@@ -44,6 +44,7 @@ Duas famílias de dados:
 - **Fase 4:** Caminho inverso — importar documento existente e popular o banco.
 - **Fase 5:** Atualização/versionamento de PPCs (histórico de mudanças, comparação entre versões — possível reaproveitamento de lógica do projeto SIGAA com `difflib`).
 - **Fase 6 (futuro/opcional):** Melhorias de UX nos formulários, autenticação de usuários por curso/unidade acadêmica.
+- **Fase 7:** Agente de Revisão de PPC (grammar + coerência via INEP)
 
 ---
 
