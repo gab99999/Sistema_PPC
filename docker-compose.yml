@@ -1,0 +1,16 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: ppc_dev
+      MYSQL_USER: ppc_user
+      MYSQL_PASSWORD: ppc_pass_dev
+      MYSQL_ROOT_PASSWORD: root_pass_dev
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

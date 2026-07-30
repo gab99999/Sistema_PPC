@@ -17,6 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+# importações do views.py
+
+from ppc.views import home
+from ppc.views import sobre
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', home, name='home'),
+    path('sobre/', sobre, name='sobre')
 ]
