@@ -20,10 +20,10 @@ from django.urls import path
 # importações do views.py
 
 from ppc.views import home
-from ppc.views import sobre
+from ppc.views import ajuda
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home, name='home'),
-    path('sobre/', sobre, name='sobre')
+    path('ajuda/', ajuda, name='ajuda'),
 ]

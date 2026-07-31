@@ -33,6 +33,7 @@ Duas famílias de dados:
 1. **Seções textuais do PPC** (~15 campos de texto longo): Informações Gerais, Apresentação, Exposição de Motivos, Objetivos, Princípios, Expectativas, TCC, Estágio Curricular, Atividade Complementar, Integração Ensino/Pesquisa/Extensão, Avaliação do Processo de Ensino-Aprendizagem, Avaliação do Projeto de Curso, Qualificação de Docentes e TA, Requisitos Legais e Normativos, Referências.
 2. **Estrutura curricular** (relacional, mais complexa): Curso → Períodos → Componentes Curriculares (natureza, núcleo, carga horária teórica/prática, ementa) → Bibliografia Básica/Complementar (título, autores, edição, cidade, editora, ano).
 
+https://cograd.catalao.ufg.br/p/35822-diretoria-de-administracao-academica
 ---
 
 ## Fases do projeto (rascunho inicial)
