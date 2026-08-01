@@ -87,25 +87,22 @@ class PPC(models.Model):
     # -- Avaliação do Projeto de Curso -- 
     avaliacao_projeto_curso = models.TextField()
 
-    # -- Estratégias de Avaliação do Projeto Pedagógico de Curso --
-    estrategias = models.TextField()
-
     # -- Qualificação de docentes e técnico-administrativos --
     qualificacao = models.TextField()
 
     # -- Requisitos legais e Normativos Obrigátorios --
-    diretrizes_curriculares_nacionais_curso = models.TextField()    
-    diretrizes_curriculares_nacionais_educacao_basica = models.TextField()
+    diretrizes_curriculares_nacionais_curso = models.TextField()  
+    diretrizes_curriculares_nacionais_educacao_basica = models.TextField(blank=True)
     diretrizes_relacoes_etnico_raciais_historia_cultura_afro_indigena = models.TextField()
     diretrizes_educacao_direitos_humanos = models.TextField()
     protecao_direitos_pessoa_transtorno_espectro_autista = models.TextField()
     componente_curricular_libras = models.TextField()
     politicas_educacao_ambiental = models.TextField()
-    diretrizes_formacao_professores_educacao_basica = models.TextField()
+    diretrizes_formacao_professores_educacao_basica = models.TextField(blank=True)
     condicoes_acesso_pessoas_deficiencia_mobilidade_reduzida = models.TextField()
 
     # -- Biblografias do PPC --
-    bibliografias_ppc = models.Textfield()
+    bibliografias_ppc = models.TextField()
 
     # -- Estrutura Curricular --
     estrutura_curricular_descricao = models.TextField()
@@ -158,14 +155,27 @@ class ComponenteCurricular(models.Model):
     natureza = models.CharField(max_length=20, choices=NATUREZA_CHOICES)
     nucleo = models.CharField(max_length=4, choices=NUCLEO_CHOICES)
     periodo = models.PositiveSmallIntegerField()
-    carga_horaria = models.PositiveIntegerField()
+    carga_horaria_teorica = models.PositiveIntegerField()
+    carga_horaria_pratica = models.PositiveIntegerField()
+    carga_horaria_pcc = models.PositiveIntegerField(default=0, help_text="Horas de Prática como Componente Curricular (só licenciaturas)")
+    unidade_academica_componente = models.CharField(max_length=200)
     ementa = models.TextField()
-    bibliografia_basica = models.TextField()
-    bibliografia_complementar = models.TextField()
 
     def __str__(self):
             return f"Componente Curricular - {self.ppc.curso.nome}"
 
+class Bibliografia(models.Model):
+    TIPO_CHOICES = [("basica", "Básica"), ("complementar", "Complementar")]
+    componente = models.ForeignKey(ComponenteCurricular, on_delete=models.CASCADE, related_name="bibliografias")
+    tipo = models.CharField(max_length=15, choices=TIPO_CHOICES)
+    titulo = models.CharField(max_length=300)
+    autores = models.CharField(max_length=300)
+    editora = models.CharField(max_length=150, blank=True)
+    cidade = models.CharField(max_length=100, blank=True)
+    ano = models.PositiveIntegerField(blank=True, null=True)
+
+    def __str__(self):
+        return self.titulo
 class Apendice(models.Model):
     TIPO_CHOICES = [
         ("corpo_docente","Relação do corpo docente e titulação"),
