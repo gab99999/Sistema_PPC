@@ -191,3 +191,27 @@ class Apendice(models.Model):
     def __str__(self):
         return self.titulo
 
+class RelacaoComponente(models.Model):
+    TIPO_CHOICES = [
+        ("pre_requisito", "Pré-requisito"),
+        ("co_requisito", "Co-requisito"),
+        ("equivalente", "Equivalente"),
+    ]
+    componente = models.ForeignKey(
+        ComponenteCurricular,
+        on_delete=models.CASCADE,
+        related_name="relacoes"
+    )
+    componente_relacionado = models.ForeignKey(
+        ComponenteCurricular,
+        on_delete=models.CASCADE,
+        related_name="relacionado_em"
+    )
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+
+    class Meta:
+        unique_together = ('componente', 'componente_relacionado', 'tipo')
+
+    def __str__(self):
+        return f"{self.componente.nome} → {self.get_tipo_display()} → {self.componente_relacionado.nome}"
+
