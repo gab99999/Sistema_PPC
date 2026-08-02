@@ -5,6 +5,7 @@
     <ul>
         {% for curso in cursos %}
             <li>{{ curso.nome }} — {{ curso.unidade_academica }}</li>
+            <li><a href="{% url 'detalhe_curso' curso.id %}">{{ curso.nome }}</a> — {{ curso.unidade_academica }}</li>
         {% empty %}
             <li>Nenhum curso cadastrado ainda.</li>
         {% endfor %}

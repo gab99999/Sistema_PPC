@@ -1,6 +1,6 @@
 # ppc/models.py
 from django.db import models
-
+from django_ckeditor_5.fields import CKEditor5Field
 
 class Curso(models.Model):
     nome = models.CharField(max_length=200)
@@ -41,72 +41,72 @@ class PPC(models.Model):
     coordenador_curso = models.CharField(max_length=200)
 
     # -- Campos condicionais (só para EAD) --
-    publico_alvo_ead = models.TextField(blank=True)
-    ato_integracao_uab = models.CharField(max_length=200, blank=True)
-    ato_credenciamento_mec = models.CharField(max_length=200, blank=True)
-    polos_ead = models.TextField(blank=True)
+    publico_alvo_ead = CKEditor5Field(blank=True, config_name='default')
+    ato_integracao_uab = CKEditor5Field(blank=True, config_name='default')
+    ato_credenciamento_mec = CKEditor5Field(blank=True, config_name='default')
+    polos_ead = CKEditor5Field(blank=True, config_name='default')
 
     # -- Apresentação (texto narrativo) --
-    apresentacao_texto = models.TextField()
+    apresentacao_texto = CKEditor5Field(blank=True, config_name='default')
 
     # -- Exposição de Motivos --
     tipo_ppc = models.CharField(max_length=20, choices=TIPO_PPC_CHOICES)
-    exposicao_motivos = models.TextField()
+    exposicao_motivos = CKEditor5Field(blank=True, config_name='default')
 
     # -- Objetivos --
-    objetivo_geral = models.TextField()
-    objetivo_especifico = models.TextField()
+    objetivo_geral = CKEditor5Field(blank=True, config_name='default')
+    objetivo_especifico = CKEditor5Field(blank=True, config_name='default')
 
     # -- Princípios Norteadores para a Formação Profissional --
-    principios_geral = models.TextField()
-    principios_pratica_profissional = models.TextField()
-    principios_formacao_tecnica = models.TextField()
-    principios_formacao_etica_social = models.TextField()
-    principios_interdisciplinaridade = models.TextField()
-    principios_articulacao_teoria_pratica = models.TextField()
+    principios_geral = CKEditor5Field(blank=True, config_name='default')
+    principios_pratica_profissional = CKEditor5Field(blank=True, config_name='default')
+    principios_formacao_tecnica = CKEditor5Field(blank=True, config_name='default')
+    principios_formacao_etica_social = CKEditor5Field(blank=True, config_name='default')
+    principios_interdisciplinaridade = CKEditor5Field(blank=True, config_name='default')
+    principios_articulacao_teoria_pratica = CKEditor5Field(blank=True, config_name='default')
 
     # -- Expectativas da Formação Profissional --
-    perfil_curso = models.TextField()
-    perfil_habilidades = models.TextField()
+    perfil_curso = CKEditor5Field(blank=True, config_name='default')
+    perfil_habilidades = CKEditor5Field(blank=True, config_name='default')
 
     # -- Trabalho de Conclusão de Curso --
-    tcc = models.TextField()
+    tcc = CKEditor5Field(blank=True, config_name='default')
 
     # -- Detalhes sobre Política e Gestão do Estágio Obrigátorio e Não Obrigátorio
-    estagio = models.TextField()
+    estagio = CKEditor5Field(blank=True, config_name='default')
 
     # -- Atividades Complementares do Curso --
-    atividades_complementares = models.TextField()
+    atividades_complementares = CKEditor5Field(blank=True, config_name='default')
 
     # -- Integração de Ensino, Pesquisa e Extensão --
-    politicas_integrada = models.TextField()
+    politicas_integrada = CKEditor5Field(blank=True, config_name='default')
 
     # -- Avaliação de Processo de Ensino e Aprendizagem --
-    avaliacao_ensino_aprendigem = models.TextField()
+    avaliacao_ensino_aprendigem = CKEditor5Field(blank=True, config_name='default')
 
     # -- Avaliação do Projeto de Curso -- 
-    avaliacao_projeto_curso = models.TextField()
+    avaliacao_projeto_curso = CKEditor5Field(blank=True, config_name='default')
 
     # -- Qualificação de docentes e técnico-administrativos --
-    qualificacao = models.TextField()
+    qualificacao = CKEditor5Field(blank=True, config_name='default')
 
     # -- Requisitos legais e Normativos Obrigátorios --
-    diretrizes_curriculares_nacionais_curso = models.TextField()  
-    diretrizes_curriculares_nacionais_educacao_basica = models.TextField(blank=True)
-    diretrizes_etnico_raciais_historia_cultura_afro_indigena = models.TextField()
-    diretrizes_educacao_direitos_humanos = models.TextField()
-    protecao_direitos_pessoa_transtorno_espectro_autista = models.TextField()
-    componente_curricular_libras = models.TextField()
-    politicas_educacao_ambiental = models.TextField()
-    diretrizes_formacao_professores_educacao_basica = models.TextField(blank=True)
-    condicoes_acesso_pessoas_deficiencia_mobilidade_reduzida = models.TextField()
+    diretrizes_curriculares_nacionais_curso = CKEditor5Field(blank=True, config_name='default')  
+    diretrizes_curriculares_nacionais_educacao_basica = CKEditor5Field(blank=True, config_name='default')
+    diretrizes_etnico_raciais_historia_cultura_afro_indigena = CKEditor5Field(blank=True, config_name='default')
+    diretrizes_educacao_direitos_humanos = CKEditor5Field(blank=True, config_name='default')
+    protecao_direitos_pessoa_transtorno_espectro_autista = CKEditor5Field(blank=True, config_name='default')
+    componente_curricular_libras = CKEditor5Field(blank=True, config_name='default')
+    politicas_educacao_ambiental = CKEditor5Field(blank=True, config_name='default')
+    diretrizes_formacao_professores_educacao_basica = CKEditor5Field(blank=True, config_name='default')
+    condicoes_acesso_pessoas_deficiencia_mobilidade_reduzida = CKEditor5Field(blank=True, config_name='default')
 
     # -- Biblografias do PPC --
-    bibliografias_ppc = models.TextField()
+    bibliografias_ppc = CKEditor5Field(blank=True, config_name='default')
 
     # -- Estrutura Curricular --
-    estrutura_curricular_descricao = models.TextField()
-    estrutura_curricular_informacoes_complementares = models.TextField()
+    estrutura_curricular_descricao = CKEditor5Field(blank=True, config_name='default')
+    estrutura_curricular_informacoes_complementares = CKEditor5Field(blank=True, config_name='default')
 
     def __str__(self):
         return f"PPC - {self.curso.nome}"
@@ -114,15 +114,15 @@ class PPC(models.Model):
 class DinamicaEAD(models.Model):
     ppc = models.OneToOneField(PPC,on_delete=models.CASCADE,related_name="dinamica_ead")
 
-    dinamica_atividades_presenciais_distancia = models.TextField(blank=True)
-    recuperacao_estudos_permanencia = models.TextField(blank=True)
-    componente_informatica_basica = models.TextField(blank=True)
-    atuacao_tutoria = models.TextField(blank=True)
-    atribuicoes_profissionais = models.TextField(blank=True)
-    material_didatico = models.TextField(blank=True)
-    ferramentas_comunicacao = models.TextField(blank=True)
-    carga_horaria_presencial_acompanhamento = models.TextField(blank=True)
-    armazenamento_gerenciamento_dados = models.TextField(blank=True)
+    dinamica_atividades_presenciais_distancia = CKEditor5Field(blank=True, config_name='default')
+    recuperacao_estudos_permanencia = CKEditor5Field(blank=True, config_name='default')
+    componente_informatica_basica = CKEditor5Field(blank=True, config_name='default')
+    atuacao_tutoria = CKEditor5Field(blank=True, config_name='default')
+    atribuicoes_profissionais = CKEditor5Field(blank=True, config_name='default')
+    material_didatico = CKEditor5Field(blank=True, config_name='default')
+    ferramentas_comunicacao = CKEditor5Field(blank=True, config_name='default')
+    carga_horaria_presencial_acompanhamento = CKEditor5Field(blank=True, config_name='default')
+    armazenamento_gerenciamento_dados = CKEditor5Field(blank=True, config_name='default')
 
     def __str__(self):
         return f"Dinâmica EAD - {self.ppc.curso.nome}" 
@@ -185,7 +185,7 @@ class Apendice(models.Model):
     ppc = models.ForeignKey(PPC,on_delete=models.CASCADE,related_name="apendices")
     tipo = models.CharField(max_length=30,choices=TIPO_CHOICES)
     titulo = models.CharField(max_length=200)
-    descricao = models.TextField(blank=True)
+    descricao = CKEditor5Field(blank=True, config_name='default')
     arquivo = models.FileField(upload_to="apendices/",blank=True)
 
     def __str__(self):

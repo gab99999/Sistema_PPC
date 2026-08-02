@@ -10,6 +10,7 @@
             <td>{{ usuario.username }}</td>
             <td>{{ usuario.email }}</td>
             <td>{{ usuario.is_active|yesno:"Sim,Não" }}</td>
+            <a href="{% url 'editar_permissoes' usuario.id %}">Editar permissões</a>
             <td>
                 {% if usuario != request.user %}
                 <form method="post" action="{% url 'alternar_acesso_usuario' usuario.id %}">

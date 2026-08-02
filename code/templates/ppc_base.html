@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="ppc-layout">
+    <nav class="menu-lateral-ppc">
+        <p><strong>{{ ppc.curso.nome }}</strong></p>
+        <a href="{% url 'editar_objetivos' ppc.id %}">Objetivos</a>
+        <!-- próximas seções entram aqui conforme criarmos: Princípios, Estágio, TCC, etc. -->
+    </nav>
+    <div class="ppc-conteudo">
+        {% block ppc_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

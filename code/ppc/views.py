@@ -1,8 +1,23 @@
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from ppc.models import Curso
+from .models import Curso, PPC
+from .forms import (PPCInformacoesGeraisForm, ObjetivosForm, EditarPermissoesForm)
+
+
+@staff_member_required
+def editar_permissoes(request, user_id):
+    usuario = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        form = EditarPermissoesForm(request.POST, instance=usuario)
+        if form.is_valid():
+            form.save()
+            return redirect('gestao_usuarios')
+    else:
+        form = EditarPermissoesForm(instance=usuario)
+    return render(request, 'ppc/editar_permissoes.html', {'form': form, 'usuario': usuario})
 
 
 def home(request):
@@ -38,3 +53,37 @@ def alternar_acesso_usuario(request, user_id):
         usuario.is_active = not usuario.is_active
         usuario.save()
     return redirect('gestao_usuarios')
+
+@login_required
+def detalhe_curso(request, curso_id):
+    curso = get_object_or_404(Curso, id=curso_id)
+    ppcs = curso.ppcs.all()
+    return render(request, 'ppc/detalhe_curso.html', {'curso': curso, 'ppcs': ppcs})
+
+
+@login_required
+def criar_ppc(request, curso_id):
+    curso = get_object_or_404(Curso, id=curso_id)
+    if request.method == 'POST':
+        form = PPCInformacoesGeraisForm(request.POST)
+        if form.is_valid():
+            ppc = form.save(commit=False)  # não salva ainda
+            ppc.curso = curso              # completa o campo que faltava
+            ppc.save()                     # agora sim salva
+            return redirect('editar_objetivos', ppc_id=ppc.id)
+    else:
+        form = PPCInformacoesGeraisForm()
+    return render(request, 'ppc/criar_ppc.html', {'form': form, 'curso': curso})
+
+
+@login_required
+def editar_objetivos(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    if request.method == 'POST':
+        form = ObjetivosForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_objetivos', ppc_id=ppc.id)
+    else:
+        form = ObjetivosForm(instance=ppc)
+    return render(request, 'ppc/editar_objetivos.html', {'form': form, 'ppc': ppc})

@@ -1,0 +1,10 @@
+{% extends "ppc_base.html" %}
+{% block title %}Objetivos — {{ ppc.curso.nome }}{% endblock %}
+{% block ppc_content %}
+    <h2>Objetivos</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Salvar</button>
+    </form>
+{% endblock %}

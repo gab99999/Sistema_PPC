@@ -15,11 +15,14 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 # importações do views.py
 
-from ppc.views import home, ajuda, lista_cursos, gestao_usuarios, criar_usuario, alternar_acesso_usuario
+from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario, alternar_acesso_usuario, detalhe_curso, criar_ppc, editar_objetivos,
+                        editar_permissoes)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,4 +32,12 @@ urlpatterns = [
     path('gestao_usuarios/', gestao_usuarios, name='gestao_usuarios'),
     path('gestao_usuarios/criar/', criar_usuario, name='criar_usuario'),
     path('gestao_usuarios/<int:user_id>/alternar/', alternar_acesso_usuario, name='alternar_acesso_usuario'),
+    path('cursos/<int:curso_id>/', detalhe_curso, name='detalhe_curso'),
+    path('cursos/<int:curso_id>/novo_ppc/', criar_ppc, name='criar_ppc'),
+    path('ppc/<int:ppc_id>/objetivos/', editar_objetivos, name='editar_objetivos'),
+    path("ckeditor5/", include('django_ckeditor_5.urls')),
+    path('gestao_usuarios/<int:user_id>/permissoes/', editar_permissoes, name='editar_permissoes'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

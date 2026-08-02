@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ curso.nome }}{% endblock %}
+{% block content %}
+    <h1>{{ curso.nome }}</h1>
+    <p>{{ curso.unidade_academica }}</p>
+
+    <a href="{% url 'criar_ppc' curso.id %}">+ Novo PPC</a>
+
+    <h2>PPCs deste curso</h2>
+    <ul>
+        {% for ppc in ppcs %}
+            <li><a href="{% url 'editar_objetivos' ppc.id %}">{{ ppc.get_tipo_ppc_display }} — {{ ppc.grau_academico }}</a></li>
+        {% empty %}
+            <li>Nenhum PPC cadastrado ainda para este curso.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

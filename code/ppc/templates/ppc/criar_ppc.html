@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Novo PPC — {{ curso.nome }}{% endblock %}
+{% block content %}
+    <h1>Novo PPC — {{ curso.nome }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Criar PPC</button>
+    </form>
+{% endblock %}
