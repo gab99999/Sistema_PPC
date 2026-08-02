@@ -93,7 +93,7 @@ class PPC(models.Model):
     # -- Requisitos legais e Normativos Obrigátorios --
     diretrizes_curriculares_nacionais_curso = models.TextField()  
     diretrizes_curriculares_nacionais_educacao_basica = models.TextField(blank=True)
-    diretrizes_relacoes_etnico_raciais_historia_cultura_afro_indigena = models.TextField()
+    diretrizes_etnico_raciais_historia_cultura_afro_indigena = models.TextField()
     diretrizes_educacao_direitos_humanos = models.TextField()
     protecao_direitos_pessoa_transtorno_espectro_autista = models.TextField()
     componente_curricular_libras = models.TextField()

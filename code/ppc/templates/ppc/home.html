@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Início{% endblock %}
 {% block content %}
-    <h1>Sistema de Gerenciamento de PPCs</h1>
-    <p>Em construção.</p>
+    <h1>Sistema de Gerenciamento de PPCs — UFCAT</h1>
+
+    <nav class="menu-principal">
+        <a href="{% url 'lista_cursos' %}">Cursos</a>
+        {% if user.is_staff %}
+            <a href="{% url 'gestao_usuarios' %}">Gerenciar Usuários</a>
+        {% endif %}
+        <a href="{% url 'ajuda' %}">Ajuda</a>
+    </nav>
 {% endblock %}

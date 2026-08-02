@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Cursos{% endblock %}
+{% block content %}
+    <h1>Cursos</h1>
+    <ul>
+        {% for curso in cursos %}
+            <li>{{ curso.nome }} — {{ curso.unidade_academica }}</li>
+        {% empty %}
+            <li>Nenhum curso cadastrado ainda.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

@@ -19,11 +19,14 @@ from django.urls import path
 
 # importações do views.py
 
-from ppc.views import home
-from ppc.views import ajuda
+from ppc.views import home, ajuda, lista_cursos, gestao_usuarios, criar_usuario, alternar_acesso_usuario
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home, name='home'),
     path('ajuda/', ajuda, name='ajuda'),
+    path('lista_cursos/', lista_cursos, name='lista_cursos'),
+    path('gestao_usuarios/', gestao_usuarios, name='gestao_usuarios'),
+    path('gestao_usuarios/criar/', criar_usuario, name='criar_usuario'),
+    path('gestao_usuarios/<int:user_id>/alternar/', alternar_acesso_usuario, name='alternar_acesso_usuario'),
 ]
