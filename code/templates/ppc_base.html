@@ -11,6 +11,8 @@
        class="{% if request.resolver_match.url_name == 'editar_exposicao_motivos' %}ativo{% endif %}">Exposição de Motivos</a>
     <a href="{% url 'editar_objetivos' ppc.id %}"
        class="{% if request.resolver_match.url_name == 'editar_objetivos' %}ativo{% endif %}">Objetivos</a>
+    <a href="{% url 'editar_principios' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_principios' %}ativo{% endif %}">Princípios Norteadores</a>
 </nav>
     <div id="ppc-conteudo">
         {% block ppc_content %}{% endblock %}

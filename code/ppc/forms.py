@@ -2,6 +2,18 @@ from django import forms
 from ppc.models import PPC, Curso
 from django.contrib.auth.models import User, Group
 
+class PrincipiosForm(forms.ModelForm):
+    class Meta:
+        model = PPC
+        fields = [
+            'principios_geral',
+            'principios_pratica_profissional',
+            'principios_formacao_tecnica',
+            'principios_formacao_etica_social',
+            'principios_interdisciplinaridade',
+            'principios_articulacao_teoria_pratica',
+        ]
+
 class EditarPermissoesForm(forms.ModelForm):
     groups = forms.ModelMultipleChoiceField(
         queryset=Group.objects.all(), required=False, widget=forms.CheckboxSelectMultiple

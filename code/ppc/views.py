@@ -5,7 +5,19 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Curso, PPC
 from .forms import (PPCInformacoesGeraisForm, ObjetivosForm, EditarPermissoesForm, CursoForm,
-                    InformacoesGeraisForm, ApresentacaoForm, ExposicaoMotivosForm, )
+                    InformacoesGeraisForm, ApresentacaoForm, ExposicaoMotivosForm, PrincipiosForm, )
+
+@login_required
+def editar_principios(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    if request.method == 'POST':
+        form = PrincipiosForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_principios', ppc_id=ppc.id)
+    else:
+        form = PrincipiosForm(instance=ppc)
+    return render(request, 'ppc/editar_principios.html', {'form': form, 'ppc': ppc})
 
 @login_required
 def editar_informacoes_gerais(request, ppc_id):
