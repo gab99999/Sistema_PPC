@@ -2,11 +2,14 @@
 from django.db import models
 from django_ckeditor_5.fields import CKEditor5Field
 from django.utils import timezone
+from simple_history.models import HistoricalRecords
 
 class Curso(models.Model):
     nome = models.CharField(max_length=200)
     unidade_academica = models.CharField(max_length=200)
     area_conhecimento = models.CharField(max_length=200)  # áreas CAPES
+
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.nome
@@ -119,6 +122,8 @@ class PPC(models.Model):
     estrutura_curricular_descricao = CKEditor5Field(blank=True, config_name='default')
     estrutura_curricular_informacoes_complementares = CKEditor5Field(blank=True, config_name='default')
 
+    history = HistoricalRecords()
+
     def __str__(self):
         return f"PPC - {self.curso.nome}"
     
@@ -134,6 +139,8 @@ class DinamicaEAD(models.Model):
     ferramentas_comunicacao = CKEditor5Field(blank=True, config_name='default')
     carga_horaria_presencial_acompanhamento = CKEditor5Field(blank=True, config_name='default')
     armazenamento_gerenciamento_dados = CKEditor5Field(blank=True, config_name='default')
+
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"Dinâmica EAD - {self.ppc.curso.nome}" 
@@ -172,6 +179,8 @@ class ComponenteCurricular(models.Model):
     unidade_academica_componente = models.CharField(max_length=200)
     ementa = models.TextField()
 
+    history = HistoricalRecords()
+
     def __str__(self):
             return f"Componente Curricular - {self.ppc.curso.nome}"
 
@@ -199,6 +208,8 @@ class Apendice(models.Model):
     descricao = CKEditor5Field(blank=True, config_name='default')
     arquivo = models.FileField(upload_to="apendices/",blank=True)
 
+    history = HistoricalRecords()
+
     def __str__(self):
         return self.titulo
 
@@ -222,6 +233,8 @@ class RelacaoComponente(models.Model):
 
     class Meta:
         unique_together = ('componente', 'componente_relacionado', 'tipo')
+
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.componente.nome} → {self.get_tipo_display()} → {self.componente_relacionado.nome}"
