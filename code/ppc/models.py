@@ -40,6 +40,10 @@ class PPC(models.Model):
     vice_diretor = models.CharField(max_length=200)
     coordenador_curso = models.CharField(max_length=200)
 
+    # -- Datas --
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
     # -- Campos condicionais (só para EAD) --
     publico_alvo_ead = CKEditor5Field(blank=True, config_name='default')
     ato_integracao_uab = CKEditor5Field(blank=True, config_name='default')

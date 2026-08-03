@@ -1,7 +1,8 @@
-{% extends "base.html" %}
-{% block title %}Editar Permissões{% endblock %}
-{% block content %}
-    <h1>Permissões — {{ usuario.username }}</h1>
+
+{% extends "ppc_base.html" %}
+{% block title %}Exposição de Motivos — {{ ppc.curso.nome }}{% endblock %}
+{% block ppc_content %}
+    <h2>Exposição de Motivos</h2>
     <form method="post" class="form-secao">
         {% csrf_token %}
         {{ form.as_p }}

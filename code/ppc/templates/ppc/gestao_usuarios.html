@@ -3,25 +3,27 @@
 {% block content %}
     <h1>Gerenciar Usuários</h1>
     <a href="{% url 'criar_usuario' %}">+ Novo usuário</a>
-    <table>
-        <tr><th>Usuário</th><th>Email</th><th>Ativo</th><th>Ação</th></tr>
-        {% for usuario in usuarios %}
-        <tr>
-            <td>{{ usuario.username }}</td>
-            <td>{{ usuario.email }}</td>
-            <td>{{ usuario.is_active|yesno:"Sim,Não" }}</td>
-            <a href="{% url 'editar_permissoes' usuario.id %}">Editar permissões</a>
-            <td>
-                {% if usuario != request.user %}
-                <form method="post" action="{% url 'alternar_acesso_usuario' usuario.id %}">
-                    {% csrf_token %}
-                    <button type="submit">
-                        {% if usuario.is_active %}Desativar{% else %}Reativar{% endif %}
-                    </button>
-                </form>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+    <table class="tabela-dados">
+    <tr><th>Usuário</th><th>Email</th><th>Ativo</th><th>Ação</th></tr>
+    {% for usuario in usuarios %}
+    <tr>
+        <td>{{ usuario.username }}</td>
+        <td>{{ usuario.email }}</td>
+        <td class="{% if usuario.is_active %}status-ativo{% else %}status-inativo{% endif %}">
+            {{ usuario.is_active|yesno:"Sim,Não" }}
+        </td>
+        <td>
+            {% if usuario != request.user %}
+            <form method="post" action="{% url 'alternar_acesso_usuario' usuario.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secundario">
+                    {% if usuario.is_active %}Desativar{% else %}Reativar{% endif %}
+                </button>
+            </form>
+            <a href="{% url 'editar_permissoes' usuario.id %}" class="btn btn-secundario">Editar permissões</a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
 {% endblock %}

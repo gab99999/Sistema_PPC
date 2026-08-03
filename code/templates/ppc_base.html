@@ -2,11 +2,17 @@
 {% block content %}
 <div class="ppc-layout">
     <nav class="menu-lateral-ppc">
-        <p><strong>{{ ppc.curso.nome }}</strong></p>
-        <a href="{% url 'editar_objetivos' ppc.id %}">Objetivos</a>
-        <!-- próximas seções entram aqui conforme criarmos: Princípios, Estágio, TCC, etc. -->
-    </nav>
-    <div class="ppc-conteudo">
+    <p><strong>{{ ppc.curso.nome }}</strong></p>
+    <a href="{% url 'editar_informacoes_gerais' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_informacoes_gerais' %}ativo{% endif %}">Informações Gerais</a>
+    <a href="{% url 'editar_apresentacao' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_apresentacao' %}ativo{% endif %}">Apresentação</a>
+    <a href="{% url 'editar_exposicao_motivos' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_exposicao_motivos' %}ativo{% endif %}">Exposição de Motivos</a>
+    <a href="{% url 'editar_objetivos' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_objetivos' %}ativo{% endif %}">Objetivos</a>
+</nav>
+    <div id="ppc-conteudo">
         {% block ppc_content %}{% endblock %}
     </div>
 </div>

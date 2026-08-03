@@ -1,19 +1,22 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}Sistema PPC{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'ppc/style.css' %}">
     {{ form.media }}
 </head>
 <body>
-    <nav>
+    <nav class="menu-principal">
         <a href="{% url 'home' %}">Início</a>
-        <a href="#">PPCs</a>
-        {% if request.resolver_match.url_name == 'home' and user.is_authenticated %}
-            <a href="#">Novo PPC</a>
+        <a href="{% url 'lista_cursos' %}">Cursos</a>
+        {% if user.is_staff %}
+            <a href="{% url 'gestao_usuarios' %}">Gerenciar Usuários</a>
         {% endif %}
+        <a href="{% url 'ajuda' %}">Ajuda</a>
     </nav>
-    <main>
+    <main id="conteudo-principal">
         {% block content %}{% endblock %}
     </main>
 </body>

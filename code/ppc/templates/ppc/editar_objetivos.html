@@ -2,9 +2,9 @@
 {% block title %}Objetivos — {{ ppc.curso.nome }}{% endblock %}
 {% block ppc_content %}
     <h2>Objetivos</h2>
-    <form method="post">
+    <form method="post" class="form-secao">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Salvar</button>
+        <button type="submit" class="btn btn-primario">Salvar</button>
     </form>
 {% endblock %}

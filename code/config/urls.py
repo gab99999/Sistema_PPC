@@ -22,7 +22,8 @@ from django.conf.urls.static import static
 # importações do views.py
 
 from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario, alternar_acesso_usuario, detalhe_curso, criar_ppc, editar_objetivos,
-                        editar_permissoes)
+                        editar_permissoes, criar_curso, editar_exposicao_motivos, editar_apresentacao, editar_informacoes_gerais, 
+                        )
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -37,6 +38,10 @@ urlpatterns = [
     path('ppc/<int:ppc_id>/objetivos/', editar_objetivos, name='editar_objetivos'),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     path('gestao_usuarios/<int:user_id>/permissoes/', editar_permissoes, name='editar_permissoes'),
+    path('cursos/novo/', criar_curso, name='criar_curso'),
+    path('ppc/<int:ppc_id>/informacoes-gerais/', editar_informacoes_gerais, name='editar_informacoes_gerais'),
+    path('ppc/<int:ppc_id>/apresentacao/', editar_apresentacao, name='editar_apresentacao'),
+    path('ppc/<int:ppc_id>/exposicao-motivos/', editar_exposicao_motivos, name='editar_exposicao_motivos'),
 ]
 
 if settings.DEBUG:

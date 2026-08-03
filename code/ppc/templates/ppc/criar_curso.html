@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Novo Usuário{% endblock %}
+{% block title %}Novo Curso{% endblock %}
 {% block content %}
-    <h1>Criar Novo Usuário</h1>
+    <h1>Novo Curso</h1>
     <form method="post" class="form-secao">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" class="btn btn-primario">Criar</button>
+        <button type="submit" class="btn btn-primario">Criar Curso</button>
     </form>
 {% endblock %}

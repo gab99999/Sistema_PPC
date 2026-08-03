@@ -4,8 +4,57 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Curso, PPC
-from .forms import (PPCInformacoesGeraisForm, ObjetivosForm, EditarPermissoesForm)
+from .forms import (PPCInformacoesGeraisForm, ObjetivosForm, EditarPermissoesForm, CursoForm,
+                    InformacoesGeraisForm, ApresentacaoForm, ExposicaoMotivosForm, )
 
+@login_required
+def editar_informacoes_gerais(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    if request.method == 'POST':
+        form = InformacoesGeraisForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_informacoes_gerais', ppc_id=ppc.id)
+    else:
+        form = InformacoesGeraisForm(instance=ppc)
+    return render(request, 'ppc/editar_informacoes_gerais.html', {'form': form, 'ppc': ppc})
+
+
+@login_required
+def editar_apresentacao(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    if request.method == 'POST':
+        form = ApresentacaoForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_apresentacao', ppc_id=ppc.id)
+    else:
+        form = ApresentacaoForm(instance=ppc)
+    return render(request, 'ppc/editar_apresentacao.html', {'form': form, 'ppc': ppc})
+
+
+@login_required
+def editar_exposicao_motivos(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    if request.method == 'POST':
+        form = ExposicaoMotivosForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_exposicao_motivos', ppc_id=ppc.id)
+    else:
+        form = ExposicaoMotivosForm(instance=ppc)
+    return render(request, 'ppc/editar_exposicao_motivos.html', {'form': form, 'ppc': ppc})
+
+@login_required
+def criar_curso(request):
+    if request.method == 'POST':
+        form = CursoForm(request.POST)
+        if form.is_valid():
+            curso = form.save()
+            return redirect('detalhe_curso', curso_id=curso.id)
+    else:
+        form = CursoForm()
+    return render(request, 'ppc/criar_curso.html', {'form': form})
 
 @staff_member_required
 def editar_permissoes(request, user_id):
@@ -70,7 +119,7 @@ def criar_ppc(request, curso_id):
             ppc = form.save(commit=False)  # não salva ainda
             ppc.curso = curso              # completa o campo que faltava
             ppc.save()                     # agora sim salva
-            return redirect('editar_objetivos', ppc_id=ppc.id)
+            return redirect('editar_apresentacao', ppc_id=ppc.id)
     else:
         form = PPCInformacoesGeraisForm()
     return render(request, 'ppc/criar_ppc.html', {'form': form, 'curso': curso})
