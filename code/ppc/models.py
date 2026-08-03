@@ -1,6 +1,7 @@
 # ppc/models.py
 from django.db import models
 from django_ckeditor_5.fields import CKEditor5Field
+from django.utils import timezone
 
 class Curso(models.Model):
     nome = models.CharField(max_length=200)
@@ -24,6 +25,11 @@ class PPC(models.Model):
         ('bacharelado', 'Bacharelado'),
         ('licenciatura', 'Licenciatura'),
     ]
+    STATUS_CHOICES = [
+        ('rascunho', 'Rascunho'),
+        ('em_revisao', 'Em Revisão'),
+        ('aprovado', 'Aprovado'),
+    ]
 
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='ppcs')
 
@@ -43,6 +49,7 @@ class PPC(models.Model):
     # -- Datas --
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='rascunho')
 
     # -- Campos condicionais (só para EAD) --
     publico_alvo_ead = CKEditor5Field(blank=True, config_name='default')

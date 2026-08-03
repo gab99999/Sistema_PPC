@@ -305,6 +305,21 @@ select:focus-visible {
     border-left: 4px solid var(--cor-primaria);
 }
 
+.status-rascunho {
+    color: var(--cor-texto-suave);
+    font-weight: 500;
+}
+
+.status-em_revisao {
+    color: var(--cor-destaque);
+    font-weight: 500;
+}
+
+.status-aprovado {
+    color: var(--cor-sucesso);
+    font-weight: 500;
+}
+
 /* -- Responsivo -- */
 @media (max-width: 720px) {
     .ppc-layout {
