@@ -2,6 +2,11 @@ from django import forms
 from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoComponente, ComponenteCurricular
 from django.contrib.auth.models import User, Group
 
+class ReferenciasForm(forms.ModelForm):
+    class Meta:
+        model = PPC
+        fields = ['bibliografias_ppc']
+
 class ComponenteCurricularForm(forms.ModelForm):
     class Meta:
         model = ComponenteCurricular

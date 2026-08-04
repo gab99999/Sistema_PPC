@@ -9,7 +9,21 @@ from .forms import (PPCInformacoesGeraisForm, ObjetivosForm, EditarPermissoesFor
                     ExpectativasForm, TccForm, EstagioForm, AtividadesComplementaresForm,
                      PoliticasIntegradaForm, AvaliacaoEnsinoForm, AvalicaoProjetoCursoForm,
                     QualificacaoForm, RequisitosLegaisForm, ApendiceForm, DinamicaEADForm, 
-                    EstruturaCurricularForm, ComponenteCurricularForm, BibliografiaForm, RelacaoComponenteForm,)
+                    EstruturaCurricularForm, ComponenteCurricularForm, BibliografiaForm, RelacaoComponenteForm,
+                    ReferenciasForm, )
+
+
+@login_required
+def editar_referencias(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    if request.method == 'POST':
+        form = ReferenciasForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_referencias', ppc_id=ppc.id)
+    else:
+        form = ReferenciasForm(instance=ppc)
+    return render(request, 'ppc/editar_referencias.html', {'form': form, 'ppc': ppc})
 
 
 @login_required
