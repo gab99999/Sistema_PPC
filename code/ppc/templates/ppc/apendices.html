@@ -8,9 +8,16 @@
             <li class="card">
                 <h3 class="card-titulo">{{ apendice.titulo }}</h3>
                 <p class="card-corpo">{{ apendice.get_tipo_display }}</p>
-                {% if apendice.arquivo %}
-                    <a href="{{ apendice.arquivo.url }}" class="btn btn-secundario">Baixar arquivo</a>
-                {% endif %}
+                <div class="btn-group">
+                    {% if apendice.arquivo %}
+                        <a href="{{ apendice.arquivo.url }}" class="btn btn-secundario">Baixar arquivo</a>
+                    {% endif %}
+                    <form method="post" action="{% url 'excluir_apendice' apendice.id %}"
+                          onsubmit="return confirm('Excluir este apêndice?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-perigo">Excluir</button>
+                    </form>
+                </div>
             </li>
         {% empty %}
             <li>Nenhum apêndice cadastrado ainda.</li>

@@ -64,24 +64,24 @@ class PPC(models.Model):
     apresentacao_texto = CKEditor5Field(blank=True, config_name='default')
 
     # -- Exposição de Motivos --
-    tipo_ppc = models.CharField(max_length=20, choices=TIPO_PPC_CHOICES)
-    exposicao_motivos = CKEditor5Field(blank=True, config_name='default')
+    tipo_ppc = models.CharField(max_length=20, choices=TIPO_PPC_CHOICES, verbose_name="Tipo de PPC")
+    exposicao_motivos = CKEditor5Field(blank=True, config_name='default', verbose_name="Exposição de Motivos")
 
     # -- Objetivos --
     objetivo_geral = CKEditor5Field(blank=True, config_name='default')
     objetivo_especifico = CKEditor5Field(blank=True, config_name='default')
 
     # -- Princípios Norteadores para a Formação Profissional --
-    principios_geral = CKEditor5Field(blank=True, config_name='default')
-    principios_pratica_profissional = CKEditor5Field(blank=True, config_name='default')
-    principios_formacao_tecnica = CKEditor5Field(blank=True, config_name='default')
-    principios_formacao_etica_social = CKEditor5Field(blank=True, config_name='default')
-    principios_interdisciplinaridade = CKEditor5Field(blank=True, config_name='default')
-    principios_articulacao_teoria_pratica = CKEditor5Field(blank=True, config_name='default')
+    principios_geral = CKEditor5Field(blank=True, config_name='default', verbose_name="Princípios Gerais")
+    principios_pratica_profissional = CKEditor5Field(blank=True, config_name='default', verbose_name="Prática Profissional")
+    principios_formacao_tecnica = CKEditor5Field(blank=True, config_name='default', verbose_name="Formação Técnica")
+    principios_formacao_etica_social = CKEditor5Field(blank=True, config_name='default', verbose_name="Formação Ética e Função Social do Profissional")
+    principios_interdisciplinaridade = CKEditor5Field(blank=True, config_name='default', verbose_name="Interdisciplinaridade")
+    principios_articulacao_teoria_pratica = CKEditor5Field(blank=True, config_name='default', verbose_name="Articulação entre Teoria e Prática")
 
     # -- Expectativas da Formação Profissional --
-    perfil_curso = CKEditor5Field(blank=True, config_name='default')
-    perfil_habilidades = CKEditor5Field(blank=True, config_name='default')
+    perfil_curso = CKEditor5Field(blank=True, config_name='default', verbose_name="Perfil do Curso")
+    perfil_habilidades = CKEditor5Field(blank=True, config_name='default', verbose_name="Perfil e Habilidades do Egresso")
 
     # -- Trabalho de Conclusão de Curso --
     tcc = CKEditor5Field(blank=True, config_name='default')
@@ -89,39 +89,41 @@ class PPC(models.Model):
     # -- Detalhes sobre Política e Gestão do Estágio Obrigátorio e Não Obrigátorio
     estagio = CKEditor5Field(blank=True, config_name='default')
 
+    # -- Detalhes sobre Política e Gestão do Estágio Obrigatório e Não Obrigatório --
+    estagio = CKEditor5Field(blank=True, config_name='default', verbose_name="Política e Gestão de Estágio Curricular Obrigatório e Não Obrigatório")
+
     # -- Atividades Complementares do Curso --
-    atividades_complementares = CKEditor5Field(blank=True, config_name='default')
+    atividades_complementares = CKEditor5Field(blank=True, config_name='default', verbose_name="Atividades Complementares")
 
     # -- Integração de Ensino, Pesquisa e Extensão --
-    politicas_integrada = CKEditor5Field(blank=True, config_name='default')
+    politicas_integrada = CKEditor5Field(blank=True, config_name='default', verbose_name="Integração Ensino, Pesquisa e Extensão")
 
-    # -- Avaliação de Processo de Ensino e Aprendizagem --
-    avaliacao_ensino_aprendizagem = CKEditor5Field(blank=True, config_name='default')
+    # -- Avaliação do Processo de Ensino e Aprendizagem --
+    avaliacao_ensino_aprendizagem = CKEditor5Field(blank=True, config_name='default', verbose_name="Avaliação do Processo de Ensino e de Aprendizagem")
 
-    # -- Avaliação do Projeto de Curso -- 
-    avaliacao_projeto_curso = CKEditor5Field(blank=True, config_name='default')
+    # -- Avaliação do Projeto de Curso --
+    avaliacao_projeto_curso = CKEditor5Field(blank=True, config_name='default', verbose_name="Avaliação do Projeto de Curso")
 
     # -- Qualificação de docentes e técnico-administrativos --
-    qualificacao = CKEditor5Field(blank=True, config_name='default')
+    qualificacao = CKEditor5Field(blank=True, config_name='default', verbose_name="Qualificação de Docentes e Técnico-Administrativos")    
 
     # -- Requisitos legais e Normativos Obrigátorios --
-    diretrizes_curriculares_nacionais_curso = CKEditor5Field(blank=True, config_name='default')  
-    diretrizes_curriculares_nacionais_educacao_basica = CKEditor5Field(blank=True, config_name='default')
-    diretrizes_etnico_raciais_historia_cultura_afro_indigena = CKEditor5Field(blank=True, config_name='default')
-    diretrizes_educacao_direitos_humanos = CKEditor5Field(blank=True, config_name='default')
-    protecao_direitos_pessoa_transtorno_espectro_autista = CKEditor5Field(blank=True, config_name='default')
-    componente_curricular_libras = CKEditor5Field(blank=True, config_name='default')
-    politicas_educacao_ambiental = CKEditor5Field(blank=True, config_name='default')
-    diretrizes_formacao_professores_educacao_basica = CKEditor5Field(blank=True, config_name='default')
-    condicoes_acesso_pessoas_deficiencia_mobilidade_reduzida = CKEditor5Field(blank=True, config_name='default')
+    diretrizes_curriculares_nacionais_curso = CKEditor5Field(blank=True, config_name='default', verbose_name="Diretrizes Curriculares Nacionais do Curso")  
+    diretrizes_curriculares_nacionais_educacao_basica = CKEditor5Field(blank=True, config_name='default', verbose_name="Diretrizes Curriculares Nacionais da Educação Básica")
+    diretrizes_etnico_raciais_historia_cultura_afro_indigena = CKEditor5Field(blank=True, config_name='default', verbose_name="Diretrizes para Educação das Relações Étnico-Raciais e Ensino de História e Cultura Afro-Brasileira e Indígena")
+    diretrizes_educacao_direitos_humanos = CKEditor5Field(blank=True, config_name='default', verbose_name="Diretrizes Nacionais para a Educação em Direitos Humanos")
+    protecao_direitos_pessoa_transtorno_espectro_autista = CKEditor5Field(blank=True, config_name='default', verbose_name="Proteção dos Direitos da Pessoa com Transtorno do Espectro Autista")
+    componente_curricular_libras = CKEditor5Field(blank=True, config_name='default', verbose_name="Componente Curricular de Libras")
+    politicas_educacao_ambiental = CKEditor5Field(blank=True, config_name='default', verbose_name="Políticas de Educação Ambiental")
+    diretrizes_formacao_professores_educacao_basica = CKEditor5Field(blank=True, config_name='default', verbose_name="Diretrizes Curriculares Nacionais para a Formação de Professores da Educação Básica")
+    condicoes_acesso_pessoas_deficiencia_mobilidade_reduzida = CKEditor5Field(blank=True, config_name='default', verbose_name="Condições de Acesso para Pessoas com Deficiência e/ou Mobilidade Reduzida")
 
-    # -- Biblografias do PPC --
-    bibliografias_ppc = CKEditor5Field(blank=True, config_name='default')
+    # -- Bibliografias do PPC --
+    bibliografias_ppc = CKEditor5Field(blank=True, config_name='default', verbose_name="Referências")
 
     # -- Estrutura Curricular --
-    estrutura_curricular_descricao = CKEditor5Field(blank=True, config_name='default')
-    estrutura_curricular_informacoes_complementares = CKEditor5Field(blank=True, config_name='default')
-
+    estrutura_curricular_descricao = CKEditor5Field(blank=True, config_name='default', verbose_name="Descrição Geral")
+    estrutura_curricular_informacoes_complementares = CKEditor5Field(blank=True, config_name='default', verbose_name="Informações Complementares")
     history = HistoricalRecords()
 
     def __str__(self):

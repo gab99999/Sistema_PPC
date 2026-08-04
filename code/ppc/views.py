@@ -14,6 +14,15 @@ from .forms import (PPCInformacoesGeraisForm, ObjetivosForm, EditarPermissoesFor
 
 
 @login_required
+def excluir_apendice(request, apendice_id):
+    apendice = get_object_or_404(Apendice, id=apendice_id)
+    ppc_id = apendice.ppc.id
+    if request.method == 'POST':
+        apendice.delete()
+    return redirect('editar_apendices', ppc_id=ppc_id)
+
+
+@login_required
 def editar_referencias(request, ppc_id):
     ppc = get_object_or_404(PPC, id=ppc_id)
     if request.method == 'POST':

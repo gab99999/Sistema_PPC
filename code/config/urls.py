@@ -26,7 +26,7 @@ from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario
                         editar_principios, editar_expectativas, editar_apendices, editar_atividades_complementares, editar_avaliacao_ensino,
                         editar_avaliacao_projeto_curso, editar_dinamicas_ead, editar_estagio, editar_politicas_integrada, editar_qualificacao, editar_requisitos_legais,
                         editar_tcc, lista_componentes, criar_componente, editar_componente, detalhe_componente, excluir_componente, 
-                        excluir_bibliografia, editar_bibliografia, editar_relacao, excluir_relacao, editar_referencias, )
+                        excluir_bibliografia, editar_bibliografia, editar_relacao, excluir_relacao, editar_referencias, excluir_apendice, )
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -69,6 +69,7 @@ urlpatterns = [
     path('relacao/<int:relacao_id>/editar/', editar_relacao, name='editar_relacao'),
     path('relacao/<int:relacao_id>/excluir/', excluir_relacao, name='excluir_relacao'),
     path('ppc/<int:ppc_id>/referencias/', editar_referencias, name='editar_referencias'),
+    path('apendice/<int:apendice_id>/excluir/', excluir_apendice, name='excluir_apendice'),
 ]
 
 if settings.DEBUG:
