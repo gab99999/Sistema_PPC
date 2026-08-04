@@ -1,7 +1,7 @@
 {% extends "ppc_base.html" %}
-{% block title %}Integração Ensino, Pesquisa e Extensão — {{ ppc.curso.nome }}{% endblock %}
+{% block title %}Editar {{ componente.nome }}{% endblock %}
 {% block ppc_content %}
-    <h2>Integração Ensino, Pesquisa e Extensão</h2>
+    <h2>Editar Componente</h2>
     <form method="post" class="form-secao">
         {% csrf_token %}
         {{ form.as_p }}

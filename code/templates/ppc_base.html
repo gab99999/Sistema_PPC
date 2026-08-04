@@ -29,11 +29,12 @@
        class="{% if request.resolver_match.url_name == 'editar_avaliacao_projeto_curso' %}ativo{% endif %}">Avaliação do Projeto de Curso</a>
    <a href="{% url 'editar_qualificacao' ppc.id %}"
        class="{% if request.resolver_match.url_name == 'editar_qualificacao' %}ativo{% endif %}">Qualificação de docentes e técnico-administrativos</a>
-   <a href="{% url 'editar_dinamica_ead' ppc.id %}"
-       class="{% if request.resolver_match.url_name == 'editar_dinamica_ead' %}ativo{% endif %}">Dinâmicas de Cursos EAD</a>
+   <a href="{% url 'editar_dinamicas_ead' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_dinamicas_ead' %}ativo{% endif %}">Dinâmica EAD</a>
    <a href="{% url 'editar_requisitos_legais' ppc.id %}"
        class="{% if request.resolver_match.url_name == 'editar_requisitos_legais' %}ativo{% endif %}">Requisitos legais e Normativos Obrigátorios</a>
-   
+   <a href="{% url 'lista_componentes' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'lista_componentes' %}ativo{% endif %}">Estrutura Curricular</a>
    
    <a href="{% url 'editar_apendices' ppc.id %}"
        class="{% if request.resolver_match.url_name == 'editar_apendice' %}ativo{% endif %}">Apêndices</a>

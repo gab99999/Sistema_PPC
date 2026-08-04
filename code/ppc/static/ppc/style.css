@@ -238,6 +238,8 @@ select:focus-visible {
     padding: 1rem;
     position: sticky;
     top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
 }
 
 .menu-lateral-ppc a {
@@ -272,9 +274,6 @@ select:focus-visible {
     counter-reset: secao;
 }
 
-.menu-lateral-ppc {
-    counter-reset: secao;
-}
 
 .menu-lateral-ppc a::before {
     counter-increment: secao;
@@ -290,6 +289,24 @@ select:focus-visible {
     font-size: 0.75rem;
     font-family: var(--fonte-titulo);
     flex-shrink: 0;
+}
+
+.menu-lateral-ppc::-webkit-scrollbar {
+    width: 6px;
+}
+
+.menu-lateral-ppc::-webkit-scrollbar-thumb {
+    background-color: var(--cor-borda);
+    border-radius: 3px;
+}
+
+.menu-lateral-ppc::-webkit-scrollbar-thumb:hover {
+    background-color: var(--cor-texto-suave);
+}
+
+.menu-lateral-ppc {
+    scrollbar-width: thin;
+    scrollbar-color: var(--cor-borda) transparent;
 }
 
 #ppc-conteudo {
@@ -318,6 +335,31 @@ select:focus-visible {
 .status-aprovado {
     color: var(--cor-sucesso);
     font-weight: 500;
+}
+
+.link-voltar {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+    text-decoration: none;
+}
+
+.link-voltar:hover {
+    color: var(--cor-primaria);
+}
+
+.btn-group {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 0.75rem;
+}
+
+h3 {
+    font-family: var(--fonte-titulo);
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
 }
 
 /* -- Responsivo -- */

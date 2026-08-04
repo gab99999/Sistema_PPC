@@ -1,0 +1,10 @@
+{% extends "ppc_base.html" %}
+{% block title %}Requisitos Legais e Normativos — {{ ppc.curso.nome }}{% endblock %}
+{% block ppc_content %}
+    <h2>Requisitos Legais e Normativos Obrigatórios</h2>
+    <form method="post" class="form-secao">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primario">Salvar</button>
+    </form>
+{% endblock %}

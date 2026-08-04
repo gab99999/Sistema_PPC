@@ -1,0 +1,32 @@
+{% extends "ppc_base.html" %}
+{% block title %}Estrutura Curricular — {{ ppc.curso.nome }}{% endblock %}
+{% block ppc_content %}
+    <h2>Estrutura Curricular</h2>
+
+    <h3>Descrição Geral e Informações Complementares</h3>
+    <form method="post" class="form-secao">
+        {% csrf_token %}
+        {{ estrutura_form.as_p }}
+        <button type="submit" name="salvar_descricao" class="btn btn-primario">Salvar</button>
+    </form>
+    <br><br>
+
+    <h3>Componentes Curriculares</h3>
+    <a href="{% url 'criar_componente' ppc.id %}" class="btn btn-primario">+ Novo Componente</a>
+
+    <table class="tabela-dados">
+        <tr><th>Período</th><th>Nome</th><th>Núcleo</th><th>Natureza</th><th>CH Total</th><th>Ação</th></tr>
+        {% for componente in componentes %}
+        <tr>
+            <td>{{ componente.periodo }}</td>
+            <td>{{ componente.nome }}</td>
+            <td>{{ componente.get_nucleo_display }}</td>
+            <td>{{ componente.get_natureza_display }}</td>
+            <td>{{ componente.carga_horaria_teorica|add:componente.carga_horaria_pratica }}h</td>
+            <td><a href="{% url 'detalhe_componente' componente.id %}" class="btn btn-secundario">Abrir</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">Nenhum componente curricular cadastrado ainda.</td></tr>
+        {% endfor %}
+    </table>
+{% endblock %}

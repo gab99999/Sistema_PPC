@@ -1,0 +1,10 @@
+{% extends "ppc_base.html" %}
+{% block title %}Expectativas da Formação — {{ ppc.curso.nome }}{% endblock %}
+{% block ppc_content %}
+    <h2>Expectativas da Formação Profissional</h2>
+    <form method="post" class="form-secao">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primario">Salvar</button>
+    </form>
+{% endblock %}

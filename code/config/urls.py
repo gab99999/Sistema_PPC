@@ -23,9 +23,10 @@ from django.conf.urls.static import static
 
 from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario, alternar_acesso_usuario, detalhe_curso, criar_ppc, editar_objetivos,
                         editar_permissoes, criar_curso, editar_exposicao_motivos, editar_apresentacao, editar_informacoes_gerais, 
-                        editar_principios, editar_expectativas, editar_apendice, editar_atividades_complementares, editar_avaliacao_ensino,
+                        editar_principios, editar_expectativas, editar_apendices, editar_atividades_complementares, editar_avaliacao_ensino,
                         editar_avaliacao_projeto_curso, editar_dinamicas_ead, editar_estagio, editar_politicas_integrada, editar_qualificacao, editar_requisitos_legais,
-                        editar_tcc, )
+                        editar_tcc, lista_componentes, criar_componente, editar_componente, detalhe_componente, excluir_componente, 
+                        excluir_bibliografia, editar_bibliografia, editar_relacao, excluir_relacao, )
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -55,9 +56,18 @@ urlpatterns = [
     path('ppc/<int:ppc_id>/qualificacao/', editar_qualificacao, name='editar_qualificacao'),
     path('ppc/<int:ppc_id>/requisitos-legais/', editar_requisitos_legais, name='editar_requisitos_legais'),
     #path('ppc/<int:ppc_id>/bibliografias/', editar_bibliografias, name='editar_bibliografias'),
-    path('ppc/<int:ppc_id>/dinamica-ead/', editar_dinamicas_ead, name='editar_dinamica_ead'),
+    path('ppc/<int:ppc_id>/dinamicas-ead/', editar_dinamicas_ead, name='editar_dinamicas_ead'),
     #path('ppc/<int:ppc_id>/estrutura-curricular/', editar_estrutura_curricular, name='editar_estrutura_curricular'),
-    path('ppc/<int:ppc_id>/apendices/', editar_apendice, name='editar_apendices'),
+    path('ppc/<int:ppc_id>/apendices/', editar_apendices, name='editar_apendices'),
+    path('ppc/<int:ppc_id>/componentes/', lista_componentes, name='lista_componentes'),
+    path('ppc/<int:ppc_id>/componentes/novo/', criar_componente, name='criar_componente'),
+    path('componentes/<int:componente_id>/', detalhe_componente, name='detalhe_componente'),
+    path('componentes/<int:componente_id>/editar/', editar_componente, name='editar_componente'),
+    path('componentes/<int:componente_id>/excluir/', excluir_componente, name='excluir_componente'),
+    path('bibliografia/<int:bibliografia_id>/editar/', editar_bibliografia, name='editar_bibliografia'),
+    path('bibliografia/<int:bibliografia_id>/excluir/', excluir_bibliografia, name='excluir_bibliografia'),
+    path('relacao/<int:relacao_id>/editar/', editar_relacao, name='editar_relacao'),
+    path('relacao/<int:relacao_id>/excluir/', excluir_relacao, name='excluir_relacao'),
 ]
 
 if settings.DEBUG:

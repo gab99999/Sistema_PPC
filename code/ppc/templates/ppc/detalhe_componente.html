@@ -1,0 +1,91 @@
+{% extends "ppc_base.html" %}
+{% block title %}{{ componente.nome }}{% endblock %}
+{% block ppc_content %}
+    <a href="{% url 'lista_componentes' ppc.id %}" class="link-voltar">← Voltar para Estrutura Curricular</a>
+
+    <div class="card cabecalho-curso">
+        <h2>{{ componente.nome }}</h2>
+        <p class="card-corpo">
+            {{ componente.get_tipo_display }} · {{ componente.get_natureza_display }} · {{ componente.get_nucleo_display }} · Período {{ componente.periodo }}
+        </p>
+        <div class="btn-group">
+            <a href="{% url 'editar_componente' componente.id %}" class="btn btn-secundario">Editar</a>
+            <a href="{% url 'excluir_componente' componente.id %}" class="btn btn-perigo">Excluir</a>
+        </div>
+    </div>
+
+    <h3>Ementa</h3>
+    <p>{{ componente.ementa }}</p>
+
+    <br>
+    <h3>Bibliografia Básica ({{ bibliografias_basicas.count }} — mínimo 3 exigido)</h3>
+        <ul class="lista-cursos">
+            {% for bib in bibliografias_basicas %}
+                <li class="card">
+                    <p class="card-corpo">{{ bib.titulo }} — {{ bib.autores }} ({{ bib.ano }})</p>
+                    <div class="btn-group">
+                        <a href="{% url 'editar_bibliografia' bib.id %}" class="btn btn-secundario">Editar</a>
+                        <form method="post" action="{% url 'excluir_bibliografia' bib.id %}"
+                              onsubmit="return confirm('Excluir esta referência?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-perigo">Excluir</button>
+                        </form>
+                    </div>
+                </li>
+            {% empty %}
+                <li>Nenhum título cadastrado ainda.</li>
+            {% endfor %}
+        </ul>
+    <br>
+    <h3>Bibliografia Complementar ({{ bibliografias_complementares.count }} — mínimo 5 exigido)</h3>
+        <ul class="lista-cursos">
+            {% for bib in bibliografias_complementares %}
+                <li class="card">
+                    <p class="card-corpo">{{ bib.titulo }} — {{ bib.autores }} ({{ bib.ano }})</p>
+                    <div class="btn-group">
+                        <a href="{% url 'editar_bibliografia' bib.id %}" class="btn btn-secundario">Editar</a>
+                        <form method="post" action="{% url 'excluir_bibliografia' bib.id %}"
+                              onsubmit="return confirm('Excluir esta referência?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-perigo">Excluir</button>
+                        </form>
+                    </div>
+                </li>
+            {% empty %}
+                <li>Nenhum título cadastrado ainda.</li>
+            {% endfor %}
+        </ul>
+    <br>
+    <h3>Adicionar Bibliografia</h3>
+    <form method="post" class="form-secao">
+        {% csrf_token %}
+        {{ bibliografia_form.as_p }}
+        <button type="submit" name="adicionar_bibliografia" class="btn btn-primario">Adicionar</button>
+    </form>
+    <br>
+    <h3>Relações (Pré-requisito / Co-requisito / Equivalente)</h3>
+    <ul class="lista-cursos">
+        {% for relacao in componente.relacoes.all %}
+            <li class="card">
+                <p class="card-corpo">{{ relacao.get_tipo_display }}: {{ relacao.componente_relacionado.nome }}</p>
+                <div class="btn-group">
+                    <a href="{% url 'editar_relacao' relacao.id %}" class="btn btn-secundario">Editar</a>
+                    <form method="post" action="{% url 'excluir_relacao' relacao.id %}"
+                          onsubmit="return confirm('Excluir esta relação?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-perigo">Excluir</button>
+                    </form>
+                </div>
+            </li>
+        {% empty %}
+            <li>Nenhuma relação cadastrada ainda.</li>
+        {% endfor %}
+    </ul>
+    <br>
+    <h3>Adicionar Relação</h3>
+    <form method="post" class="form-secao">
+        {% csrf_token %}
+        {{ relacao_form.as_p }}
+        <button type="submit" name="adicionar_relacao" class="btn btn-primario">Adicionar</button>
+    </form>
+{% endblock %}

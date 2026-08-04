@@ -1,11 +1,49 @@
 from django import forms
-from ppc.models import PPC, Curso, DinamicaEAD, Apendice
+from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoComponente, ComponenteCurricular
 from django.contrib.auth.models import User, Group
+
+class ComponenteCurricularForm(forms.ModelForm):
+    class Meta:
+        model = ComponenteCurricular
+        fields = [
+            'nome', 'tipo', 'natureza', 'nucleo', 'periodo',
+            'carga_horaria_teorica', 'carga_horaria_pratica', 'carga_horaria_pcc',
+            'unidade_academica_componente', 'ementa',
+        ]
+
+
+class BibliografiaForm(forms.ModelForm):
+    class Meta:
+        model = Bibliografia
+        fields = ['tipo', 'titulo', 'autores', 'editora', 'cidade', 'ano']
+
+
+class RelacaoComponenteForm(forms.ModelForm):
+    class Meta:
+        model = RelacaoComponente
+        fields = ['componente_relacionado', 'tipo']
+
+    def __init__(self, *args, ppc=None, componente_atual=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if ppc:
+            qs = ComponenteCurricular.objects.filter(ppc=ppc)
+            if componente_atual:
+                qs = qs.exclude(id=componente_atual.id)
+            self.fields['componente_relacionado'].queryset = qs
+
+
+class EstruturaCurricularForm(forms.ModelForm):
+    class Meta:
+        model = PPC
+        fields = ['estrutura_curricular_descricao', 'estrutura_curricular_informacoes_complementares']
+
+
+
 
 class ApendiceForm(forms.ModelForm):
     class Meta:
         model = Apendice
-        fields = ['ppc', 'tipo', 'titulo', 'descricao', 'arquivo']
+        fields = ['tipo', 'titulo', 'descricao', 'arquivo']
 class DinamicaEADForm(forms.ModelForm):
     class Meta:
         model = DinamicaEAD

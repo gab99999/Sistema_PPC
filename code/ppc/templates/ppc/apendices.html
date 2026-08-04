@@ -1,0 +1,26 @@
+{% extends "ppc_base.html" %}
+{% block title %}Apêndices — {{ ppc.curso.nome }}{% endblock %}
+{% block ppc_content %}
+    <h2>Apêndices</h2>
+
+    <ul class="lista-cursos">
+        {% for apendice in ppc.apendices.all %}
+            <li class="card">
+                <h3 class="card-titulo">{{ apendice.titulo }}</h3>
+                <p class="card-corpo">{{ apendice.get_tipo_display }}</p>
+                {% if apendice.arquivo %}
+                    <a href="{{ apendice.arquivo.url }}" class="btn btn-secundario">Baixar arquivo</a>
+                {% endif %}
+            </li>
+        {% empty %}
+            <li>Nenhum apêndice cadastrado ainda.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Adicionar Apêndice</h2>
+    <form method="post" enctype="multipart/form-data" class="form-secao">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primario">Adicionar</button>
+    </form>
+{% endblock %}

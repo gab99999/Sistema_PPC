@@ -1,0 +1,11 @@
+{% extends "ppc_base.html" %}
+{% block title %}Excluir {{ componente.nome }}{% endblock %}
+{% block ppc_content %}
+    <h2>Excluir Componente</h2>
+    <p>Tem certeza que deseja excluir <strong>{{ componente.nome }}</strong>? Essa ação também apaga suas bibliografias e relações cadastradas.</p>
+    <form method="post" class="form-secao">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-perigo">Confirmar exclusão</button>
+        <a href="{% url 'detalhe_componente' componente.id %}" class="btn btn-secundario">Cancelar</a>
+    </form>
+{% endblock %}
