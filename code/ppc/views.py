@@ -5,7 +5,142 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Curso, PPC
 from .forms import (PPCInformacoesGeraisForm, ObjetivosForm, EditarPermissoesForm, CursoForm,
-                    InformacoesGeraisForm, ApresentacaoForm, ExposicaoMotivosForm, PrincipiosForm, )
+                    InformacoesGeraisForm, ApresentacaoForm, ExposicaoMotivosForm, PrincipiosForm,
+                    ExpectativasForm, TccForm, EstagioForm, AtividadesComplementaresForm,
+                     PoliticasIntegradaForm, AvaliacaoEnsinoForm, AvalicaoProjetoCursoForm,
+                    QualificacaoForm, RequisitosLegaisForm, ApendiceForm, DinamicaEADForm)
+
+@login_required
+def editar_apendice(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    if request.method == 'POST':
+        form = ApendiceForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_apendice', ppc_id=ppc.id)
+    else:
+        form = ApendiceForm(instance=ppc)
+    return render(request, 'ppc/editar_apendice.html', {'form': form, 'apendice': ppc})
+
+@login_required
+def editar_dinamicas_ead(request, dinamicasead_id):
+    dinamicasead = get_object_or_404(PPC, id=dinamicasead_id)
+    if request.method == 'POST':
+        form = DinamicaEADForm(request.POST, instance=dinamicasead)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_dinamicas_ead', ppc_id=dinamicasead.id)
+    else:
+        form = DinamicaEADForm(instance=dinamicasead)
+    return render(request, 'ppc/editar_dinamicas_ead.html', {'form': form, 'dinamicasead': dinamicasead})
+
+@login_required
+def editar_requisitos_legais(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    if request.method == 'POST':
+        form = RequisitosLegaisForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_requisitos_legais', ppc_id=ppc.id)
+    else:
+        form = RequisitosLegaisForm(instance=ppc)
+    return render(request, 'ppc/editar_requisitos_legais.html', {'form': form, 'ppc': ppc})
+
+@login_required
+def editar_qualificacao(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    if request.method == 'POST':
+        form = QualificacaoForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_qualificacao', ppc_id=ppc.id)
+    else:
+        form = PrincipiosForm(instance=ppc)
+    return render(request, 'ppc/editar_qualificacao.html', {'form': form, 'ppc': ppc})
+
+@login_required
+def editar_avaliacao_projeto_curso(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    if request.method == 'POST':
+        form = AvalicaoProjetoCursoForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_avaliacao_projeto_curso', ppc_id=ppc.id)
+    else:
+        form = AvalicaoProjetoCursoForm(instance=ppc)
+    return render(request, 'ppc/editar_avaliacao_projeto_curso.html', {'form': form, 'ppc': ppc})
+
+@login_required
+def editar_avaliacao_ensino(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    if request.method == 'POST':
+        form = AvaliacaoEnsinoForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_avaliacao_ensino', ppc_id=ppc.id)
+    else:
+        form = AvaliacaoEnsinoForm(instance=ppc)
+    return render(request, 'ppc/editar_avaliacao_ensino.html', {'form': form, 'ppc': ppc})
+
+@login_required
+def editar_politicas_integrada(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    if request.method == 'POST':
+        form = PoliticasIntegradaForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_politicas_integrada', ppc_id=ppc.id)
+    else:
+        form = PoliticasIntegradaForm(instance=ppc)
+    return render(request, 'ppc/editar_politicas_integrada.html', {'form': form, 'ppc': ppc})
+
+@login_required
+def editar_atividades_complementares(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    if request.method == 'POST':
+        form = AtividadesComplementaresForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_atividades_complementares', ppc_id=ppc.id)
+    else:
+        form = AtividadesComplementaresForm(instance=ppc)
+    return render(request, 'ppc/editar_atividades_complementares.html', {'form': form, 'ppc': ppc})
+
+@login_required
+def editar_estagio(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    if request.method == 'POST':
+        form = EstagioForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_estagio', ppc_id=ppc.id)
+    else:
+        form = EstagioForm(instance=ppc)
+    return render(request, 'ppc/editar_estagio.html', {'form': form, 'ppc': ppc})
+
+@login_required
+def editar_tcc(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    if request.method == 'POST':
+        form = TccForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_tcc', ppc_id=ppc.id)
+    else:
+        form = TccForm(instance=ppc)
+    return render(request, 'ppc/editar_tcc.html', {'form': form, 'ppc': ppc})
+
+@login_required
+def editar_expectativas(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    if request.method == 'POST':
+        form = ExpectativasForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_expectativas', ppc_id=ppc.id)
+    else:
+        form = ExpectativasForm(instance=ppc)
+    return render(request, 'ppc/editar_expectativas.html', {'form': form, 'ppc': ppc})
 
 @login_required
 def editar_principios(request, ppc_id):

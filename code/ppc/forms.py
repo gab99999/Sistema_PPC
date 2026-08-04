@@ -1,7 +1,68 @@
 from django import forms
-from ppc.models import PPC, Curso
+from ppc.models import PPC, Curso, DinamicaEAD, Apendice
 from django.contrib.auth.models import User, Group
 
+class ApendiceForm(forms.ModelForm):
+    class Meta:
+        model = Apendice
+        fields = ['ppc', 'tipo', 'titulo', 'descricao', 'arquivo']
+class DinamicaEADForm(forms.ModelForm):
+    class Meta:
+        model = DinamicaEAD
+        fields = ['dinamica_atividades_presenciais_distancia',
+                  'recuperacao_estudos_permanencia',
+                  'componente_informatica_basica',
+                  'atuacao_tutoria',
+                  'atribuicoes_profissionais',
+                  'material_didatico',
+                  'ferramentas_comunicacao',
+                  'carga_horaria_presencial_acompanhamento',
+                  'armazenamento_gerenciamento_dados']
+
+class RequisitosLegaisForm(forms.ModelForm):
+    class Meta:
+        model = PPC
+        fields = ['diretrizes_curriculares_nacionais_curso',
+                  'diretrizes_curriculares_nacionais_educacao_basica',
+                  'diretrizes_etnico_raciais_historia_cultura_afro_indigena',
+                  'diretrizes_educacao_direitos_humanos',
+                  'protecao_direitos_pessoa_transtorno_espectro_autista',
+                  'componente_curricular_libras',
+                  'politicas_educacao_ambiental',
+                  'diretrizes_formacao_professores_educacao_basica',
+                  'condicoes_acesso_pessoas_deficiencia_mobilidade_reduzida']
+class QualificacaoForm(forms.ModelForm):
+    class Meta:
+        model = PPC
+        fields = ['qualificacao']
+class AvalicaoProjetoCursoForm(forms.ModelForm):
+    class Meta:
+        model = PPC
+        fields = ['avaliacao_projeto_curso']
+class AvaliacaoEnsinoForm(forms.ModelForm):
+    class Meta:
+        model = PPC
+        fields = ['avaliacao_ensino_aprendizagem']
+class PoliticasIntegradaForm(forms.ModelForm):
+    class Meta:
+        model = PPC
+        fields = ['politicas_integrada']
+class AtividadesComplementaresForm(forms.ModelForm):
+    class Meta:
+        model = PPC
+        fields = ['atividades_complementares']
+class EstagioForm(forms.ModelForm):
+    class Meta:
+        model = PPC
+        fields = ['estagio']
+class TccForm(forms.ModelForm):
+    class Meta:
+        model = PPC
+        fields = ['tcc']
+class ExpectativasForm(forms.ModelForm):
+    class Meta:
+        model = PPC
+        fields = ['perfil_curso', 'perfil_habilidades']
 class PrincipiosForm(forms.ModelForm):
     class Meta:
         model = PPC

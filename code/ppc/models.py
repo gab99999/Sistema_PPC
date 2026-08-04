@@ -96,7 +96,7 @@ class PPC(models.Model):
     politicas_integrada = CKEditor5Field(blank=True, config_name='default')
 
     # -- Avaliação de Processo de Ensino e Aprendizagem --
-    avaliacao_ensino_aprendigem = CKEditor5Field(blank=True, config_name='default')
+    avaliacao_ensino_aprendizagem = CKEditor5Field(blank=True, config_name='default')
 
     # -- Avaliação do Projeto de Curso -- 
     avaliacao_projeto_curso = CKEditor5Field(blank=True, config_name='default')

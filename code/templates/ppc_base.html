@@ -13,6 +13,30 @@
        class="{% if request.resolver_match.url_name == 'editar_objetivos' %}ativo{% endif %}">Objetivos</a>
     <a href="{% url 'editar_principios' ppc.id %}"
        class="{% if request.resolver_match.url_name == 'editar_principios' %}ativo{% endif %}">Princípios Norteadores</a>
+   <a href="{% url 'editar_expectativas' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_expectativas' %}ativo{% endif %}">Expectativas da Formação Profissional</a>
+   <a href="{% url 'editar_tcc' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_tcc' %}ativo{% endif %}">Trabalho de Conclusão de Curso</a>
+   <a href="{% url 'editar_estagio' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_estagio' %}ativo{% endif %}">Política e Gestão do Estágio Obrigátorio e Não Obrigátorio</a>
+   <a href="{% url 'editar_atividades_complementares' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_atividades_complementares' %}ativo{% endif %}">Atividades Complementares do Curso</a>
+   <a href="{% url 'editar_politicas_integrada' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_politicas_integrada' %}ativo{% endif %}">Integração de Ensino, Pesquisa e Extensão</a>
+   <a href="{% url 'editar_avaliacao_ensino' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_avaliacao_ensino' %}ativo{% endif %}">Avaliação de Processo de Ensino e Aprendizagem</a>
+   <a href="{% url 'editar_avaliacao_projeto_curso' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_avaliacao_projeto_curso' %}ativo{% endif %}">Avaliação do Projeto de Curso</a>
+   <a href="{% url 'editar_qualificacao' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_qualificacao' %}ativo{% endif %}">Qualificação de docentes e técnico-administrativos</a>
+   <a href="{% url 'editar_dinamica_ead' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_dinamica_ead' %}ativo{% endif %}">Dinâmicas de Cursos EAD</a>
+   <a href="{% url 'editar_requisitos_legais' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_requisitos_legais' %}ativo{% endif %}">Requisitos legais e Normativos Obrigátorios</a>
+   
+   
+   <a href="{% url 'editar_apendices' ppc.id %}"
+       class="{% if request.resolver_match.url_name == 'editar_apendice' %}ativo{% endif %}">Apêndices</a>
 </nav>
     <div id="ppc-conteudo">
         {% block ppc_content %}{% endblock %}

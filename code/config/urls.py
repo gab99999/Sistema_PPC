@@ -23,7 +23,9 @@ from django.conf.urls.static import static
 
 from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario, alternar_acesso_usuario, detalhe_curso, criar_ppc, editar_objetivos,
                         editar_permissoes, criar_curso, editar_exposicao_motivos, editar_apresentacao, editar_informacoes_gerais, 
-                        editar_principios, )
+                        editar_principios, editar_expectativas, editar_apendice, editar_atividades_complementares, editar_avaliacao_ensino,
+                        editar_avaliacao_projeto_curso, editar_dinamicas_ead, editar_estagio, editar_politicas_integrada, editar_qualificacao, editar_requisitos_legais,
+                        editar_tcc, )
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -43,6 +45,19 @@ urlpatterns = [
     path('ppc/<int:ppc_id>/apresentacao/', editar_apresentacao, name='editar_apresentacao'),
     path('ppc/<int:ppc_id>/exposicao-motivos/', editar_exposicao_motivos, name='editar_exposicao_motivos'),
     path('ppc/<int:ppc_id>/principios/', editar_principios, name='editar_principios'),
+    path('ppc/<int:ppc_id>/expectativas/', editar_expectativas, name='editar_expectativas'),
+    path('ppc/<int:ppc_id>/tcc/', editar_tcc, name='editar_tcc'),
+    path('ppc/<int:ppc_id>/estagio/', editar_estagio, name='editar_estagio'),
+    path('ppc/<int:ppc_id>/atividades-complementares/', editar_atividades_complementares, name='editar_atividades_complementares'),
+    path('ppc/<int:ppc_id>/politicas-integrada/', editar_politicas_integrada, name='editar_politicas_integrada'),
+    path('ppc/<int:ppc_id>/avaliacao-ensino/', editar_avaliacao_ensino, name='editar_avaliacao_ensino'),
+    path('ppc/<int:ppc_id>/avaliacao-projeto-curso/', editar_avaliacao_projeto_curso, name='editar_avaliacao_projeto_curso'),
+    path('ppc/<int:ppc_id>/qualificacao/', editar_qualificacao, name='editar_qualificacao'),
+    path('ppc/<int:ppc_id>/requisitos-legais/', editar_requisitos_legais, name='editar_requisitos_legais'),
+    #path('ppc/<int:ppc_id>/bibliografias/', editar_bibliografias, name='editar_bibliografias'),
+    path('ppc/<int:ppc_id>/dinamica-ead/', editar_dinamicas_ead, name='editar_dinamica_ead'),
+    #path('ppc/<int:ppc_id>/estrutura-curricular/', editar_estrutura_curricular, name='editar_estrutura_curricular'),
+    path('ppc/<int:ppc_id>/apendices/', editar_apendice, name='editar_apendices'),
 ]
 
 if settings.DEBUG:
