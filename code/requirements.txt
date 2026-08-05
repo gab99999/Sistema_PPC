@@ -1,0 +1,6 @@
+Django==6.0.7
+mysqlclient>=2.2
+django-ckeditor-5
+django-simple-history
+django-environ
+weasyprint>=66,<67

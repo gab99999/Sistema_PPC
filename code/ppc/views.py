@@ -3,16 +3,64 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Curso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from django.db.models import Prefetch
+from django.utils.text import slugify
+from weasyprint import HTML
+from .models import Curso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE
 from .forms import (PPCInformacoesGeraisForm, ObjetivosForm, EditarPermissoesForm, CursoForm,
                     InformacoesGeraisForm, ApresentacaoForm, ExposicaoMotivosForm, PrincipiosForm,
                     ExpectativasForm, TccForm, EstagioForm, AtividadesComplementaresForm,
                      PoliticasIntegradaForm, AvaliacaoEnsinoForm, AvalicaoProjetoCursoForm,
                     QualificacaoForm, RequisitosLegaisForm, ApendiceForm, DinamicaEADForm, 
                     EstruturaCurricularForm, ComponenteCurricularForm, BibliografiaForm, RelacaoComponenteForm,
-                    ReferenciasForm, )
+                    ReferenciasForm, MembroNDEForm)
 from django.db.models import Q
 
+
+@login_required
+def lista_nde(request, curso_id):
+    curso = get_object_or_404(Curso, id=curso_id)
+    membros = curso.membros_nde.filter(ativo=True).order_by('-funcao', 'nome')
+    return render(request, 'ppc/lista_nde.html', {'curso': curso, 'membros': membros})
+
+
+@login_required
+def criar_membro_nde(request, curso_id):
+    curso = get_object_or_404(Curso, id=curso_id)
+    if request.method == 'POST':
+        form = MembroNDEForm(request.POST)
+        if form.is_valid():
+            membro = form.save(commit=False)
+            membro.curso = curso
+            membro.save()
+            return redirect('lista_nde', curso_id=curso.id)
+    else:
+        form = MembroNDEForm()
+    return render(request, 'ppc/criar_membro_nde.html', {'form': form, 'curso': curso})
+
+
+@login_required
+def editar_membro_nde(request, membro_id):
+    membro = get_object_or_404(MembroNDE, id=membro_id)
+    if request.method == 'POST':
+        form = MembroNDEForm(request.POST, instance=membro)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_nde', curso_id=membro.curso.id)
+    else:
+        form = MembroNDEForm(instance=membro)
+    return render(request, 'ppc/editar_membro_nde.html', {'form': form, 'curso': membro.curso})
+
+
+@login_required
+def excluir_membro_nde(request, membro_id):
+    membro = get_object_or_404(MembroNDE, id=membro_id)
+    curso_id = membro.curso.id
+    if request.method == 'POST':
+        membro.delete()
+    return redirect('lista_nde', curso_id=curso_id)
 
 
 def lista_cursos(request):
@@ -480,3 +528,37 @@ def editar_objetivos(request, ppc_id):
     else:
         form = ObjetivosForm(instance=ppc)
     return render(request, 'ppc/editar_objetivos.html', {'form': form, 'ppc': ppc})
+
+
+@login_required
+def gerar_pdf_ppc(request, ppc_id):
+    """Gera uma representação de impressão independente das telas de edição."""
+    bibliografias = Bibliografia.objects.order_by('tipo', 'autores', 'titulo')
+    relacoes = RelacaoComponente.objects.select_related('componente_relacionado').order_by(
+        'tipo', 'componente_relacionado__nome'
+    )
+    componentes = ComponenteCurricular.objects.order_by('periodo', 'nome').prefetch_related(
+        Prefetch('bibliografias', queryset=bibliografias),
+        Prefetch('relacoes', queryset=relacoes),
+    )
+    ppc = get_object_or_404(
+        PPC.objects.select_related('curso').prefetch_related(
+            Prefetch('componentes_curriculares', queryset=componentes),
+            Prefetch('apendices', queryset=Apendice.objects.order_by('tipo', 'titulo')),
+        ),
+        id=ppc_id,
+    )
+
+    # A relação é opcional: PPCs presenciais não precisam ter DinamicaEAD.
+    dinamica_ead = DinamicaEAD.objects.filter(ppc=ppc).first()
+    html = render_to_string('ppc/pdf/ppc_documento.html', {
+        'ppc': ppc,
+        'componentes': ppc.componentes_curriculares.all(),
+        'dinamica_ead': dinamica_ead,
+    }, request=request)
+
+    pdf = HTML(string=html, base_url=request.build_absolute_uri('/')).write_pdf()
+    nome = slugify(ppc.curso.nome) or f'ppc-{ppc.pk}'
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="ppc-{nome}.pdf"'
+    return response

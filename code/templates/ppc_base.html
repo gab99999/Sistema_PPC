@@ -2,7 +2,7 @@
 {% block content %}
 <div class="ppc-layout">
     <nav class="menu-lateral-ppc">
-    <p><strong>{{ ppc.curso.nome }}</strong></p>
+    <p><strong>{{ ppc.curso.nome }}</strong></p> <a href="{% url 'gerar_pdf_ppc' ppc.id %}" class="btn btn-primario">Baixar PDF</a>
     <a href="{% url 'editar_informacoes_gerais' ppc.id %}"
        class="{% if request.resolver_match.url_name == 'editar_informacoes_gerais' %}ativo{% endif %}">Informações Gerais</a>
     <a href="{% url 'editar_apresentacao' ppc.id %}"

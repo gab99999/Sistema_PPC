@@ -1,0 +1,131 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>PPC - {{ ppc.curso.nome }}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2.5cm 2.3cm 2.2cm;
+      @bottom-center { content: counter(page); font: 9pt "Times New Roman", serif; }
+    }
+    @page cover { margin: 2.2cm 2.3cm; @top-center { content: none; } @bottom-center { content: none; } }
+    @page curriculum { size: A4 landscape; margin: 1.5cm; }
+    * { box-sizing: border-box; }
+    body { color: #000; font-family: "Times New Roman", Times, serif; font-size: 11pt; line-height: 1.35; }
+    p { margin: 0 0 .55em; text-align: justify; }
+    h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
+    h1 { margin: 0 0 1em; font-size: 13pt; font-weight: 700; text-transform: uppercase; }
+    h2 { margin: 1.1em 0 .55em; font-size: 11.5pt; font-weight: 700; }
+    h3 { margin: .9em 0 .45em; font-size: 11pt; font-weight: 700; }
+    ul, ol { margin: 0 0 .65em 1.2em; padding: 0; }
+    li { margin-bottom: .25em; text-align: justify; }
+    table { width: 100%; border-collapse: collapse; margin: .7em 0 1em; font-size: 9pt; }
+    th, td { border: .5pt solid #000; padding: 4pt; vertical-align: top; }
+    th { text-align: center; font-weight: 700; }
+    tr { break-inside: avoid; page-break-inside: avoid; }
+    .cover { page: cover; height: 25.3cm; text-align: center; display: flex; flex-direction: column; }
+    .cover .resolution { margin-top: .3cm; font-size: 12pt; }
+    .cover .title { margin-top: .75cm; font-weight: 700; font-size: 14pt; line-height: 1.3; text-transform: uppercase; }
+    .cover .institution { margin-top: 1.65cm; font-size: 13pt; font-weight: 700; text-transform: uppercase; }
+    .cover .authority { margin-top: .55cm; }
+    .cover .unit { margin-top: 1.4cm; font-size: 13pt; font-weight: 700; text-transform: uppercase; }
+    .cover .commission { margin-top: 1.1cm; }
+    .cover .people { margin: .65cm auto 0; width: 78%; text-align: left; }
+    .cover .place { margin-top: auto; font-size: 12pt; }
+    .toc { page: cover; break-before: page; page-break-before: always; }
+    .toc h1 { text-align: center; }
+    .toc a { color: inherit; text-decoration: none; }
+    .toc-row { display: flex; gap: .2em; margin: .26em 0; font-weight: 700; text-transform: uppercase; }
+    .toc-row .leader { flex: 1; border-bottom: 1pt dotted #000; transform: translateY(-.35em); }
+    .toc-row .page::after { content: target-counter(attr(href), page); }
+    .chapter { break-before: page; page-break-before: always; }
+    .rich-text img { max-width: 100%; height: auto; }
+    .rich-text table { font-size: 9pt; }
+    .curriculum { page: curriculum; break-before: page; page-break-before: always; }
+    .matrix { font-size: 7.7pt; }
+    .matrix th { vertical-align: middle; }
+    .component { break-before: page; page-break-before: always; }
+    .component h2 { text-transform: uppercase; }
+    .bibliography p { margin: 0 0 .25em; }
+    .appendix { break-before: page; page-break-before: always; }
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <div class="resolution">ANEXO DA RESOLUÇÃO CONSEPEC/UFCAT Nº [A DEFINIR]</div>
+    <div class="title">Projeto Pedagógico do Curso de Graduação em {{ ppc.curso.nome }}<br>
+      Grau Acadêmico: {{ ppc.get_grau_academico_display }} - Modalidade: {{ ppc.get_modalidade_display }}</div>
+    <div class="institution">Universidade Federal de Catalão</div>
+    <div class="authority"><strong>Diretor(a):</strong> {{ ppc.diretor }}<br><strong>Vice-Diretor(a):</strong> {{ ppc.vice_diretor }}</div>
+    <div class="unit">{{ ppc.curso.unidade_academica }}</div>
+    <div class="authority"><strong>Coordenador(a) do Curso:</strong> {{ ppc.coordenador_curso }}</div>
+    <div class="commission"><strong>Núcleo Docente Estruturante</strong><br><strong>Comissão de Elaboração/Atualização do PPC</strong></div>
+    <div class="people">
+        {% for membro in ppc.curso.membros_nde.all %}
+            {% if membro.ativo %}{{ membro.nome }} — {{ membro.get_titulacao_display }}{% if not forloop.last %}<br>{% endif %}{% endif %}
+        {% empty %}
+            <em>Núcleo Docente Estruturante a ser cadastrado.</em>
+        {% endfor %}
+    </div>
+    <div class="place">CATALÃO<br>{{ ppc.atualizado_em|date:"Y" }}</div>
+  </section>
+
+  <nav class="toc">
+    <h1>Sumário</h1>
+    <div class="toc-row"><a href="#cap-1">1 Informações Gerais</a><span class="leader"></span><a class="page" href="#cap-1"></a></div>
+    <div class="toc-row"><a href="#cap-2">2 Apresentação</a><span class="leader"></span><a class="page" href="#cap-2"></a></div>
+    <div class="toc-row"><a href="#cap-3">3 Exposição de Motivos</a><span class="leader"></span><a class="page" href="#cap-3"></a></div>
+    <div class="toc-row"><a href="#cap-4">4 Objetivos</a><span class="leader"></span><a class="page" href="#cap-4"></a></div>
+    <div class="toc-row"><a href="#cap-5">5 Princípios Norteadores para a Formação Profissional</a><span class="leader"></span><a class="page" href="#cap-5"></a></div>
+    <div class="toc-row"><a href="#cap-6">6 Expectativas da Formação Profissional</a><span class="leader"></span><a class="page" href="#cap-6"></a></div>
+    <div class="toc-row"><a href="#cap-7">7 Estrutura Curricular</a><span class="leader"></span><a class="page" href="#cap-7"></a></div>
+    <div class="toc-row"><a href="#cap-8">8 Estágio Curricular</a><span class="leader"></span><a class="page" href="#cap-8"></a></div>
+    <div class="toc-row"><a href="#cap-9">9 Trabalho de Conclusão de Curso</a><span class="leader"></span><a class="page" href="#cap-9"></a></div>
+    <div class="toc-row"><a href="#cap-10">10 Atividades Complementares</a><span class="leader"></span><a class="page" href="#cap-10"></a></div>
+    <div class="toc-row"><a href="#cap-11">11 Integração Ensino, Pesquisa e Extensão</a><span class="leader"></span><a class="page" href="#cap-11"></a></div>
+    <div class="toc-row"><a href="#cap-12">12 Avaliação do Processo de Ensino-Aprendizagem</a><span class="leader"></span><a class="page" href="#cap-12"></a></div>
+    <div class="toc-row"><a href="#cap-13">13 Avaliação do Projeto de Curso</a><span class="leader"></span><a class="page" href="#cap-13"></a></div>
+    <div class="toc-row"><a href="#cap-14">14 Qualificação de Docentes e Técnico-Administrativos</a><span class="leader"></span><a class="page" href="#cap-14"></a></div>
+    <div class="toc-row"><a href="#cap-15">15 Requisitos Legais e Normativos</a><span class="leader"></span><a class="page" href="#cap-15"></a></div>
+    {% if ppc.modalidade == 'ead' and dinamica_ead %}<div class="toc-row"><a href="#cap-16">16 Dinâmica das Atividades (EAD)</a><span class="leader"></span><a class="page" href="#cap-16"></a></div>{% endif %}
+    <div class="toc-row"><a href="#cap-17">17 Referências</a><span class="leader"></span><a class="page" href="#cap-17"></a></div>
+    <div class="toc-row"><a href="#cap-18">18 Apêndices</a><span class="leader"></span><a class="page" href="#cap-18"></a></div>
+  </nav>
+
+  <section class="chapter" id="cap-1"><h1>1 Informações Gerais</h1>
+    <table><tbody>
+      <tr><th>Curso</th><td>{{ ppc.curso.nome }}</td></tr><tr><th>Unidade acadêmica responsável</th><td>{{ ppc.curso.unidade_academica }}</td></tr>
+      <tr><th>Área de conhecimento</th><td>{{ ppc.curso.area_conhecimento }}</td></tr><tr><th>Modalidade / grau</th><td>{{ ppc.get_modalidade_display }} / {{ ppc.get_grau_academico_display }}</td></tr>
+      <tr><th>Turno / vagas anuais</th><td>{{ ppc.turno_funcionamento }} / {{ ppc.numero_vagas_anuais }}</td></tr><tr><th>Carga horária total</th><td>{{ ppc.carga_horaria_total }} horas</td></tr>
+      <tr><th>Duração (mínima, média e máxima)</th><td>{{ ppc.duracao_minima_semestres }}, {{ ppc.duracao_media_semestres }} e {{ ppc.duracao_maxima_semestres }} semestres</td></tr>
+    </tbody></table>
+  </section>
+
+  <section class="chapter" id="cap-2"><h1>2 Apresentação</h1><div class="rich-text">{{ ppc.apresentacao_texto|safe }}</div></section>
+  <section class="chapter" id="cap-3"><h1>3 Exposição de Motivos</h1><p><strong>Tipo de PPC:</strong> {{ ppc.get_tipo_ppc_display }}</p><div class="rich-text">{{ ppc.exposicao_motivos|safe }}</div></section>
+  <section class="chapter" id="cap-4"><h1>4 Objetivos</h1><h2>4.1 Objetivo Geral</h2><div class="rich-text">{{ ppc.objetivo_geral|safe }}</div><h2>4.2 Objetivos Específicos</h2><div class="rich-text">{{ ppc.objetivo_especifico|safe }}</div></section>
+  <section class="chapter" id="cap-5"><h1>5 Princípios Norteadores para a Formação Profissional</h1><h2>Princípios gerais</h2><div class="rich-text">{{ ppc.principios_geral|safe }}</div><h2>Prática profissional</h2><div class="rich-text">{{ ppc.principios_pratica_profissional|safe }}</div><h2>Formação técnica</h2><div class="rich-text">{{ ppc.principios_formacao_tecnica|safe }}</div><h2>Formação ética e função social</h2><div class="rich-text">{{ ppc.principios_formacao_etica_social|safe }}</div><h2>Interdisciplinaridade</h2><div class="rich-text">{{ ppc.principios_interdisciplinaridade|safe }}</div><h2>Articulação entre teoria e prática</h2><div class="rich-text">{{ ppc.principios_articulacao_teoria_pratica|safe }}</div></section>
+  <section class="chapter" id="cap-6"><h1>6 Expectativas da Formação Profissional</h1><h2>Perfil do curso</h2><div class="rich-text">{{ ppc.perfil_curso|safe }}</div><h2>Perfil e habilidades do egresso</h2><div class="rich-text">{{ ppc.perfil_habilidades|safe }}</div></section>
+
+  <section class="curriculum" id="cap-7"><h1>7 Estrutura Curricular</h1><div class="rich-text">{{ ppc.estrutura_curricular_descricao|safe }}</div>
+    <h2>7.1 Matriz Curricular</h2><table class="matrix"><thead><tr><th>Per.</th><th>Componente curricular</th><th>Tipo</th><th>Unidade</th><th>Teórica</th><th>Prática</th><th>PCC</th><th>Total</th><th>Pré / co-requisitos</th><th>Núcleo</th><th>Natureza</th></tr></thead><tbody>
+      {% for componente in componentes %}<tr><td>{{ componente.periodo }}º</td><td>{{ componente.nome }}</td><td>{{ componente.get_tipo_display }}</td><td>{{ componente.unidade_academica_componente }}</td><td>{{ componente.carga_horaria_teorica|default:"-" }}</td><td>{{ componente.carga_horaria_pratica|default:"-" }}</td><td>{{ componente.carga_horaria_pcc|default:"-" }}</td><td>{{ componente.carga_horaria_teorica|add:componente.carga_horaria_pratica|add:componente.carga_horaria_pcc }}</td><td>{% for relacao in componente.relacoes.all %}{{ relacao.get_tipo_display }}: {{ relacao.componente_relacionado.nome }}{% if not forloop.last %}<br>{% endif %}{% empty %}-{% endfor %}</td><td>{{ componente.get_nucleo_display }}</td><td>{{ componente.get_natureza_display }}</td></tr>{% empty %}<tr><td colspan="11">Nenhum componente curricular cadastrado.</td></tr>{% endfor %}
+    </tbody></table><div class="rich-text">{{ ppc.estrutura_curricular_informacoes_complementares|safe }}</div>
+  </section>
+  {% for componente in componentes %}<section class="component"><h2>{{ componente.nome }}</h2><p><strong>Ementa:</strong> {{ componente.ementa }}</p><div class="bibliography"><h3>Bibliografia Básica</h3>{% for bib in componente.bibliografias.all %}{% if bib.tipo == 'basica' %}<p>{{ bib.autores }}. <em>{{ bib.titulo }}</em>. {{ bib.cidade }}{% if bib.cidade and bib.editora %}: {% endif %}{{ bib.editora }}{% if bib.ano %}, {{ bib.ano }}{% endif %}.</p>{% endif %}{% empty %}<p>Não cadastrada.</p>{% endfor %}<h3>Bibliografia Complementar</h3>{% for bib in componente.bibliografias.all %}{% if bib.tipo == 'complementar' %}<p>{{ bib.autores }}. <em>{{ bib.titulo }}</em>. {{ bib.cidade }}{% if bib.cidade and bib.editora %}: {% endif %}{{ bib.editora }}{% if bib.ano %}, {{ bib.ano }}{% endif %}.</p>{% endif %}{% endfor %}</div></section>{% endfor %}
+
+  <section class="chapter" id="cap-8"><h1>8 Estágio Curricular</h1><div class="rich-text">{{ ppc.estagio|safe }}</div></section>
+  <section class="chapter" id="cap-9"><h1>9 Trabalho de Conclusão de Curso</h1><div class="rich-text">{{ ppc.tcc|safe }}</div></section>
+  <section class="chapter" id="cap-10"><h1>10 Atividades Complementares</h1><div class="rich-text">{{ ppc.atividades_complementares|safe }}</div></section>
+  <section class="chapter" id="cap-11"><h1>11 Integração Ensino, Pesquisa e Extensão</h1><div class="rich-text">{{ ppc.politicas_integrada|safe }}</div></section>
+  <section class="chapter" id="cap-12"><h1>12 Avaliação do Processo de Ensino-Aprendizagem</h1><div class="rich-text">{{ ppc.avaliacao_ensino_aprendizagem|safe }}</div></section>
+  <section class="chapter" id="cap-13"><h1>13 Avaliação do Projeto de Curso</h1><div class="rich-text">{{ ppc.avaliacao_projeto_curso|safe }}</div></section>
+  <section class="chapter" id="cap-14"><h1>14 Qualificação de Docentes e Técnico-Administrativos</h1><div class="rich-text">{{ ppc.qualificacao|safe }}</div></section>
+  <section class="chapter" id="cap-15"><h1>15 Requisitos Legais e Normativos</h1><h2>Diretrizes Curriculares Nacionais do Curso</h2><div class="rich-text">{{ ppc.diretrizes_curriculares_nacionais_curso|safe }}</div><h2>Diretrizes Curriculares Nacionais da Educação Básica</h2><div class="rich-text">{{ ppc.diretrizes_curriculares_nacionais_educacao_basica|safe }}</div><h2>Relações étnico-raciais, história e cultura afro-brasileira e indígena</h2><div class="rich-text">{{ ppc.diretrizes_etnico_raciais_historia_cultura_afro_indigena|safe }}</div><h2>Educação em direitos humanos</h2><div class="rich-text">{{ ppc.diretrizes_educacao_direitos_humanos|safe }}</div><h2>Proteção dos direitos da pessoa com TEA</h2><div class="rich-text">{{ ppc.protecao_direitos_pessoa_transtorno_espectro_autista|safe }}</div><h2>Componente curricular de Libras</h2><div class="rich-text">{{ ppc.componente_curricular_libras|safe }}</div><h2>Políticas de educação ambiental</h2><div class="rich-text">{{ ppc.politicas_educacao_ambiental|safe }}</div><h2>Formação de professores da educação básica</h2><div class="rich-text">{{ ppc.diretrizes_formacao_professores_educacao_basica|safe }}</div><h2>Acessibilidade</h2><div class="rich-text">{{ ppc.condicoes_acesso_pessoas_deficiencia_mobilidade_reduzida|safe }}</div></section>
+  {% if ppc.modalidade == 'ead' and dinamica_ead %}<section class="chapter" id="cap-16"><h1>16 Dinâmica das Atividades (EAD)</h1><h2>Atividades presenciais e a distância</h2><div class="rich-text">{{ dinamica_ead.dinamica_atividades_presenciais_distancia|safe }}</div><h2>Recuperação de estudos e permanência</h2><div class="rich-text">{{ dinamica_ead.recuperacao_estudos_permanencia|safe }}</div><h2>Tutoria</h2><div class="rich-text">{{ dinamica_ead.atuacao_tutoria|safe }}</div><h2>Material didático e comunicação</h2><div class="rich-text">{{ dinamica_ead.material_didatico|safe }}{{ dinamica_ead.ferramentas_comunicacao|safe }}</div></section>{% endif %}
+  <section class="chapter" id="cap-17"><h1>17 Referências</h1><div class="rich-text">{{ ppc.bibliografias_ppc|safe }}</div></section>
+  <section class="appendix" id="cap-18"><h1>18 Apêndices</h1>{% for apendice in ppc.apendices.all %}<h2>{{ apendice.titulo }}</h2><div class="rich-text">{{ apendice.descricao|safe }}</div>{% if apendice.arquivo %}<p><strong>Arquivo anexo:</strong> {{ apendice.arquivo.name }}</p>{% endif %}{% empty %}<p>Nenhum apêndice cadastrado.</p>{% endfor %}</section>
+</body>
+</html>

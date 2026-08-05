@@ -1,7 +1,16 @@
 from django import forms
-from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoComponente, ComponenteCurricular
+from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoComponente, ComponenteCurricular, MembroNDE
 from django.contrib.auth.models import User, Group
 
+
+class MembroNDEForm(forms.ModelForm):
+    class Meta:
+        model = MembroNDE
+        fields = ['nome', 'titulacao', 'regime_trabalho', 'funcao', 'portaria_designacao', 'data_inicio', 'data_fim', 'ativo']
+        widgets = {
+            'data_inicio': forms.DateInput(attrs={'type': 'date'}),
+            'data_fim': forms.DateInput(attrs={'type': 'date'}),
+        }
 class ReferenciasForm(forms.ModelForm):
     class Meta:
         model = PPC

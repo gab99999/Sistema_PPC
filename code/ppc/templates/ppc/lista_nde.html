@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}NDE — {{ curso.nome }}{% endblock %}
+{% block content %}
+    <a href="{% url 'detalhe_curso' curso.id %}" class="link-voltar">← Voltar para {{ curso.nome }}</a>
+    <h1>Núcleo Docente Estruturante</h1>
+    <a href="{% url 'criar_membro_nde' curso.id %}" class="btn btn-primario">+ Novo Membro</a>
+
+    <table class="tabela-dados">
+        <tr><th>Nome</th><th>Titulação</th><th>Regime</th><th>Função</th><th>Desde</th><th>Ação</th></tr>
+        {% for membro in membros %}
+        <tr>
+            <td>{{ membro.nome }}</td>
+            <td>{{ membro.get_titulacao_display }}</td>
+            <td>{{ membro.get_regime_trabalho_display }}</td>
+            <td>{{ membro.get_funcao_display }}</td>
+            <td>{{ membro.data_inicio|date:"d/m/Y" }}</td>
+            <td>
+                <div class="btn-group">
+                    <a href="{% url 'editar_membro_nde' membro.id %}" class="btn btn-secundario">Editar</a>
+                    <form method="post" action="{% url 'excluir_membro_nde' membro.id %}"
+                          onsubmit="return confirm('Remover este membro do NDE?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-perigo">Remover</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">Nenhum membro cadastrado ainda.</td></tr>
+        {% endfor %}
+    </table>
+{% endblock %}

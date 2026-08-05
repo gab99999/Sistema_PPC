@@ -241,3 +241,38 @@ class RelacaoComponente(models.Model):
     def __str__(self):
         return f"{self.componente.nome} → {self.get_tipo_display()} → {self.componente_relacionado.nome}"
 
+
+class MembroNDE(models.Model):
+    TITULACAO_CHOICES = [
+        ('doutor', 'Doutor(a)'),
+        ('mestre', 'Mestre'),
+        ('especialista', 'Especialista'),
+        ('graduado', 'Graduado(a)'),
+    ]
+    REGIME_CHOICES = [
+        ('de', 'Dedicação Exclusiva'),
+        ('40h', '40 horas'),
+        ('20h', '20 horas'),
+    ]
+    FUNCAO_CHOICES = [
+        ('presidente', 'Presidente/Coordenador(a) do NDE'),
+        ('membro', 'Membro'),
+    ]
+
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='membros_nde', verbose_name="Curso")
+    nome = models.CharField(max_length=200, verbose_name="Nome Completo")
+    titulacao = models.CharField(max_length=20, choices=TITULACAO_CHOICES, verbose_name="Titulação")
+    regime_trabalho = models.CharField(max_length=10, choices=REGIME_CHOICES, verbose_name="Regime de Trabalho")
+    funcao = models.CharField(max_length=20, choices=FUNCAO_CHOICES, default='membro', verbose_name="Função no Núcleo")
+    portaria_designacao = models.CharField(max_length=200, blank=True, verbose_name="Portaria/Ato de Designação")
+    data_inicio = models.DateField(verbose_name="Data de Início no Núcleo")
+    data_fim = models.DateField(blank=True, null=True, verbose_name="Data de Saída (se aplicável)")
+    ativo = models.BooleanField(default=True, verbose_name="Ativo no Núcleo")
+
+    class Meta:
+        verbose_name = "Membro do NDE"
+        verbose_name_plural = "Membros do NDE"
+
+    def __str__(self):
+        return f"{self.nome} ({self.curso.nome})"
+
