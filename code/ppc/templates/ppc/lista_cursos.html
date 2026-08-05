@@ -3,15 +3,22 @@
 {% block content %}
     <h1>Cursos</h1>
     <a href="{% url 'criar_curso' %}" class="btn btn-primario">+ Novo Curso</a>
+
+    <form method="get" class="form-busca">
+        <input type="text" name="q" value="{{ query }}" placeholder="Buscar por nome, unidade ou área...">
+        <button type="submit" class="btn btn-secundario">Buscar</button>
+        {% if query %}<a href="{% url 'lista_cursos' %}" class="btn btn-secundario">Limpar</a>{% endif %}
+    </form>
+
     <ul class="lista-cursos">
-    {% for curso in cursos %}
-        <li class="card">
-            <h2 class="card-titulo">{{ curso.nome }}</h2>
-            <p class="card-corpo">{{ curso.unidade_academica }}</p>
-            <a href="{% url 'detalhe_curso' curso.id %}" class="btn btn-primario">Ver PPCs</a>
-        </li>
-    {% empty %}
-        <li>Nenhum curso cadastrado ainda.</li>
-    {% endfor %}
-</ul>
+        {% for curso in cursos %}
+            <li class="card">
+                <h2 class="card-titulo">{{ curso.nome }}</h2>
+                <p class="card-corpo">{{ curso.unidade_academica }}</p>
+                <a href="{% url 'detalhe_curso' curso.id %}" class="btn btn-secundario">Ver PPCs</a>
+            </li>
+        {% empty %}
+            <li>Nenhum curso encontrado.</li>
+        {% endfor %}
+    </ul>
 {% endblock %}

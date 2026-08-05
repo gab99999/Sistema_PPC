@@ -362,6 +362,21 @@ h3 {
     margin-bottom: 0.5rem;
 }
 
+.form-busca {
+    display: flex;
+    gap: 0.6rem;
+    margin: 1rem 0;
+}
+
+.form-busca input[type="text"] {
+    flex: 1;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    font-family: var(--fonte-corpo);
+    font-size: 0.9rem;
+}
+
 /* -- Responsivo -- */
 @media (max-width: 720px) {
     .ppc-layout {

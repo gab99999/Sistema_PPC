@@ -11,7 +11,20 @@ from .forms import (PPCInformacoesGeraisForm, ObjetivosForm, EditarPermissoesFor
                     QualificacaoForm, RequisitosLegaisForm, ApendiceForm, DinamicaEADForm, 
                     EstruturaCurricularForm, ComponenteCurricularForm, BibliografiaForm, RelacaoComponenteForm,
                     ReferenciasForm, )
+from django.db.models import Q
 
+
+
+def lista_cursos(request):
+    query = request.GET.get('q', '')
+    cursos = Curso.objects.all()
+    if query:
+        cursos = cursos.filter(
+            Q(nome__icontains=query) |
+            Q(unidade_academica__icontains=query) |
+            Q(area_conhecimento__icontains=query)
+        )
+    return render(request, 'ppc/lista_cursos.html', {'cursos': cursos, 'query': query})
 
 @login_required
 def excluir_apendice(request, apendice_id):
@@ -398,14 +411,15 @@ def home(request):
 def ajuda(request):
     return render(request, 'ppc/ajuda.html')
 
-def lista_cursos(request):
-    cursos = Curso.objects.all()
-    return render(request, 'ppc/lista_cursos.html', {'cursos': cursos})
-
 @staff_member_required
 def gestao_usuarios(request):
+    query = request.GET.get('q', '')
     usuarios = User.objects.all().order_by('username')
-    return render(request, 'ppc/gestao_usuarios.html', {'usuarios': usuarios})
+    if query:
+        usuarios = usuarios.filter(
+            Q(username__icontains=query) | Q(email__icontains=query)
+        )
+    return render(request, 'ppc/gestao_usuarios.html', {'usuarios': usuarios, 'query': query})
 
 @staff_member_required
 def criar_usuario(request):

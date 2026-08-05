@@ -3,6 +3,15 @@
 {% block content %}
     <h1>Gerenciar Usuários</h1>
     <a href="{% url 'criar_usuario' %}">+ Novo usuário</a>
+    <br>
+
+    <form method="get" class="form-busca">
+        <input type="text" name="q" value="{{ query }}" placeholder="Buscar por usuário ou email...">
+        <button type="submit" class="btn btn-secundario">Buscar</button>
+        {% if query %}<a href="{% url 'gestao_usuarios' %}" class="btn btn-secundario">Limpar</a>{% endif %}
+    </form>
+    <br><br>
+
     <table class="tabela-dados">
     <tr><th>Usuário</th><th>Email</th><th>Ativo</th><th>Ação</th></tr>
     {% for usuario in usuarios %}
