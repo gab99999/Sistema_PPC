@@ -15,9 +15,22 @@
             <a href="{% url 'gestao_usuarios' %}">Gerenciar Usuários</a>
         {% endif %}
         <a href="{% url 'ajuda' %}">Ajuda</a>
+    
+        {% if user.is_authenticated %}
+            <span class="usuario-logado">Olá, {{ user.username }}</span>
+            <form method="post" action="{% url 'logout' %}" class="form-logout">
+                {% csrf_token %}
+                <button type="submit" class="link-botao">Sair</button>
+            </form>
+        {% else %}
+            <a href="{% url 'login' %}">Entrar</a>
+        {% endif %}
     </nav>
     <main id="conteudo-principal">
         {% block content %}{% endblock %}
     </main>
+    <footer class="rodape">
+        <p>&copy; {% now "Y" %} Universidade Federal de Catalão (UFCAT) — Todos os direitos reservados.</p>
+    </footer>
 </body>
 </html>

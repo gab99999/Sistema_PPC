@@ -381,7 +381,7 @@ def editar_exposicao_motivos(request, ppc_id):
         form = ExposicaoMotivosForm(instance=ppc)
     return render(request, 'ppc/editar_exposicao_motivos.html', {'form': form, 'ppc': ppc})
 
-@staff_member_required
+@staff_member_required(login_url='login')
 def criar_curso(request):
     if request.method == 'POST':
         form = CursoForm(request.POST)

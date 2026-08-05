@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth.views import LoginView, LogoutView
 
 # importações do views.py
 
@@ -70,6 +71,8 @@ urlpatterns = [
     path('relacao/<int:relacao_id>/excluir/', excluir_relacao, name='excluir_relacao'),
     path('ppc/<int:ppc_id>/referencias/', editar_referencias, name='editar_referencias'),
     path('apendice/<int:apendice_id>/excluir/', excluir_apendice, name='excluir_apendice'),
+    path('login/', LoginView.as_view(template_name='ppc/login.html'), name='login'),
+    path('logout/', LogoutView.as_view(), name='logout'),
 ]
 
 if settings.DEBUG:

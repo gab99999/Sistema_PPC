@@ -377,6 +377,40 @@ h3 {
     font-size: 0.9rem;
 }
 
+.form-logout {
+    display: inline;
+}
+
+.link-botao {
+    background: none;
+    border: none;
+    color: var(--cor-texto);
+    font-family: var(--fonte-corpo);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0;
+}
+
+.link-botao:hover {
+    color: var(--cor-primaria);
+}
+
+.usuario-logado {
+    font-size: 0.9rem;
+    color: var(--cor-texto-suave);
+    margin-left: auto;
+}
+
+.rodape {
+    text-align: center;
+    padding: 1.5rem;
+    margin-top: 3rem;
+    border-top: 1px solid var(--cor-borda);
+    color: var(--cor-texto-suave);
+    font-size: 0.8rem;
+}
+
 /* -- Responsivo -- */
 @media (max-width: 720px) {
     .ppc-layout {
