@@ -406,7 +406,14 @@ def editar_permissoes(request, user_id):
 
 
 def home(request):
-    return render(request, "ppc/home.html")
+    total_cursos = Curso.objects.count()
+    total_ppcs = PPC.objects.count()
+    ppcs_recentes = PPC.objects.select_related('curso').order_by('-atualizado_em')[:5]
+    return render(request, "ppc/home.html", {
+        'total_cursos': total_cursos,
+        'total_ppcs': total_ppcs,
+        'ppcs_recentes': ppcs_recentes,
+    })
 
 def ajuda(request):
     return render(request, 'ppc/ajuda.html')
