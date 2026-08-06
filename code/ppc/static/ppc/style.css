@@ -475,6 +475,33 @@ h3 {
     height: 22px;
 }
 
+.btn-flutuante {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background-color: var(--cor-primaria);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 10px rgba(28, 35, 33, 0.25);
+    transition: background-color 0.15s ease, transform 0.15s ease;
+    z-index: 100;
+}
+
+.btn-flutuante svg {
+    width: 24px;
+    height: 24px;
+}
+
+.btn-flutuante:hover {
+    background-color: var(--cor-primaria-hover);
+    transform: scale(1.06);
+}
+
 /* -- Responsivo -- */
 @media (max-width: 720px) {
     .ppc-layout {
