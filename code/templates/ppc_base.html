@@ -51,4 +51,12 @@
         <path d="M12 10.5v6.5M9 14.5l3 3 3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
 </a>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var linkAtivo = document.querySelector('.menu-lateral-ppc a.ativo');
+    if (linkAtivo) {
+        linkAtivo.scrollIntoView({ block: 'nearest' });
+    }
+});
+</script>
 {% endblock %}
