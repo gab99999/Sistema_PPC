@@ -3,6 +3,8 @@ from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoC
 from django.contrib.auth.models import User, Group
 
 
+
+
 class MembroNDEForm(forms.ModelForm):
     class Meta:
         model = MembroNDE
@@ -142,7 +144,7 @@ class PPCInformacoesGeraisForm(forms.ModelForm):
             'modalidade', 'grau_academico', 'turno_funcionamento',
             'carga_horaria_total', 'numero_vagas_anuais',
             'duracao_minima_semestres', 'duracao_media_semestres', 'duracao_maxima_semestres',
-            'diretor', 'vice_diretor', 'coordenador_curso', 'tipo_ppc',
+            'diretor', 'vice_diretor', 'coordenador_curso', 'tipo_ppc', 'status', 'numero_resolucao',
         ]
 
 class CursoForm(forms.ModelForm):
@@ -162,7 +164,7 @@ class InformacoesGeraisForm(forms.ModelForm):
             'modalidade', 'grau_academico', 'turno_funcionamento',
             'carga_horaria_total', 'numero_vagas_anuais',
             'duracao_minima_semestres', 'duracao_media_semestres', 'duracao_maxima_semestres',
-            'diretor', 'vice_diretor', 'coordenador_curso',
+            'diretor', 'vice_diretor', 'coordenador_curso', 'tipo_ppc', 'status', 'numero_resolucao',
         ]
 
 

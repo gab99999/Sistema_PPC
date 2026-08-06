@@ -53,6 +53,7 @@ class PPC(models.Model):
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='rascunho')
+    numero_resolucao = models.CharField(max_length=100, blank=True, verbose_name="Número da Resolução de Aprovação")
 
     # -- Campos condicionais (só para EAD) --
     publico_alvo_ead = CKEditor5Field(blank=True, config_name='default')
