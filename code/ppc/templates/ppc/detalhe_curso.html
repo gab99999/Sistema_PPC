@@ -6,6 +6,7 @@
         <p class="card-corpo">{{ curso.unidade_academica }}</p>
         <a href="{% url 'criar_ppc' curso.id %}" class="btn btn-primario">+ Novo PPC</a>
         <a href="{% url 'lista_nde' curso.id %}" class="btn btn-secundario">Núcleo Docente Estruturante</a>
+        <a href="{% url 'importar_ppc_pdf' curso.id %}" class="btn btn-secundario">Importar PPC (PDF)</a>
     </div>
 
     <h2>PPCs deste curso</h2>

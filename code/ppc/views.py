@@ -15,9 +15,36 @@ from .forms import (PPCInformacoesGeraisForm, ObjetivosForm, EditarPermissoesFor
                      PoliticasIntegradaForm, AvaliacaoEnsinoForm, AvalicaoProjetoCursoForm,
                     QualificacaoForm, RequisitosLegaisForm, ApendiceForm, DinamicaEADForm, 
                     EstruturaCurricularForm, ComponenteCurricularForm, BibliografiaForm, RelacaoComponenteForm,
-                    ReferenciasForm, MembroNDEForm)
+                    ReferenciasForm, MembroNDEForm, ImportarPDFForm, )
 from django.db.models import Q
+from .importacao import extrair_dados_pdf
 
+CAMPOS_PPC_VALIDOS = {f.name for f in PPC._meta.get_fields()}
+
+@login_required
+def importar_ppc_pdf(request, curso_id):
+    curso = get_object_or_404(Curso, id=curso_id)
+    if request.method == 'POST':
+        form = ImportarPDFForm(request.POST, request.FILES)
+        if form.is_valid():
+            dados = extrair_dados_pdf(request.FILES['arquivo'])
+
+            dados_ppc = {k: v for k, v in dados.items() if k in CAMPOS_PPC_VALIDOS}
+            dados_ppc.setdefault('modalidade', 'presencial')
+            dados_ppc.setdefault('grau_academico', 'bacharelado')
+            dados_ppc.setdefault('tipo_ppc', 'novo')
+            dados_ppc.setdefault('carga_horaria_total', 0)
+            dados_ppc.setdefault('numero_vagas_anuais', 0)
+            dados_ppc.setdefault('duracao_minima_semestres', 0)
+            dados_ppc.setdefault('duracao_media_semestres', 0)
+            dados_ppc.setdefault('duracao_maxima_semestres', 0)
+            dados_ppc['status'] = 'rascunho'
+
+            ppc = PPC.objects.create(curso=curso, **dados_ppc)
+            return redirect('editar_informacoes_gerais', ppc_id=ppc.id)
+    else:
+        form = ImportarPDFForm()
+    return render(request, 'ppc/importar_ppc.html', {'form': form, 'curso': curso})
 
 @login_required
 def lista_nde(request, curso_id):

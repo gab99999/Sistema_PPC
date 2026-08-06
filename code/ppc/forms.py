@@ -2,7 +2,8 @@ from django import forms
 from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoComponente, ComponenteCurricular, MembroNDE
 from django.contrib.auth.models import User, Group
 
-
+class ImportarPDFForm(forms.Form):
+    arquivo = forms.FileField(label="Arquivo PDF do PPC")
 
 
 class MembroNDEForm(forms.ModelForm):

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Importar PPC{% endblock %}
+{% block content %}
+    <h1>Importar PPC (PDF no formato do sistema)</h1>
+    <p class="card-corpo">Funciona para PDFs gerados por este sistema ou que sigam exatamente a mesma estrutura de capítulos. A Estrutura Curricular (componentes) precisa ser cadastrada manualmente depois.</p>
+    <form method="post" enctype="multipart/form-data" class="form-secao">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primario">Importar</button>
+    </form>
+{% endblock %}
