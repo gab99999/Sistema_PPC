@@ -1,0 +1,297 @@
+{
+  "curso": {
+    "nome": "Graduação em Medicina",
+    "unidade_academica": "Unidade Acadêmica de Biotecnologia",
+    "area_conhecimento": "Ciências da Saúde"
+  },
+  "ppc": {
+    "modalidade": "Presencial",
+    "grau_academico": "bacharelado",
+    "turno_funcionamento": "Integral",
+    "carga_horaria_total": 7584,
+    "numero_vagas_anuais": 30,
+    "duracao_minima_semestres": 12,
+    "duracao_media_semestres": null,
+    "duracao_maxima_semestres": 18,
+    "diretor": null,
+    "vice_diretor": null,
+    "coordenador_curso": null,
+    "numero_resolucao": null,
+    "tipo_ppc": null,
+    "publico_alvo_ead": null,
+    "ato_integracao_uab": null,
+    "ato_credenciamento_mec": null,
+    "polos_ead": null,
+    "apresentacao_texto": null,
+    "exposicao_motivos": null,
+    "objetivo_geral": "Formar profissionais médicos generalistas, humanitários, éticos, com capacidade crítica e reflexiva, capazes de atuar nos processos de saúde-adoecimento-cuidado em diferentes níveis de atenção, com ações de promoção, prevenção, recuperação e reabilitação à saúde, na perspectiva da integralidade da assistência, com senso de responsabilidade social e compromisso com a cidadania, promovendo a saúde integral do ser humano e contribuindo de forma efetiva na melhoria das condições sociais da população brasileira a partir do contexto loco-regional.",
+    "objetivo_especifico": null,
+    "principios_geral": "A estrutura curricular do Curso de Medicina da UFCAT encontra-se orientada por competências e pelas necessidades de atenção/cuidado da população, fundamentalmente nos princípios do construtivismo e do humanismo, na utilização de metodologias ativas de ensino-aprendizagem e da avaliação dialógica, na integração teoria e prática, na formação no contexto do SUS, favorecendo a formação generalista, crítico-reflexiva, ética, pautada na responsabilidade social e compromisso com a cidadania, visando a promoção da saúde integral do ser humano.",
+    "principios_pratica_profissional": "A construção de competências para o exercício profissional da medicina pressupõe a inserção dos estudantes nos diversos cenários do sistema de saúde e nos diferentes ambientes de trabalho.",
+    "principios_formacao_tecnica": null,
+    "principios_formacao_etica_social": "Os profissionais de saúde têm um papel crucial como mediadores na aplicação do conhecimento para melhorar a saúde. Eles não apenas fornecem serviços de saúde, mas também atuam como cuidadores, educadores, líderes e formuladores de políticas.",
+    "principios_interdisciplinaridade": "Interdisciplinaridade e integração de saberes entre diferentes áreas de conhecimento, envolvendo as ciências básicas, as áreas clínicas, as ciências sociais e humanas e do comportamento e as da saúde coletiva (com sua interface com as Ciências Exatas), são desejadas.",
+    "principios_articulacao_teoria_pratica": "A articulação teoria-prática se estabelece na integração entre a aprendizagem em ambiente protegido e o cenário do trabalho, deslocando o aprendizado estrito de conceitos abstratos nas disciplinas, para aplicação desses conhecimentos em situações reais de atenção/cuidado.",
+    "perfil_curso": "O Curso de Medicina da UFCAT propõe formar médicos, enfatizando a formação: generalista, humanista, ética, crítica e reflexiva, orientada por competência e segundo uma abordagem construtivista do processo ensino-aprendizagem e com a avaliação referenciada em critérios de excelência.",
+    "perfil_habilidades": null,
+    "estrutura_curricular_descricao": "A estrutura curricular do Curso de Medicina da UFCAT foi projetada de modo a permitir que sejam trabalhados os avanços tecnológicos e as mudanças contemporâneas desejadas no cuidado e na formação profissional em saúde, com a transposição de um modelo estritamente biomédico para uma visão mais abrangente e integrativa dos ser humano, para uma prática mais colaborativa e holística baseada em equipes de saúde e redes de atenção, com evidências científicas e socialmente relevante, visando a promoção da saúde e o tratamento eficaz dos processos de saúde-adoecimento-cuidado e o fortalecimento do SUS.",
+    "estrutura_curricular_informacoes_complementares": null,
+    "estagio": "O Estágio Curricular Obrigatório é um programa obrigatório de ensino-aprendizagem com características especiais, durante o qual o estudante deve receber treinamento intensivo e contínuo, com supervisão docente/preceptor.",
+    "tcc": null,
+    "atividades_complementares": "As Atividades Complementares (AC) constituem-se em atividades que enriquecem e complementam o perfil do(a) formando(a), estimulando a prática de estudos independentes, transversais, opcionais e de interdisciplinaridade, de caráter obrigatório que visam valorizar a formação do estudante em diferentes contextos de aprendizagem.",
+    "politicas_integrada": null,
+    "avaliacao_ensino_aprendizagem": "A avaliação do aproveitamento dos componentes curriculares do curso de Medicina da UFCAT serà feita por instrumentos variados, que serão apresentados e detalhados no plano de ensino, sendo que cada instrumento avaliativo será escolhido de modo coerente com a metodologia de ensino de cada componente curricular prevista neste PPC (Quadro 17).",
+    "avaliacao_projeto_curso": "A respeito da Avaliação interna, o curso mantém reflexão contínua sobre o processo de avaliação dos componentes educacionais, promovendo discussões dos processos e resultados destas avaliações no Núcleo Docente Estruturante (NDE), que faz reuniões periódicas para se discutir o projeto pedagógico de curso e seus resultados na formação do estudante.",
+    "qualificacao": null,
+    "diretrizes_curriculares_nacionais_curso": "O Projeto Pedagógico do Curso de Medicina da Universidade Federal de Catalão (UFCAT) segue os preceitos da Constituição Federal Brasileira no que se refere à reorientação da formação profissional na área da saúde, a Lei de Diretrizes e Bases da Educação Nacional (LDB – Lei nº. 9.394 de 20/12/1996); Diretrizes Curriculares Nacionais para o curso de Graduação em Medicina (Resolução CNE/CES nº 3, de 20 de junho de 2014)",
+    "diretrizes_curriculares_nacionais_educacao_basica": null,
+    "diretrizes_etnico_raciais_historia_cultura_afro_indigena": null,
+    "diretrizes_educacao_direitos_humanos": null,
+    "protecao_direitos_pessoa_transtorno_espectro_autista": null,
+    "componente_curricular_libras": "Com respeito ao ensino de libras, ela está disponível na matriz curricular e é oferecida como núcleo livre a todos os estudantes da UFCAT, inclusive os do curso de Medicina.",
+    "politicas_educacao_ambiental": "A questão da política de educação ambiental será abordada de forma transversal nos módulos NECESSIDADES DE SAÚDE E PLANOS TERAPÊUTICOS APLICADOS, ATENÇÃO À SAÚDE NA PRÁTICA COMUNITÁRIA no caso, como contexto dos determinantes de saúde.",
+    "diretrizes_formacao_professores_educacao_basica": null,
+    "condicoes_acesso_pessoas_deficiencia_mobilidade_reduzida": null,
+    "bibliografias_ppc": null
+  },
+  "dinamica_ead": {
+    "dinamica_atividades_presenciais_distancia": null,
+    "recuperacao_estudos_permanencia": null,
+    "componente_informatica_basica": null,
+    "atuacao_tutoria": null,
+    "atribuicoes_profissionais": null,
+    "material_didatico": null,
+    "ferramentas_comunicacao": null,
+    "carga_horaria_presencial_acompanhamento": null,
+    "armazenamento_gerenciamento_dados": null
+  },
+  "componentes_curriculares": [
+    {
+      "nome": "Necessidades de saúde e planos terapêuticos aplicados 1",
+      "tipo": "modulo",
+      "natureza": "obrigatoria",
+      "nucleo": null,
+      "periodo": 1,
+      "carga_horaria_teorica": 128,
+      "carga_horaria_pratica": 0,
+      "carga_horaria_pcc": null,
+      "unidade_academica_componente": "Unidade Acadêmica de Biotecnologia",
+      "ementa": "Explorar situações-problema prevalentes da prática médica no contexto do SUS em seus aspectos cognitivos, atitudinais e psicomotores das situações prevalentes nos diferentes ciclos de vida e o perfil de competência do estudante, com foco nos conceitos de necessidades de saúde, as dimensões do processo saúde-adoecimento-cuidado e alternativas de cuidado, processos biológicos normais e alterados, processos sociais, culturais, históricos, laborais, ecológicos/ambientais, éticos e legais vinculados ao processo saúde-adoecimento-cuidado, ainda aos processos comportamentais/psicológicos normais e alterados e os processos de cuidado no contexto do SUS; processos educacionais por meio de metodologias ativas, com foco na prevenção e promoção de saúde.",
+      "bibliografias": [
+        {
+          "tipo": "basica",
+          "titulo": "Tratado de fisiologia médica",
+          "autores": "GUYTON, A.C.; HALL, J. E.",
+          "editora": "Elsevier",
+          "cidade": "Rio de Janeiro",
+          "ano": 2017
+        },
+        {
+          "tipo": "basica",
+          "titulo": "Princípios de bioquímica de Lehninger",
+          "autores": "LEHNINGER, Albert L.",
+          "editora": "Artmed",
+          "cidade": "Porto Alegre",
+          "ano": 2019
+        },
+        {
+          "tipo": "basica",
+          "titulo": "Anatomia humana sistêmica e segmentar",
+          "autores": "DANGELO, J.G.; FATTINI, C.A.",
+          "editora": "Atheneu",
+          "cidade": "São Paulo",
+          "ano": 2007
+        },
+        {
+          "tipo": "complementar",
+          "titulo": "Introdução à genética",
+          "autores": "GRIFFITHS, Anthony J. F et al.",
+          "editora": "Guanabara Koogan",
+          "cidade": "Rio de Janeiro",
+          "ano": 2016
+        },
+        {
+          "tipo": "complementar",
+          "titulo": "Histologia Básica – Texto e Atlas",
+          "autores": "JUNQUEIRA, I. C.; CARNEIRO, J.",
+          "editora": "Guanabara Koogan",
+          "cidade": "Guanabara Koogan",
+          "ano": 2018
+        }
+      ],
+      "relacoes": []
+    },
+    {
+      "nome": "Habilidades clínicas 1",
+      "tipo": "modulo",
+      "natureza": "obrigatoria",
+      "nucleo": null,
+      "periodo": 1,
+      "carga_horaria_teorica": 0,
+      "carga_horaria_pratica": 64,
+      "carga_horaria_pcc": null,
+      "unidade_academica_componente": "Unidade Acadêmica de Biotecnologia",
+      "ementa": "Realização de simulações realísticas de procedimentos de saúde e atendimentos médicos em cenários simulados com o uso de atores e/ou outros recursos tecnológicos e pedagógicos para representarem situações de pacientes, explorando o desenvolvimento de conteúdos cognitivos, atitudinais e psicomotores que fundamentam a prática clínica e aplicação de políticas públicas, incluindo o desenvolvimento de capacidades para o uso e análise de Exames Complementares, segundo o perfil de competência do ciclo do estudante no curso. Foco na prevenção em saúde e promoção de saúde.",
+      "bibliografias": [
+        {
+          "tipo": "basica",
+          "titulo": "Semiologia médica",
+          "autores": "PORTO & PORTO",
+          "editora": "Guanabara Koogan",
+          "cidade": "Rio de Janeiro",
+          "ano": 2019
+        }
+      ],
+      "relacoes": []
+    },
+    {
+      "nome": "Atenção à saúde na prática comunitária 1",
+      "tipo": "modulo",
+      "natureza": "obrigatoria",
+      "nucleo": null,
+      "periodo": 1,
+      "carga_horaria_teorica": 0,
+      "carga_horaria_pratica": 64,
+      "carga_horaria_pcc": null,
+      "unidade_academica_componente": "Unidade Acadêmica de Biotecnologia",
+      "ementa": "Experimentação de vivências junto às equipes de saúde do município, da realidade da atenção ao cuidado e políticas públicas de saúde, explorando conhecimentos, atitudes e habilidades da prática médica no contexto do SUS, considerando a integralidade do cuidado, o perfil de competence do estudante e o ciclo educacional, contemplando observação do funcionamento de estabelecimentos e instituições, acompanhamento de agentes comunitários de saúde, ações em equipamentos sociais e de saúde do território e atendimentos clínicos sob supervisão de preceptores e/ou professores, na atenção primária à saúde em nível domiciliar e ambulatorial com foco na prevenção em saúde e promoção de saúde.",
+      "bibliografias": [
+        {
+          "tipo": "basica",
+          "titulo": "Tratado de saúde coletiva",
+          "autores": "CAMPOS, G.W.S et al.",
+          "editora": "Hucitec",
+          "cidade": "São Paulo",
+          "ano": 2012
+        },
+        {
+          "tipo": "basica",
+          "titulo": "Tratado de Medicina de Família e Comunidade",
+          "autores": "GUSSO, G., LOPES, J.M.C.",
+          "editora": "Artmed",
+          "cidade": "São Paulo",
+          "ano": 2018
+        }
+      ],
+      "relacoes": []
+    },
+    {
+      "nome": "Ciência, tecnologias em saúde, adoecimento e cuidado 1",
+      "tipo": "modulo",
+      "natureza": "obrigatoria",
+      "nucleo": null,
+      "periodo": 1,
+      "carga_horaria_teorica": 64,
+      "carga_horaria_pratica": 64,
+      "carga_horaria_pcc": null,
+      "unidade_academica_componente": "Unidade Acadêmica de Biotecnologia",
+      "ementa": "Abordagem das contribuições mais atuais da ciência e tecnologias em saúde, que embasam a compreensão do adoecimento e do cuidado, em suas dimensões biológica, psicológica e social relacionadas às situações de importância epidemiológica e comunitária, nos territórios de saúde, contemplando amplamente aspectos bioéticos, normativos-legais, bioestatística e biossegurança, envolvendo compreensão dos processos, da gestão do trabalho em saúde, as inovações no cuidado, a gestão da clínica através de processos educacionais e da aprendizagem colaborativa e ética por metodologias ativas. Foco na prevenção em saúde e promoção de saúde.",
+      "bibliografias": [
+        {
+          "tipo": "basica",
+          "titulo": "Tratado de Fisiologia Medica",
+          "autores": "GUYTON, A. C; HALL, J. E.",
+          "editora": "Guanabara Koogan",
+          "cidade": "Rio de Janeiro",
+          "ano": 2021
+        }
+      ],
+      "relacoes": []
+    }
+  ],
+  "apendices": [],
+  "membros_nde": [
+    {
+      "nome": "Prof. Me. Augusto César da Fonseca Neto",
+      "titulacao": "mestre",
+      "regime_trabalho": null,
+      "funcao": "membro",
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": true
+    },
+    {
+      "nome": "Profa. Dra. Cristiane de Oliveira Cardoso",
+      "titulacao": "doutor",
+      "regime_trabalho": null,
+      "funcao": "membro",
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": true
+    },
+    {
+      "nome": "Profa. Dra. Fernanda Vieira Rodovalho Callegari",
+      "titulacao": "doutor",
+      "regime_trabalho": null,
+      "funcao": "membro",
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": true
+    },
+    {
+      "nome": "Prof. Me. Jonatha Cajado Menezes e Silva",
+      "titulacao": "mestre",
+      "regime_trabalho": null,
+      "funcao": "membro",
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": true
+    },
+    {
+      "nome": "Profa. Esp.Gizelda Vasconcelos Vieira de Alcântara",
+      "titulacao": "especialista",
+      "regime_trabalho": null,
+      "funcao": "membro",
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": true
+    },
+    {
+      "nome": "Prof. Esp. Leonardo Vieira Fernandes",
+      "titulacao": "especialista",
+      "regime_trabalho": null,
+      "funcao": "membro",
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": true
+    },
+    {
+      "nome": "Prof. Dr. Thiago Montes Fidale",
+      "titulacao": "doutor",
+      "regime_trabalho": null,
+      "funcao": "membro",
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": true
+    },
+    {
+      "nome": "Profa. Dra. Wânia Rezende Lima",
+      "titulacao": "doutor",
+      "regime_trabalho": null,
+      "funcao": "membro",
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": true
+    },
+    {
+      "nome": "Profa. Dra. Rosuita Fratari Bonito",
+      "titulacao": "doutor",
+      "regime_trabalho": null,
+      "funcao": "membro",
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": true
+    }
+  ],
+  "ausencias_no_documento": [],
+  "proveniencia_campos": []
+}
