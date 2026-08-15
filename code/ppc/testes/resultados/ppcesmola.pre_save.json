@@ -1,0 +1,330 @@
+{
+  "pronto_para_revisao": true,
+  "pronto_para_confirmacao": false,
+  "registros_foram_salvos": false,
+  "formularios_ppc_e_curso": {
+    "curso": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "informacoes_gerais": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "apresentacao": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "exposicao_motivos": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "objetivos": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "principios": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "expectativas": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "estrutura_curricular": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "estagio": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "tcc": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "atividades_complementares": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "politicas_integrada": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "avaliacao_ensino": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "avaliacao_projeto": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "qualificacao": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "requisitos_legais": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "referencias": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    }
+  },
+  "componentes_curriculares": [
+    {
+      "indice": 0,
+      "nome": "base de Atividade Orientada",
+      "valido": false,
+      "erros": {
+        "unidade_academica_componente": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "unidade_academica_componente": ""
+      },
+      "bibliografias": []
+    },
+    {
+      "indice": 1,
+      "nome": "Gabriel Rodrigues Alves Módulo asa",
+      "valido": false,
+      "erros": {
+        "unidade_academica_componente": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "unidade_academica_componente": ""
+      },
+      "bibliografias": []
+    }
+  ],
+  "apendices": [],
+  "membros_nde": [
+    {
+      "indice": 0,
+      "nome": "Gabriel Rodrigues Alves",
+      "valido": false,
+      "erros": {
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "regime_trabalho": "",
+        "data_inicio": ""
+      }
+    }
+  ],
+  "dinamica_ead": {
+    "avaliada": false,
+    "valido": true,
+    "erros": {}
+  },
+  "erros_para_confirmacao": {
+    "formularios_ppc_e_curso": {
+      "curso": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "informacoes_gerais": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "apresentacao": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "exposicao_motivos": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "objetivos": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "principios": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "expectativas": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "estrutura_curricular": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "estagio": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "tcc": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "atividades_complementares": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "politicas_integrada": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "avaliacao_ensino": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "avaliacao_projeto": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "qualificacao": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "requisitos_legais": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "referencias": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      }
+    },
+    "componentes_curriculares": [
+      {
+        "indice": 0,
+        "nome": "base de Atividade Orientada",
+        "valido": false,
+        "erros": {
+          "unidade_academica_componente": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ]
+        },
+        "valores_enviados_com_erro": {
+          "unidade_academica_componente": ""
+        },
+        "bibliografias": []
+      },
+      {
+        "indice": 1,
+        "nome": "Gabriel Rodrigues Alves Módulo asa",
+        "valido": false,
+        "erros": {
+          "unidade_academica_componente": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ]
+        },
+        "valores_enviados_com_erro": {
+          "unidade_academica_componente": ""
+        },
+        "bibliografias": []
+      }
+    ],
+    "apendices": [],
+    "membros_nde": [
+      {
+        "indice": 0,
+        "nome": "Gabriel Rodrigues Alves",
+        "valido": false,
+        "erros": {
+          "regime_trabalho": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ],
+          "data_inicio": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ]
+        },
+        "valores_enviados_com_erro": {
+          "regime_trabalho": "",
+          "data_inicio": ""
+        }
+      }
+    ],
+    "dinamica_ead": {
+      "avaliada": false,
+      "valido": true,
+      "erros": {}
+    }
+  },
+  "pendencias_confirmacao": [
+    "O Curso extraído não foi criado nem associado: o fluxo atual exige escolher/criar o Curso antes do PPC.",
+    "As relações entre componentes foram preservadas por nome e só podem ser validadas após a confirmação dos componentes e a criação de seus IDs."
+  ],
+  "relacoes_pendentes": [
+    {
+      "componente": "base de Atividade Orientada",
+      "relacoes": [
+        {
+          "tipo": "pre_requisito",
+          "componente_relacionado_nome": "Gabriel Rodrigues Alves"
+        }
+      ]
+    }
+  ]
+}

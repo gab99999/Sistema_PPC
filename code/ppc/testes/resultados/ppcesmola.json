@@ -1,0 +1,118 @@
+{
+  "curso": {
+    "nome": "esmola",
+    "unidade_academica": "rua",
+    "area_conhecimento": "nenhuma"
+  },
+  "ppc": {
+    "modalidade": "presencial",
+    "grau_academico": "bacharelado",
+    "turno_funcionamento": "sempre",
+    "carga_horaria_total": 1000,
+    "numero_vagas_anuais": 100,
+    "duracao_minima_semestres": 16,
+    "duracao_media_semestres": 16,
+    "duracao_maxima_semestres": 16,
+    "diretor": "jubileu",
+    "vice_diretor": "Jéssica arantes",
+    "coordenador_curso": "kleber",
+    "numero_resolucao": null,
+    "tipo_ppc": "novo",
+    "publico_alvo_ead": "todos",
+    "ato_integracao_uab": null,
+    "ato_credenciamento_mec": null,
+    "polos_ead": null,
+    "apresentacao_texto": "old",
+    "exposicao_motivos": null,
+    "objetivo_geral": null,
+    "objetivo_especifico": null,
+    "principios_geral": "todos",
+    "principios_pratica_profissional": "eu e vc",
+    "principios_formacao_tecnica": "aqueles",
+    "principios_formacao_etica_social": "estes",
+    "principios_interdisciplinaridade": "aquelles",
+    "principios_articulacao_teoria_pratica": "todas",
+    "perfil_curso": "acaba jesus",
+    "perfil_habilidades": "ele",
+    "estrutura_curricular_descricao": null,
+    "estrutura_curricular_informacoes_complementares": null,
+    "estagio": "estou fazendo",
+    "tcc": "n quero",
+    "atividades_complementares": "tenho",
+    "politicas_integrada": null,
+    "avaliacao_ensino_aprendizagem": "cristo",
+    "avaliacao_projeto_curso": "n",
+    "qualificacao": "acaba",
+    "diretrizes_curriculares_nacionais_curso": "sbajasa",
+    "diretrizes_curriculares_nacionais_educacao_basica": "aada",
+    "diretrizes_etnico_raciais_historia_cultura_afro_indigena": "adas",
+    "diretrizes_educacao_direitos_humanos": "adxa",
+    "protecao_direitos_pessoa_transtorno_espectro_autista": "sa",
+    "componente_curricular_libras": "adads",
+    "politicas_educacao_ambiental": "adsa",
+    "diretrizes_formacao_professores_educacao_basica": "sada",
+    "condicoes_acesso_pessoas_deficiencia_mobilidade_reduzida": "adsas",
+    "bibliografias_ppc": null
+  },
+  "dinamica_ead": {
+    "dinamica_atividades_presenciais_distancia": null,
+    "recuperacao_estudos_permanencia": null,
+    "componente_informatica_basica": null,
+    "atuacao_tutoria": null,
+    "atribuicoes_profissionais": null,
+    "material_didatico": null,
+    "ferramentas_comunicacao": null,
+    "carga_horaria_presencial_acompanhamento": null,
+    "armazenamento_gerenciamento_dados": null
+  },
+  "componentes_curriculares": [
+    {
+      "nome": "base de Atividade Orientada",
+      "tipo": "atividade",
+      "natureza": "obrigatoria",
+      "nucleo": "NE",
+      "periodo": 2,
+      "carga_horaria_teorica": 72,
+      "carga_horaria_pratica": 21,
+      "carga_horaria_pcc": 45,
+      "unidade_academica_componente": null,
+      "ementa": "sa nkasnalmdnskas",
+      "bibliografias": [],
+      "relacoes": [
+        {
+          "tipo": "pre_requisito",
+          "componente_relacionado_nome": "Gabriel Rodrigues Alves"
+        }
+      ]
+    },
+    {
+      "nome": "Gabriel Rodrigues Alves Módulo asa",
+      "tipo": "modulo",
+      "natureza": "obrigatoria",
+      "nucleo": "NC",
+      "periodo": 3,
+      "carga_horaria_teorica": 5,
+      "carga_horaria_pratica": 7,
+      "carga_horaria_pcc": 7,
+      "unidade_academica_componente": null,
+      "ementa": "sasads",
+      "bibliografias": [],
+      "relacoes": []
+    }
+  ],
+  "apendices": [],
+  "membros_nde": [
+    {
+      "nome": "Gabriel Rodrigues Alves",
+      "titulacao": "mestre",
+      "regime_trabalho": null,
+      "funcao": "presidente",
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": null
+    }
+  ],
+  "ausencias_no_documento": [],
+  "proveniencia_campos": []
+}

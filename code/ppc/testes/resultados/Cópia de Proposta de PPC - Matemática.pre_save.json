@@ -1,0 +1,1261 @@
+{
+  "pronto_para_revisao": false,
+  "pronto_para_confirmacao": false,
+  "registros_foram_salvos": false,
+  "formularios_ppc_e_curso": {
+    "curso": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "informacoes_gerais": {
+      "valido": false,
+      "erros": {
+        "duracao_media_semestres": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "duracao_media_semestres": ""
+      }
+    },
+    "apresentacao": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "exposicao_motivos": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "objetivos": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "principios": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "expectativas": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "estrutura_curricular": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "estagio": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "tcc": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "atividades_complementares": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "politicas_integrada": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "avaliacao_ensino": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "avaliacao_projeto": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "qualificacao": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "requisitos_legais": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "referencias": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    }
+  },
+  "componentes_curriculares": [
+    {
+      "indice": 0,
+      "nome": "Álgebra Linear",
+      "valido": false,
+      "erros": {
+        "carga_horaria_pratica": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "carga_horaria_pcc": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "carga_horaria_pratica": "",
+        "carga_horaria_pcc": ""
+      },
+      "bibliografias": [
+        {
+          "indice": 0,
+          "valido": true,
+          "erros": {},
+          "valores_enviados_com_erro": {}
+        },
+        {
+          "indice": 1,
+          "valido": true,
+          "erros": {},
+          "valores_enviados_com_erro": {}
+        }
+      ]
+    },
+    {
+      "indice": 1,
+      "nome": "Álgebra para o Ensino Básico",
+      "valido": false,
+      "erros": {
+        "carga_horaria_pratica": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "carga_horaria_pcc": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "carga_horaria_pratica": "",
+        "carga_horaria_pcc": ""
+      },
+      "bibliografias": [
+        {
+          "indice": 0,
+          "valido": true,
+          "erros": {},
+          "valores_enviados_com_erro": {}
+        }
+      ]
+    }
+  ],
+  "apendices": [
+    {
+      "indice": 0,
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    {
+      "indice": 1,
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    {
+      "indice": 2,
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    }
+  ],
+  "membros_nde": [
+    {
+      "indice": 0,
+      "nome": "Profa. Crhistiane da Fonseca Souza",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "funcao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "funcao": "",
+        "data_inicio": ""
+      }
+    },
+    {
+      "indice": 1,
+      "nome": "Prof. Daniel da Silveira Guimarães",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "funcao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "funcao": "",
+        "data_inicio": ""
+      }
+    },
+    {
+      "indice": 2,
+      "nome": "Profa. Élida Alves da Silva",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "funcao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "funcao": "",
+        "data_inicio": ""
+      }
+    },
+    {
+      "indice": 3,
+      "nome": "Prof. Fernando da Costa Barbosa",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "funcao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "funcao": "",
+        "data_inicio": ""
+      }
+    },
+    {
+      "indice": 4,
+      "nome": "Prof. Jardel Vieira",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "funcao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "funcao": "",
+        "data_inicio": ""
+      }
+    },
+    {
+      "indice": 5,
+      "nome": "Profa. Luciana Vale Silva Rabelo",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "funcao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "funcao": "",
+        "data_inicio": ""
+      }
+    },
+    {
+      "indice": 6,
+      "nome": "Prof. Márcio Roberto Rocha Ribeiro",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "funcao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "funcao": "",
+        "data_inicio": ""
+      }
+    },
+    {
+      "indice": 7,
+      "nome": "Profa. Marta Borges",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "funcao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "funcao": "",
+        "data_inicio": ""
+      }
+    },
+    {
+      "indice": 8,
+      "nome": "Prof. Paulo Henrique Barbosa Galdino",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "funcao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "funcao": "",
+        "data_inicio": ""
+      }
+    },
+    {
+      "indice": 9,
+      "nome": "Prof. Paulo Roberto Bergamaschi",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "funcao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "funcao": "",
+        "data_inicio": ""
+      }
+    },
+    {
+      "indice": 10,
+      "nome": "Prof. Porfírio Azevedo dos Santos Júnior",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "funcao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "funcao": "",
+        "data_inicio": ""
+      }
+    },
+    {
+      "indice": 11,
+      "nome": "Profa. Shirley da Silva Macedo",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "funcao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "funcao": "",
+        "data_inicio": ""
+      }
+    },
+    {
+      "indice": 12,
+      "nome": "Prof. Thiago Porto de Almeida Freitas",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "funcao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "funcao": "",
+        "data_inicio": ""
+      }
+    }
+  ],
+  "dinamica_ead": {
+    "avaliada": false,
+    "valido": true,
+    "erros": {}
+  },
+  "pendencias_por_ausencia_no_documento": [
+    {
+      "caminho": "membros_nde[0].titulacao",
+      "campo": "titulacao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ],
+      "motivo": "O documento lista apenas os nomes dos membros do NDE sem apresentar suas titulações"
+    },
+    {
+      "caminho": "membros_nde[0].regime_trabalho",
+      "campo": "regime_trabalho",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ],
+      "motivo": "O documento lista apenas os nomes dos membros do NDE sem apresentar seus regimes de trabalho"
+    },
+    {
+      "caminho": "membros_nde[0].funcao",
+      "campo": "funcao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ],
+      "motivo": "O documento lista apenas os nomes dos membros do NDE sem apresentar suas funções"
+    },
+    {
+      "caminho": "membros_nde[0].data_inicio",
+      "campo": "data_inicio",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ],
+      "motivo": "O documento lista apenas os nomes dos membros do NDE sem apresentar datas de início"
+    }
+  ],
+  "erros_que_bloqueiam_revisao": [
+    {
+      "caminho": "ppc.duracao_media_semestres",
+      "campo": "duracao_media_semestres",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "componentes_curriculares[0].carga_horaria_pratica",
+      "campo": "carga_horaria_pratica",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "componentes_curriculares[0].carga_horaria_pcc",
+      "campo": "carga_horaria_pcc",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "componentes_curriculares[1].carga_horaria_pratica",
+      "campo": "carga_horaria_pratica",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "componentes_curriculares[1].carga_horaria_pcc",
+      "campo": "carga_horaria_pcc",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[1].titulacao",
+      "campo": "titulacao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[1].regime_trabalho",
+      "campo": "regime_trabalho",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[1].funcao",
+      "campo": "funcao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[1].data_inicio",
+      "campo": "data_inicio",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[2].titulacao",
+      "campo": "titulacao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[2].regime_trabalho",
+      "campo": "regime_trabalho",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[2].funcao",
+      "campo": "funcao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[2].data_inicio",
+      "campo": "data_inicio",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[3].titulacao",
+      "campo": "titulacao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[3].regime_trabalho",
+      "campo": "regime_trabalho",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[3].funcao",
+      "campo": "funcao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[3].data_inicio",
+      "campo": "data_inicio",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[4].titulacao",
+      "campo": "titulacao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[4].regime_trabalho",
+      "campo": "regime_trabalho",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[4].funcao",
+      "campo": "funcao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[4].data_inicio",
+      "campo": "data_inicio",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[5].titulacao",
+      "campo": "titulacao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[5].regime_trabalho",
+      "campo": "regime_trabalho",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[5].funcao",
+      "campo": "funcao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[5].data_inicio",
+      "campo": "data_inicio",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[6].titulacao",
+      "campo": "titulacao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[6].regime_trabalho",
+      "campo": "regime_trabalho",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[6].funcao",
+      "campo": "funcao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[6].data_inicio",
+      "campo": "data_inicio",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[7].titulacao",
+      "campo": "titulacao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[7].regime_trabalho",
+      "campo": "regime_trabalho",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[7].funcao",
+      "campo": "funcao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[7].data_inicio",
+      "campo": "data_inicio",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[8].titulacao",
+      "campo": "titulacao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[8].regime_trabalho",
+      "campo": "regime_trabalho",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[8].funcao",
+      "campo": "funcao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[8].data_inicio",
+      "campo": "data_inicio",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[9].titulacao",
+      "campo": "titulacao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[9].regime_trabalho",
+      "campo": "regime_trabalho",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[9].funcao",
+      "campo": "funcao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[9].data_inicio",
+      "campo": "data_inicio",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[10].titulacao",
+      "campo": "titulacao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[10].regime_trabalho",
+      "campo": "regime_trabalho",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[10].funcao",
+      "campo": "funcao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[10].data_inicio",
+      "campo": "data_inicio",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[11].titulacao",
+      "campo": "titulacao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[11].regime_trabalho",
+      "campo": "regime_trabalho",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[11].funcao",
+      "campo": "funcao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[11].data_inicio",
+      "campo": "data_inicio",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[12].titulacao",
+      "campo": "titulacao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[12].regime_trabalho",
+      "campo": "regime_trabalho",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[12].funcao",
+      "campo": "funcao",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    },
+    {
+      "caminho": "membros_nde[12].data_inicio",
+      "campo": "data_inicio",
+      "erros": [
+        {
+          "message": "Este campo é obrigatório.",
+          "code": "required"
+        }
+      ]
+    }
+  ],
+  "pendencias_confirmacao": [
+    "O Curso extraído não foi criado nem associado: o fluxo atual exige escolher/criar o Curso antes do PPC."
+  ],
+  "relacoes_pendentes": []
+}

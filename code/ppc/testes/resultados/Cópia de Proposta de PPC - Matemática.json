@@ -1,0 +1,303 @@
+{
+  "curso": {
+    "nome": "Matemática",
+    "unidade_academica": "Instituto de Matemática e Tecnologia (IMTec)",
+    "area_conhecimento": "Ciências Exatas e da Terra"
+  },
+  "ppc": {
+    "modalidade": "presencial",
+    "grau_academico": "licenciatura",
+    "turno_funcionamento": "noturno",
+    "carga_horaria_total": 3200,
+    "numero_vagas_anuais": 50,
+    "duracao_minima_semestres": 8,
+    "duracao_media_semestres": null,
+    "duracao_maxima_semestres": 12,
+    "diretor": "Prof. Celso Vieira Abud",
+    "vice_diretor": "Profa. Élida Alves da Silva",
+    "coordenador_curso": "Prof. Thiago Porto de Almeida Freitas",
+    "numero_resolucao": null,
+    "tipo_ppc": "reformulacao",
+    "publico_alvo_ead": null,
+    "ato_integracao_uab": null,
+    "ato_credenciamento_mec": null,
+    "polos_ead": null,
+    "apresentacao_texto": "A ciência matemática é um campo fundamental do conhecimento humano que busca compreender o mundo por meio da análise e manipulação de números, formas e estruturas lógicas. Ela não apenas serve como base para muitas outras disciplinas científicas, mas também é uma ferramenta poderosa para resolver problemas práticos e inovar em diversas áreas, desde a indústria até a pesquisa acadêmica. Em um nível mais profundo, a matemática é entendida como uma ciência abstrata, que estuda padrões, estruturas e relações entre números, formas e outros objetos matemáticos. Não é sempre sobre o que vemos no dia a dia, mas sobre entender conceitos como infinito, espaço multidimensional ou a teoria dos números. A matemática tem uma relação direta e fundamental com variadas ciências, em especial aquelas que lidam com fenômenos que podem ser quantificados e descritos numericamente, utilizando métodos e modelos matemáticos para entender, analisar e prever comportamentos. A exemplo da Física, Química, Engenharia, Economia e Finanças, Estatística e Probabilidade, Ciências Computacionais, Astronomia e Astrofísica. Em suma, a matemática é a linguagem e a ferramenta essencial para todas essas ciências quantitativas exatas. Além de fornecer a estrutura necessária para formular leis, modelar fenômenos e realizar previsões, as técnicas matemáticas também permitem que esses campos avancem, trazendo descobertas e inovações. A interação entre a matemática e as ciências exatas é contínua e essencial para o progresso do conhecimento humano, visto que a matemática torna o mundo \"quantificável\" e compreensível. Nesse contexto é necessária a formação de profissionais que colaborem no educar matematicamente o país, isto é, de professores de matemática. Assim, o curso de licenciatura em Matemática da Universidade Federal de Catalão (UFCAT), que se apresenta via o presente projeto pedagógico, tem como objetivo formar profissionais com consciência crítica, capazes de transmitir, construir e utilizar o conhecimento matemático para o bem-estar social a partir do exercício da docência em matemática.",
+    "exposicao_motivos": "A criação da Universidade Federal de Catalão (UFCAT) se deu no ano de 2018, por meio do desmembramento da Universidade Federal de Goiás (UFG), nos termos da Lei nº 13.634, contudo, o curso de Matemática da instituição já existia desde 1988. Por cerca de 20 anos, a estrutura curricular do curso de Matemática esteve vinculada aos parâmetros definidos pelo Instituto de Matemática e Estatística (IME) da UFG. A autonomia institucional necessária para promover alterações curriculares que estivessem alinhadas com a história do curso do Instituto de Matemática e Tecnologia (IMTec), suas concepções pedagógicas e o contexto sociocultural em que atua foi conquistada em 2005. A partir desse momento, iniciaram-se uma série de debates com o objetivo de reformular o currículo. Em 2008, foi apresentado o Projeto Pedagógico de Curso (PPC), que representou o auge dessas discussões, resultando em uma produção coletiva que estabelecia uma relação coerente entre os princípios fundamentais do IMTec – ou seja, sua identidade – e o contexto político-pedagógico que orientava as práticas educacionais adotadas. A primeira turma de alunos regida por este PPC ingressou no curso em 2009. Com a publicação da Resolução CNE/CP nº 2, de 1º de julho de 2015, que definiu, à época, novas Diretrizes Curriculares Nacionais para a formação inicial de professores da educação básica em nível superior, tornou-se necessário adequar os projetos pedagógicos dos cursos de licenciatura a essas novas diretrizes. Em função disso, o PPC do Curso de Matemática do IMTec foi ajustado em 2019, a fim de atender a essa normativa. Agora, acrescido da Resolução CNE/CP nº 04/2024, que estabelece as Diretrizes Curriculares Nacionais para a Formação Inicial em Nível Superior de Profissionais do Magistério da Educação Escolar Básica, a atualização do PPC do Curso de Matemática torna-se novamente necessária. Essa reformulação é motivada não apenas pelo atendimento às novas diretrizes legais, mas também pelas demandas educacionais, sociais, econômicas, culturais, políticas e ambientais que permeiam a sociedade contemporânea.",
+    "objetivo_geral": "Promover a formação inicial de professores de Matemática para a Educação Básica, com conhecimentos, habilidades e comportamentos que condizem com um profissional capacitado para atuar nos Anos Finais do Ensino Fundamental e Ensino Médio.",
+    "objetivo_especifico": "Oportunizar uma formação teórica consistente que permita compreender os problemas a ele apresentados, o uso da linguagem e do pensamento lógico-matemático no desenvolvimento do conteúdo específico de ensino; Possibilitar atitudes de pesquisa, com postura investigativa, integrativa e propositiva, por meio da análise crítica das teorias educacionais vistas na relação da ciência com a sociedade; Possibilizar conhecimentos e habilidades que incentivem o licenciando a observar o problema, identificá-lo, analisá-lo, descrevê-lo ou explicá-lo, por meio de elaboração de hipóteses para a sua possível solução e tomada de decisão; Utilizar tecnologias digitais de informação e comunicação para o desenvolvimento da aprendizagem; Proporcionar, ao licenciando, ambientes de aprendizagem que despertem a intuição, a criatividade, a crítica e o interesse pelo estudo; Desenvolver no licenciando a capacidade de trabalhar individualmente e coletivamente, planejando ações de ensino, estratégias pedagógicas e recursos que sejam adequados à etapa da Educação Básica a qual seus alunos pertencerem; Proporcionar, ao licenciando, conhecimentos relativos ao planejamento didático-pedagógico e gestão escolar, considerando as características dos estudantes e os contextos de atuação; Fomentar espaços para que o licenciando atue como agente transformador do meio social, por meio de seus entendimentos matemáticos enquanto campo histórico, social e culturalmente construído, propiciando crescimento pessoal e aprendizagens efetivas; Possibilitar que os estudantes atuem como multiplicadores de conhecimento científico ou pedagógico, bem como conhecimentos plurais; Formar educadores matemáticos e pesquisadores que façam da sua própria prática docente elemento de reflexão e crítica indispensável ao seu desenvolvimento profissional; Contribuir para a consolidação de um exercício docente significativo, baseado na ética e compromisso voltado para a formação da cidadania.",
+    "principios_geral": null,
+    "principios_pratica_profissional": "O curso de licenciatura em Matemática da UFCAT é estruturado para garantir que o licenciando tenha contato direto com a realidade educacional desde os primeiros períodos. A formação enfatiza a prática profissional de maneira progressiva, proporcionando experiências concretas e diversificadas em ambientes escolares. Esse processo ocorre por meio de Estágios Supervisionados, Atividades Curriculares de Extensão (ACEXs) e disciplinas voltadas ao ensino e à inovação pedagógica.",
+    "principios_formacao_tecnica": "O curso de licenciatura em Matemática da UFCAT proporciona uma formação técnica sólida, combinando fundamentação teórica, prática pedagógica, uso da tecnologia, pesquisa e inovação, preparando o licenciando para atuar com competência e autonomia no ensino da Matemática.",
+    "principios_formacao_etica_social": "A formação do professor de Matemática não se restringe ao domínio dos conteúdos específicos, mas inclui uma sólida preparação ética e um compromisso com a transformação social.",
+    "principios_interdisciplinaridade": "A Matemática está presente em diversas atividades humanas, conectando-se com múltiplas áreas do conhecimento. Para garantir uma formação mais abrangente, o curso enfatiza a integração com diferentes disciplinas.",
+    "principios_articulacao_teoria_pratica": "A formação do professor de Matemática busca integrar teoria e prática, garantindo que o licenciando tenha contato com experiências que aproximam o conhecimento acadêmico da realidade do ensino.",
+    "perfil_curso": "O perfil do curso de licenciatura em Matemática da UFCAT está estruturado a partir de uma base sólida de conhecimentos específicos da área de Matemática e Educação Matemática, associada ao desenvolvimento de habilidades e competências necessárias para a prática docente.",
+    "perfil_habilidades": "O curso visa formar educadores e professores de matemática reflexivos, críticos e criativos, capazes de investigar o contexto sociocultural em que atuam. O egresso será também um pesquisador que faz de sua prática docente um espaço de reflexão e aprimoramento profissional.",
+    "estrutura_curricular_descricao": "A estrutura curricular do curso de Matemática, modalidade presencial, da UFCAT, constante neste projeto pedagógico visa fortalecer a base sólida de conhecimentos específicos da área de Matemática e Educação Matemática, do(a) futuro(a) professor(a) de matemática, associada ao desenvolvimento de habilidades e competências necessárias para a prática docente, por meio de componentes curriculares (distribuídos em núcleos comum, específico e livre), atividades complementares e atividades curriculares de extensão. Todos os componentes curriculares da matriz curricular são de natureza obrigatória.",
+    "estrutura_curricular_informacoes_complementares": null,
+    "estagio": "O estágio curricular obrigatório no curso de Licenciatura em Matemática da UFCAT está estruturado em 5 (cinco) componentes curriculares do núcleo obrigatório, com cargas horárias de 48, 64, 96, 96 e 96 horas respectivamente, totalizando 400 horas, conforme disposto na Resolução CONSEPEC/UFCAT nº 020/2024 e alinhado às Diretrizes Curriculares Nacionais CNE/CP nº 04/2024.",
+    "tcc": "O Trabalho de Conclusão de Curso (TCC) é um produto bibliográfico, de natureza científica, exigido para a obtenção do grau de licenciado(a) em matemática e constitui parte da reflexão que integra a construção teórica com as experiências adquiridas ao longo do curso.",
+    "atividades_complementares": "As atividades complementares do curso de licenciatura em Matemática da UFCAT consistem de atividades acadêmicas, escolhidas e desenvolvidas pelo estudante durante o período que possuir vínculo com o curso.",
+    "politicas_integrada": null,
+    "avaliacao_ensino_aprendizagem": "A avaliação da aprendizagem dos estudantes fará sentido apenas quando considerada em conjunto com todas as demais variáveis que compõem o espaço de formação acadêmica, incorporando uma perspectiva abrangente que considera o desenvolvimento do estudante em suas diversas dimensões.",
+    "avaliacao_projeto_curso": "A avaliação do Projeto Pedagógico do Curso de Licenciatura em Matemática atenderá a determinação da Resolução CONSEPEC UFCAT nº 020, de 07 de agosto de 2024, sendo um processo sistemático, flexível, aberto, de caráter formativo e permanentemente pelo NDE, buscando garantir a qualidade do curso e a formação do discente egresso.",
+    "qualificacao": "O Instituto de Matemática e Tecnologia da UFCAT tem manifestado uma constante preocupação com a qualificação de seus servidores, tendo o quadro docente atual com 30 professores efetivos, dentre eles 16 egressos do curso de Matemática, sendo 27 doutores, 01 doutorando e 02 mestres.",
+    "diretrizes_curriculares_nacionais_curso": "A resolução CNE/CP nº 04, de 29 de maio de 2024 - que dispõe sobre as Diretrizes Curriculares Nacionais para a Formação Inicial em Nível Superior de Profissionais do Magistério da Educação Escolar Básica.",
+    "diretrizes_curriculares_nacionais_educacao_basica": "A resolução CNE/CP n° 1, de 30 de maio de 2012 - que estabelece Diretrizes Nacionais para a Educação em Direitos Humanos, contemplada nos componentes curriculares Matemática e Sociedade, Fundamentos Filosóficos Sócio-Históricos da Educação.",
+    "diretrizes_etnico_raciais_historia_cultura_afro_indigena": "A resolução é contemplada nos componentes curriculares Matemática e Sociedade, Tendências em Educação Matemática.",
+    "diretrizes_educacao_direitos_humanos": "A resolução é contemplada nos componentes curriculares Matemática e Sociedade, Fundamentos Filosóficos Sócio-Históricos da Educação.",
+    "protecao_direitos_pessoa_transtorno_espectro_autista": "A disciplina de Matemática e Práticas de Inclusão com Estudantes Público da Educação Especial menciona o transtorno do espectro autista na bibliografia, e o componente curricular Libras de natureza obrigatória está previsto na matriz curricular.",
+    "componente_curricular_libras": "Libras",
+    "politicas_educacao_ambiental": "A resolução é contemplada nos componentes curriculares Matemática e Sociedade.",
+    "diretrizes_formacao_professores_educacao_basica": null,
+    "condicoes_acesso_pessoas_deficiencia_mobilidade_reduzida": null,
+    "bibliografias_ppc": "BRASIL. Conselho Nacional de Educação. Resolução CNE/CP nº 4, de 29 de maio de 2024. Dispõe sobre as Diretrizes Curriculares Nacionais para a Formação Inicial em Nível Superior de Profissionais do Magistério da Educação Escolar Básica. Diário Oficial da União, Brasília, 3 jun. 2024."
+  },
+  "dinamica_ead": {
+    "dinamica_atividades_presenciais_distancia": null,
+    "recuperacao_estudos_permanencia": null,
+    "componente_informatica_basica": null,
+    "atuacao_tutoria": null,
+    "atribuicoes_profissionais": null,
+    "material_didatico": null,
+    "ferramentas_comunicacao": null,
+    "carga_horaria_presencial_acompanhamento": null,
+    "armazenamento_gerenciamento_dados": null
+  },
+  "componentes_curriculares": [
+    {
+      "nome": "Álgebra Linear",
+      "tipo": "disciplina",
+      "natureza": "obrigatoria",
+      "nucleo": "NC",
+      "periodo": 3,
+      "carga_horaria_teorica": 64,
+      "carga_horaria_pratica": null,
+      "carga_horaria_pcc": null,
+      "unidade_academica_componente": "IMTec",
+      "ementa": "Sistemas de equações lineares e eliminação gaussiana. Matrizes e determinantes. Espaços vetoriais, bases, dimensão. Transformações lineares, núcleo, imagem, projeções e soma direta. Autovalores, autovetores e diagonalização de operadores. Espaço com produto interno, processo de ortogonalização de Gram-Schmidt. Aplicações da Álgebra Linear.",
+      "bibliografias": [
+        {
+          "tipo": "basica",
+          "titulo": "BOLDRINI, José Luiz e outros. Álgebra Linear, 3ª ed., São Paulo: Harbra, 1986.",
+          "autores": "BOLDRINI, José Luiz e outros",
+          "editora": "Harbra",
+          "cidade": "São Paulo",
+          "ano": 1986
+        },
+        {
+          "tipo": "complementar",
+          "titulo": "LIMA, E. L.. Álgebra Linear, CMU, Rio de Janeiro: IMPA, CNPq, 2003.",
+          "autores": "LIMA, E. L.",
+          "editora": "IMPA",
+          "cidade": "Rio de Janeiro",
+          "ano": 2003
+        }
+      ],
+      "relacoes": []
+    },
+    {
+      "nome": "Álgebra para o Ensino Básico",
+      "tipo": "disciplina",
+      "natureza": "obrigatoria",
+      "nucleo": "NC",
+      "periodo": 1,
+      "carga_horaria_teorica": 64,
+      "carga_horaria_pratica": null,
+      "carga_horaria_pcc": null,
+      "unidade_academica_componente": "IMTec",
+      "ementa": "Nesta disciplina serão abordados objetos de conhecimento da unidade temática de Álgebra da Base Nacional Comum Curricular. Cada tópico deve ser abordado a partir de metodologias, práticas de ensino ou didáticas específicas dos conteúdos, de forma a exemplificar como o futuro professor poderá abordar tais temas em suas aulas, usando o erro como recurso metodológico e (re)orientador da prática pedagógica. Os tópicos são: Linguagem algébrica: variável e incógnita. Equivalência de expressões algébricas, fatoração e produtos notáveis. Funções polinomiais de 1º grau: gráfico, raiz, crescimento, decrescimento, taxa de variação da função. Construção e análise de gráficos. Gráficos de funções de 1º grau associado a juros simples. Sistemas de equações lineares. Funções polinomiais do 2º grau: gráfico, raízes, pontos de máximo/mínimo, crescimento/decrescimento, 36 concavidade e variação da função. Funções definidas por uma ou mais sentenças: gráfico, domínio, crescimento e decrescimento. Logaritmo (decimal e natural). Funções logarítmicas. Funções exponenciais. Relação entre variação exponencial e logarítmica. Estudo do crescimento e análise do comportamento das funções exponenciais e logarítmicas em seus respectivos domínios. Construção de gráficos. Gráficos de funções exponenciais associados a juros compostos. Sequências recursivas e não recursivas. Sequências numéricas: progressões aritméticas (P.A.). Sequências numéricas: progressões geométricas (P.G.).",
+      "bibliografias": [
+        {
+          "tipo": "basica",
+          "titulo": "ALMEIDA, Lourdes Werle de et al. Modelagem matemática na educação básica. São Paulo: Contexto, 2019.",
+          "autores": "ALMEIDA, Lourdes Werle de et al.",
+          "editora": "Contexto",
+          "cidade": "São Paulo",
+          "ano": 2019
+        }
+      ],
+      "relacoes": []
+    }
+  ],
+  "apendices": [
+    {
+      "tipo": "corpo_docente",
+      "titulo": "Regulamento de Trabalho de Conclusão de Curso",
+      "descricao": "Regulamento que padroniza os procedimentos referentes ao Trabalho de Conclusão de Curso"
+    },
+    {
+      "tipo": "quadro_oferta",
+      "titulo": "Regulamento de Estágio",
+      "descricao": "Regulamento que regulamenta os estágios do curso de Matemática da UFCAT"
+    },
+    {
+      "tipo": "corpo_docente",
+      "titulo": "Regulamento de Atividades Complementares",
+      "descricao": "Regulamento que regulamenta as atividades complementares do curso de Matemática da UFCAT"
+    }
+  ],
+  "membros_nde": [
+    {
+      "nome": "Profa. Crhistiane da Fonseca Souza",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": null,
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": null
+    },
+    {
+      "nome": "Prof. Daniel da Silveira Guimarães",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": null,
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": null
+    },
+    {
+      "nome": "Profa. Élida Alves da Silva",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": null,
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": null
+    },
+    {
+      "nome": "Prof. Fernando da Costa Barbosa",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": null,
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": null
+    },
+    {
+      "nome": "Prof. Jardel Vieira",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": null,
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": null
+    },
+    {
+      "nome": "Profa. Luciana Vale Silva Rabelo",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": null,
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": null
+    },
+    {
+      "nome": "Prof. Márcio Roberto Rocha Ribeiro",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": null,
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": null
+    },
+    {
+      "nome": "Profa. Marta Borges",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": null,
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": null
+    },
+    {
+      "nome": "Prof. Paulo Henrique Barbosa Galdino",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": null,
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": null
+    },
+    {
+      "nome": "Prof. Paulo Roberto Bergamaschi",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": null,
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": null
+    },
+    {
+      "nome": "Prof. Porfírio Azevedo dos Santos Júnior",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": null,
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": null
+    },
+    {
+      "nome": "Profa. Shirley da Silva Macedo",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": null,
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": null
+    },
+    {
+      "nome": "Prof. Thiago Porto de Almeida Freitas",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": null,
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": null
+    }
+  ],
+  "ausencias_no_documento": [
+    {
+      "caminho": "membros_nde[0].titulacao",
+      "motivo": "O documento lista apenas os nomes dos membros do NDE sem apresentar suas titulações"
+    },
+    {
+      "caminho": "membros_nde[0].regime_trabalho",
+      "motivo": "O documento lista apenas os nomes dos membros do NDE sem apresentar seus regimes de trabalho"
+    },
+    {
+      "caminho": "membros_nde[0].funcao",
+      "motivo": "O documento lista apenas os nomes dos membros do NDE sem apresentar suas funções"
+    },
+    {
+      "caminho": "membros_nde[0].portaria_designacao",
+      "motivo": "O documento lista apenas os nomes dos membros do NDE sem apresentar portarias de designação"
+    },
+    {
+      "caminho": "membros_nde[0].data_inicio",
+      "motivo": "O documento lista apenas os nomes dos membros do NDE sem apresentar datas de início"
+    },
+    {
+      "caminho": "membros_nde[0].data_fim",
+      "motivo": "O documento lista apenas os nomes dos membros do NDE sem apresentar datas de fim"
+    },
+    {
+      "caminho": "membros_nde[0].ativo",
+      "motivo": "O documento lista apenas os nomes dos membros do NDE sem indicar se estão ativos"
+    }
+  ]
+}

@@ -4,3 +4,4 @@ django-ckeditor-5
 django-simple-history
 django-environ
 weasyprint>=66,<67
+pdfplumber
