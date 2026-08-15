@@ -1,0 +1,326 @@
+{
+  "curso": {
+    "nome": "Ciência da Computação",
+    "unidade_academica": "Universidade Federal de Goiás – Regional Catalão",
+    "area_conhecimento": "Ciências Exatas e da Terra"
+  },
+  "ppc": {
+    "modalidade": "presencial",
+    "grau_academico": "bacharelado",
+    "turno_funcionamento": "Integral",
+    "carga_horaria_total": 3224,
+    "numero_vagas_anuais": 35,
+    "duracao_minima_semestres": 8,
+    "duracao_media_semestres": null,
+    "duracao_maxima_semestres": 16,
+    "diretor": "Thiago Jabur Bittar",
+    "vice_diretor": null,
+    "coordenador_curso": "Tércio Alberto dos Santos Filho",
+    "numero_resolucao": null,
+    "tipo_ppc": null,
+    "publico_alvo_ead": null,
+    "ato_integracao_uab": null,
+    "ato_credenciamento_mec": null,
+    "polos_ead": null,
+    "apresentacao_texto": "Área de conhecimento: Ciências Exatas e da Terra. Modalidade: Presencial. Grau acadêmico: Bacharelado. Título a ser conferido: Bacharel. Curso: Ciência da Computação. Habilitação: Não há. Carga horária do curso: 3224 horas. Unidade responsável pelo curso: Universidade Federal de Goiás – Regional Catalão. Turno de funcionamento: Integral. Número de vagas: 35 vagas. Duração do curso em semestres: Duração mínima de 8 e máxima de 16 semestres. Forma de ingresso ao curso: O ingresso no curso dar-se-á nos termos do Regimento da UFG.",
+    "exposicao_motivos": "A Universidade Federal de Goiás (UFG) foi criada pela Lei n0 3834-­‐C, de dezembro de 1960, e reestruturada pelo Decreto n0 63.817, de 16 de dezembro de 1968, com sede na Regional Samambaia, Goiânia-­‐GO, inscrita no CGC do Ministério da Fazenda sob o n0 0156701/0001-­‐43. As origens do Instituto de Informática remontam a 1972, com a criação do Departamento de Informática (DEI) no Instituto de Matemática e Física (IMF). O DEI foi criado para atender às necessidades existentes nas áreas de Estatística e Informática na Universidade Federal de Goiás. Em 1984 ocorreu a criação do Curso de Bacharelado em Ciência da Computação, que ficou sob a responsabilidade do DEI (Portaria / MEC 431 de 09/08/88 – D.O.U. 11/08/88: processo 23070.005591/87-­‐17). No final de 1996, com a reestruturação da UFG, O DEI foi extinto. A maior parte do seu quadro docente passou então a formar o atual Instituto de Informática (INF). A partir da estrutura curricular do INF foi criado, em 1996, o curso de Bacharelado em Ciência da Computação, na cidade de Catalão, através do processo n0 23070.006295/95-­‐80, convênio 18/96. As atividades do curso foram iniciadas em março de 1996, com o ingresso da primeira turma de 20 alunos, no qual se formaram em 1999. Em 2004, uma grande reformulação no projeto do curso foi implementada conforme processo 23070.009408/02-­‐81. Dentre as principais modificações, o curso passa a ter o caráter semestral e, por conta disto, um novo elenco de disciplinas foi criado para formar cientistas da computação. A resolução CEPEC 780/2006 fixa o currículo de 2004. Durante o ano de 2009, o Departamento de Ciência da Computação da Regional Catalão (DCC-­‐RC) realizou um trabalho interno de discussão entre seus professores sobre a real situação de suas atividades de graduação, levantando as dificuldades e as oportunidades existentes. Esse trabalho gerou um documento que apontava para a necessidade de uma reformulação. A partir de 2010, levando em consideração o resultado desta discussão, o núcleo docente estruturante (NDE) do DCC-­‐RC iniciou um trabalho de revisão de seu curso de graduação propondo criar novos laboratórios temáticos de pesquisa, aumentar a integração dos alunos de graduação com tais laboratórios e atualizar o conjunto de disciplinas oferecidas.",
+    "objetivo_geral": "Estrategicamente, o objetivo do Curso de Ciência da Computação é de gerar conhecimento e formar recursos humanos de alta qualidade, que atendam adequadamente as exigências do meio acadêmico e do mercado de trabalho, que possam atuar em atividades de pesquisa, extensão e desenvolvimento na área de Ciência da Computação e que estejam preparados para ingressar em programas de pós-­‐graduação em computação.",
+    "objetivo_especifico": "O Curso de Bacharelado em Ciência da Computação deve desenvolver no egresso uma visão crítica e consciente do seu papel social e da sua contribuição no avanço científico e tecnológico do país. Espera-­‐se que o conhecimento adquirido ao longo do curso possa ser aplicado para se encontrar soluções de problemas da sociedade, de maneira consciente e responsável, utilizando um vasto conjunto de recursos tecnológicos e computacionais para a geração e uso da informação. Este PPC tem como objetivo ajustar a estrutura curricular de forma que os objetivos listados anteriormente sejam cumpridos. O ajuste na estrutura curricular visa que o curso tenha um caráter educacional focado na teoria e prática, que capacite o profissional tanto para a área de ciência quanto para a área de tecnologia. Neste contexto, o Curso de Ciência da Computação tem por objetivo formar profissionais que dominem amplamente os conteúdos científicos e tecnológicos da área, aptos a identificar problemas do mundo real, socializar o conhecimento na área de computação, propor soluções inéditas ou melhorar as já existentes, por meio da construção de modelos computacionais e de sua implementação. O curso também objetiva fornecer ao egresso a compreensão das questões éticas, econômicas, sociais e políticas no exercício de sua profissão.",
+    "principios_geral": "A necessidade de formação de profissionais em Ciência da Computação está sendo apontada como uma das áreas em expansão no país. A inovação constante da ciência e a criatividade para desenvolver/aprimorar produtos e serviços disponíveis são exigências impostas tanto na área acadêmica quanto no mercado de trabalho. Estas características fazem com que a área de computação esteja em constante expansão.",
+    "principios_pratica_profissional": "Além disso, são responsáveis pelo desenvolvimento de aplicações de propósito geral. Os cientistas da computação aplicam métodos e processos científicos para o desenvolvimento de produtos corretos, sabem fazer uso da interdisciplinaridade, na medida em que conseguem combinar ciências, dando a elas um tratamento computacional. Para tanto o profissional deve, no que concerne a prática profissional, possuir: Sólida formação científica, capaz de promover o desenvolvimento da ciência e aplicar tecnologias computacionais aos interesses da sociedade em qualquer área profissional; Capacidade para aplicar os conhecimentos adquiridos de forma independente e inovadora; Desenvolvimento de habilidades de trabalho colaborativo e de liderança; Consciência da necessidade de estar situado no estado da arte da ciência; Raciocínio lógico; Capacidade de abstração; Capacidade para identificar, analisar, projetar, implementar e validar soluções de problemas; Capacidade de comunicação oral e escrita; Capacidade de aprender a aprender (autodidaxia); Adaptabilidade crítica ao novo, ou seja, capacidade que possibilita ao aluno acompanhar a evolução da ciência computacional; Capacidade de síntese, de avaliação crítica e de análise; Ética; Formação humanística e visão global que o habilite a compreender o meio social, político, econômico e cultural, onde está inserido, e ser capaz de tomar decisões avaliando-­‐se os impactos; Pró-­‐atividade; Formação científica e técnica para atuar tanto em atividades de pesquisa e desenvolvimento, quanto no mercado de trabalho; Consciência sobre o contínuo aperfeiçoamento profissional e o desenvolvimento da autoconfiança; Criatividade para inovar nas soluções de problemas e influenciar no estado da arte; Conhecimento básico das legislações trabalhistas e de propriedade intelectual; Capacidade de exercer liderança e de trabalhar em grupo.",
+    "principios_formacao_tecnica": "Tecnicamente, o profissional egresso deve: Conhecer, identificar áreas de aplicações e aplicar fundamentos teóricos, científicos e tecnológicos relacionados à área de Ciência da Computação; Planejar, desenvolver e gerir projetos visando à construção de soluções com base científica e tecnológica, integrando os conhecimentos teóricos e práticos adquiridos ao longo de sua formação; Ser capaz de reconhecer, melhorar e controlar processos internos; Gerenciar dados e informações; Planejar a redução de custos; Melhorar a qualidade e disponibilidade das informações importantes interna e externamente à organização; Modelar e especificar soluções usando recursos da ciência da computação; Definir critérios para seleção de software, hardware, periféricos, sistemas de telecomunicação e demais recursos para a construção de soluções na área de computação; Postura empreendedora, que viabilize o descobrimento de novas oportunidades para a aplicação e desenvolvimento, e integração de recursos da ciência da computação; Ser capaz de identificar e analisar soluções computacionais para diversos tipos de problemas.",
+    "principios_formacao_etica_social": "Este projeto pedagógico propõe uma formação integral e adequada do estudante por meio de uma articulação entre o ensino, a pesquisa e a extensão. Também é estimulado a inclusão e a valorização das dimensões ética e humanística na formação do aluno, desenvolvendo atitudes e valores, orientados para a cidadania e para a solidariedade. Para tanto o egresso deve: Respeitar os princípios éticos da área de computação; Implementar sistemas que visem melhorar o desempenho das atividades no cotidiano sem causar prejuízos econômicos e sociais; Facilitar o acesso e a disseminação do conhecimento na área de computação; Ter uma visão humanística crítica e consistente sobre o impacto de sua atuação profissional na sociedade; Articulação entre teoria e prática; Interdisciplinaridade.",
+    "principios_interdisciplinaridade": "As articulações com os outros departamentos que ajudam a compor a matriz curricular foram precocemente discutidas, proporcionando uma rica troca de informações. Assim, é muito clara a natureza interdisciplinar deste curso, como se observa nas linhas teóricas que compõem o ciclo básico: matemática, português e administração. Além disso, o Regimento Geral dos Cursos de Graduação (RGCG) determina um percentual considerável de carga horária do curso em disciplinas de Núcleo Livre, onde o aluno terá a possibilidade de conhecer as mais variadas áreas teóricas e práticas, enriquecendo a sua bagagem de conhecimento.",
+    "principios_articulacao_teoria_pratica": "Para se conseguir um desenvolvimento contínuo da relação entre teoria e prática, este projeto propõe um fluxo curricular, onde o aluno desde os seus primeiros momentos no curso até a sua saída definitiva tenha a possibilidade de vislumbrar os conceitos teóricos de maneira mais construtiva, aplicando-­‐os em situações práticas, sempre buscando a simulação de ações reais e corriqueiras que o acompanharão nos próximos estágios de sua carreira. Neste projeto, a partir do primeiro período, todas as aulas de programação tem um laboratório prático associado. Algumas disciplinas foram conectadas de modo que a teoria vista em um semestre seja aplicada no seguinte. Isso pode ser percebido nas disciplinas Banco de Dados 1 e Banco de Dados 2, Sistemas Operacionais 1 e Sistemas Operacionais 2, Rede de Computadores 1 e Rede de Computadores 2. Mesmo disciplinas notadamente teóricas têm contempladas horas e/ou ementas práticas, conforme Cálculo I e Cálculo II, Linguagens de Programação, Teoria de Grafos e Teoria da Computação. Outra forma de promover a interação teórico/prática é por meio dos programas de pesquisa de iniciação científica, extensão e cultura, e as monitorias. A ideia central é a de que o aluno perceba a atualização e questionamento que a prática realiza sobre a teoria. Espera-­‐se que o egresso esteja muito bem preparado para a sua atuação profissional, uma vez que a distância existente entre o campo de trabalho e o meio acadêmico é reduzida gradualmente durante todas as fases do curso.",
+    "perfil_curso": "A matriz curricular e o perfil do egresso evidenciam que o curso tem por objetivo formar profissionais para atuar na área de Ciência da Computação, de forma que tais profissionais possam atuar no meio acadêmico, pesquisa e em empresas que tenham a informática como atividade meio ou como atividade fim.",
+    "perfil_habilidades": "Neste sentido, o egresso do Curso de Ciência da Computação da Regional Catalão da Universidade Federal de Goiás deve: Compreender os fatos essenciais, os conceitos, os princípios e as teorias relacionadas à Ciência da Computação para o desenvolvimento de software, hardware e suas aplicações; Reconhecer a importância do pensamento computacional no cotidiano e sua aplicação em circunstâncias apropriadas e em domínios diversos; Identificar e gerenciar os riscos que podem estar envolvidos na operação de equipamentos de computação (incluindo os aspectos de dependabilidade e segurança); Identificar e analisar requisitos e especificações para problemas específicos, e planejar estratégias para suas soluções; Especificar, projetar, implementar, manter e avaliar sistemas de computação, empregando teorias, práticas e ferramentas adequadas; Conceber soluções computacionais a partir de decisões visando o equilíbrio de todos os fatores envolvidos; Empregar metodologias que visem garantir critérios de qualidade ao longo de todas as etapas de desenvolvimento de uma solução computacional; Analisar o quanto um sistema baseado em computadores atende os critérios definidos para seu uso corrente e futuro (adequabilidade); Gerenciar projetos de desenvolvimento de sistemas computacionais; Aplicar temas e princípios recorrentes, como abstração, complexidade, princípio de localidade de referência (caching), compartilhamento de recursos, segurança, concorrência, evolução de sistemas, entre outros, e reconhecer que esses temas e princípios são fundamentais à área de Ciência da Computação; Escolher e aplicar boas práticas e técnicas que conduzam ao raciocínio rigoroso no planejamento, na execução, acompanhamento, medição e gerenciamento geral da qualidade de sistemas computacionais; Aplicar os princípios de gerência, organização e recuperação da informação de vários tipos, incluindo texto, imagem, som e vídeo; Aplicar os princípios de interação humano-­‐computador para avaliar e construir uma grande variedade de produtos, incluindo interface do usuário, páginas WEB, sistemas multimídia e sistemas móveis.",
+    "estrutura_curricular_descricao": "O currículo do curso de graduação é a expressão do projeto pedagógico, abrangendo conjunto de conteúdos, experiências acadêmicas e situações de ensino-­‐aprendizagem relacionadas à formação do estudante. A grade curricular é organizada por meio de núcleos, que se subdividem em comum, específico e livre, desenvolvidos na forma de disciplinas e atividades complementares. O núcleo comum (NC) é o conjunto de conteúdos básicos para a formação profissional do estudante. O núcleo específico (NE) é o conjunto de conteúdos que darão especificidade à formação do profissional. O núcleo livre (NL) é o conjunto de conteúdos que tem por objetivo: ampliar e diversificar a formação do estudante; promover a interdisciplinaridade e a transdisciplinaridade; possibilitar o aprofundamento de estudo em áreas de interesse do estudante e viabilizar o intercâmbio entre estudantes de diferentes cursos da UFG. A proposta curricular do curso procura garantir uma flexibilidade, por meio das disciplinas de núcleo livre e, também, por meio da oferta de disciplinas optativas. As disciplinas optativas, de cumprimento não obrigatório, têm como finalidade complementar a formação do discente. Apesar da não obrigatoriedade para a integralização curricular, as disciplinas optativas serão acrescidas no histórico acadêmico do aluno.",
+    "estrutura_curricular_informacoes_complementares": null,
+    "estagio": "Compreende-­‐se como Estágio Curricular um componente de caráter teórico-­‐prático, que tem como objetivo principal proporcionar aos estudantes a aproximação com a realidade profissional, com vistas ao desenvolvimento de sua formação técnica, cultural, científica e pedagógica, no sentido de prepará-­‐lo para o exercício da profissão e cidadania. Mesmo o Estágio Curricular no Curso de Ciência da Computação, sendo um item opcional, este seguirá as legislações vigentes, tomando por base a Lei 11.788 de 2008 [ESTAG] e as Resoluções CEPEC/UFG. O estágio só poderá ser realizado a partir do 2º semestre e será necessária a celebração de termo de compromisso entre o discente, a parte concedente do estágio e entre a UFG. Levando-­‐se em conta a compatibilidade entre as atividades desenvolvidas no estágio e aquelas previstas no termo de compromisso. Vale ressaltar que o Estágio Curricular não cria vínculo empregatício com as instituições envolvidas e o estágio também só pode ser realizado em empresas devidamente conveniadas com a UFG ou utilizar-­‐se de agente de integração conveniados com a UFG. Além disso, é preciso ter um supervisor no local de estágio e um professor do curso como orientador do estágio. Não é permitido que este tipo de estágio interfira no desempenho das disciplinas do curso. No Estágio previsto para o Curso de Ciência da Computação, o estagiário receberá o pagamento de bolsa estágio ou outra forma de contraprestação que venha a ser acordada, bem como auxílio transporte e seguro pago pela instituição na qual realiza o estágio. O aluno deve apresentar relatórios semestrais, preencher o termo de compromisso e o plano de estágio, além de apresentar a frequência. As normas complementares de Estágio com as normas de frequência, acompanhamento e avaliação do estágio, bem como todos os formulários necessários ao desenvolvimento do mesmo, baseia-­‐se em resolução específica do Departamento de Ciência da Computação.",
+    "tcc": "O trabalho de conclusão de curso no Curso de Ciência da Computação é denominado Projeto Final de Curso (PFC). O PFC é distribuído nas disciplinas de Projeto Final de Curso 1 e Projeto Final de Curso 2, e possui uma carga horária prevista de 32 horas para cada disciplina. O objetivo é preparar os alunos para a atuação profissional, preparando pareceres, aprendendo a forma correta de desenvolver uma pesquisa, organizando e produzindo trabalhos. Os temas abordados no PFC podem ser desenvolvidos com base em projetos de pesquisa, demandas oriundas de empresas, organizações ou da sociedade, assuntos de interesse do aluno e/ou orientador. Dentro desta perspectiva espera-­‐se que o aluno tenha a oportunidade de produzir conhecimento e experimentar teorias. O resultado é uma monografia contendo todo o processo de pesquisa, análise e desenvolvimento realizado no contexto da disciplina. Nesta fase, o aluno deve possuir um professor orientador que lhe mostra o caminho a seguir. Para isto, o aluno junto com seu orientador, deverá definir um tema para a monografia que expresse importância científica e tenha dimensões compatíveis com o período limite para a produção do trabalho.",
+    "atividades_complementares": "Atividades complementares (AC) são atividades acadêmicas, escolhidas e desenvolvidas pelos estudantes durante o período disponível para a integralização curricular, excetuando-­‐se disciplinas ou eixos temáticos/módulos. Atividades complementares compreendem a participação em monitorias, pesquisas, projetos de extensão e cultura, conferências, seminários, palestras, congressos, debates e outras atividades científicas, artísticas e culturais, à exceção do estágio curricular não obrigatório. As atividades extracurriculares possibilitam ao aluno adquirir conhecimentos de interesse para sua formação pessoal e profissional, constituindo um meio de ampliação de seu currículo, com experiências e vivências acadêmicas internas e externas ao curso, reconhecida através de avaliação. A carga horária das atividades complementares é de, no mínimo, 120 (cento e vinte) horas para efeito de integralização curricular. As atividades complementares têm a finalidade de enriquecer o processo ensino-­‐aprendizagem, privilegiando a complementação da formação social e profissional. A abrangência do escopo destas atividades inclui as seguintes modalidades: prestação de serviços por meio de monitorias; iniciação científica e tecnológica; participação e organização em eventos para assimilação de novos conhecimentos. Até a data limite, prevista em calendário acadêmico da universidade, o acadêmico deverá apresentar fotocópias dos seus certificados, ou relatórios ou atas, quando for o caso. A carga horária será, então, contabilizada e, deste modo, o acadêmico ainda terá tempo hábil para realizar atividades a fim de cumprir as horas que porventura necessite. As atividades complementares serão divididas em 3 grandes grupos: 1-­‐ atividades relacionadas à pesquisa, 2-­‐ atividades relacionadas à extensão, 3-­‐ atividades relacionadas à monitoria. Conforme previsto no Regimento Geral dos Cursos de Graduação da UFG, atividades de estágio não obrigatório não podem ser consideradas complementares. Entende-­‐se como atividade relacionadas à pesquisa àquelas que impliquem em participação de projetos de pesquisa regularmente registrados junto à Pro-­‐Reitoria de Pesquisa e Pós-­‐Graduação da UFG. Entende-­‐se como atividades relacionadas à extensão: 1) Aquelas que impliquem em participação em eventos artísticos e culturais, conferências, seminários, palestras, congressos e debates como ouvintes; 2) Aquelas que impliquem em participação em projetos de extensão, em geral, como elemento passivo, isto é, como aluno ou ouvinte. Entende-­‐se como atividades relacionadas às monitorias aquelas previstas na resolução CEPEC No 1190/2013. A validação da carga horária efetiva será feita por meio da apresentação de documentação comprovatória, assinada, reconhecida e timbrada, junto à coordenação do curso, sendo comprovadas da seguinte forma: 1) As atividades de pesquisa – por meio de declaração do orientador e cópia do projeto de pesquisa e relatório final desenvolvido pelo aluno; 2) As atividades de extensão – por meio de certificados de participação devidamente assinados, timbrados e reconhecidos; 3) As atividades de monitoria – por meio de declaração do professor supervisor ou de certificado emitido pela PROGRAD. A carga horária mínima de atividades complementares a ser cumprida pelo aluno é de 120 horas, 20 horas acima do mínimo previsto pelo Regimento Geral dos Cursos de Graduação da UFG. Contudo, será contabilizado no máximo 60 horas por grupo de atividade complementar, sendo que, para cada certificado de participação em evento de extensão serão contabilizadas no máximo 10 horas, obrigando o aluno realizar pelo menos dois tipos de atividades complementares.",
+    "politicas_integrada": null,
+    "avaliacao_ensino_aprendizagem": "A avaliação por ser instrumento de aperfeiçoamento do processo de ensino-­‐aprendizagem, deve ser contínua, possibilitando tanto ao aluno quanto ao docente constatarem dificuldades e promoverem meios para saná-­‐las. A nota final do aluno será resultado de, no mínimo, duas avaliações que podem ser na forma de provas, trabalhos, seminários, relatórios ou outras formas de produção acadêmica escrita, oral, prática ou audiovisual do estudante. Exceção apenas às disciplinas Projeto Final de Curso 1 e Projeto Final de Curso 2 que seguem o disposto no Capítulo 8. As formas, os períodos e a divulgação das avaliações, bem como a forma de obtenção da nota final relativos ao processo de ensino-­‐aprendizagem, são previstos no plano de ensino da disciplina ou do eixo temático/módulo. O docente responsável pela disciplina só poderá realizar uma nova avaliação após divulgar a nota obtida na avaliação anterior com antecedência de pelo menos dois (2) dias letivos. Será aprovado na disciplina o estudante que obtiver frequência e nota final igual ou superior às previstas no Regulamento Geral dos Cursos de Graduação (RGCG).",
+    "avaliacao_projeto_curso": "A implementação e o desenvolvimento do projeto pedagógico do curso de graduação em Ciência da Computação devem ser institucionalmente acompanhados e permanentemente avaliados, com vistas a verificar o atendimento dos objetivos estabelecidos nos projetos pedagógicos e permitir os ajustes necessários ao seu aperfeiçoamento. A avaliação do processo de ensino-­‐aprendizagem e do próprio projeto pedagógico do curso deve ser realizada periodicamente, em conexão com as avaliações institucionais, de acordo com as metodologias e os critérios definidos pelas normas da Universidade Federal de Goiás. O acompanhamento dos cursos deve ser contínuo, podendo se basear em auto avaliação e no relato das experiências de seus egressos. Espera-­‐se que os egressos do curso tenham os perfis, as competências, as habilidades e as atitudes estabelecidas pelo presente Plano Pedagógico de Curso, com base nas diretrizes da área de computação. O processo de avaliação dos cursos pode ser realimentado com informações relevantes sobre o desempenho nas atividades laborais ou por meio da comparação com egressos de mesmo perfil, de outras instituições. As avaliações dos curso terão como objetivo encontrar os seus pontos fracos, do ponto de vista da qualidade, como também identificar as suas potencialidades. Este sistema de avaliação contará com o acompanhamento do: Núcleo Docente Estruturante (NDE), Conselho Departamental e da Comissão de Avaliação Institucional (CAVI/UFG).",
+    "qualificacao": "O Departamento de Ciência da Computação prevê em seu quadro de docentes a liberação do docente para qualificação em ciência da computação. Cerca de 80% do quadro efetivo do curso é formado por doutores. Os 20% restantes estão em fase de qualificação, mestrado e doutorado. Com forma de manter o conhecimento atualizado, é estimulada a participação dos docentes com apresentação de trabalho em eventos científicos como congressos, seminários ou congêneres, como meio de divulgação de seus produtos de pesquisa. No tangente à qualificação do pessoal técnico-­‐administrativo, estimula-­‐se também a participação dos funcionários em cursos de capacitação profissional, por meio de adequação no horário de trabalho, além de buscar recursos que propiciem a concretização desta ação. O departamento está construindo um mestrado acadêmico em ciência da computação e alguns dos professores efetivos já fazem parte de programas de mestrado interdisciplinar, orientando e ministrando disciplinas.",
+    "diretrizes_curriculares_nacionais_curso": "Parecer CNE/CES n. 136/2012, que estabelece as Diretrizes Curriculares Nacionais para os cursos de bacharelado em ciência da computação e também com as normas da Universidade Federal de Goiás, em especial o Regulamento Geral dos Cursos de Graduação (RGCG).",
+    "diretrizes_curriculares_nacionais_educacao_basica": null,
+    "diretrizes_etnico_raciais_historia_cultura_afro_indigena": null,
+    "diretrizes_educacao_direitos_humanos": null,
+    "protecao_direitos_pessoa_transtorno_espectro_autista": null,
+    "componente_curricular_libras": "Disciplina optativa LIBRAS, atendendo ao disposto no parágrafo segundo do Art. 3o do Decreto 5.626, de 22 de dezembro de 2005.",
+    "politicas_educacao_ambiental": "Disciplina optativa Gestão Ambiental e Responsabilidade Social, atendendo à Lei nº 9.795 de 2002.",
+    "diretrizes_formacao_professores_educacao_basica": null,
+    "condicoes_acesso_pessoas_deficiencia_mobilidade_reduzida": null,
+    "bibliografias_ppc": "Referências: [CHT] Resolução CES/CNE/MEC N0 02 de 18/06/2007, [ENADE] Portaria INEP N0 179 DE 24/08/04, [SBC] http://www.sbc.org.br, [ACM] http://www.acm.org/education/curricula.html, [MEC, 1998] CEEInf – MEC – Diretrizes Curriculares de Cursos da Área de Computação e Informática. http://www.mec.gov.br/sesu/diretrizes.sthm, [CNE-­‐CES] PARECER CNE/CES N0 136/2012, APROVADO EM: 09/03/2012, [LIBRAS] BRASIL, Decreto nº 5.626 de 2005. Regulamente a Lei nº 10.436 de 24 de abril de 2002, que dispõe sobre a Língua Brasileira de Sinais – LIBRAS, e o art. 18 da Lei nº. 10.098, de 19 de dezembro de 2000., [ESTAG] BRASIL, LEI Nº 11.788, de 25 de setembro de 2008. Dispõem sobre o estágio de estudantes. Diário Oficial da União, Brasília, DF, 16 set. 2008. 23., [AMB] BRASIL, Lei nº 9.795 de 2002. Dispõe sobre a educação ambiental, institui a Política Nacional de Educação Ambiental e dá outras providências., [AFRO] BRASIL, Resolução CNE/CP nº 01 de 2004. Institui as diretrizes curriculares nacionais para educação das relações étnico-­‐raciais e para o ensino de história e cultura afro-­‐brasileira e africana., [DIRETRIZ] BRASIL. Lei nº. 9.394, de 20 de dezembro de 1996. Estabelece as Diretrizes e Bases da Educação Nacional. Diário Oficial da União. Brasília, DF, v. 143, n. 248., [NDE] CONAES. Resolução CONAES Nº 01, de 17 de junho de 2010. Normatiza o Núcleo Docente Estruturante e dá outras providências. Disponível em: < http://portal.mec.gov.br/index.php?Itemid=1093&id=15712&option=com_content&view=article>. Acesso em: 20 ago. 2013., [PDI] UNIVERSIDADE FEDERAL DE GOIÁS -­‐UFG. Plano de Desenvolvimento Institucional – PDI -­‐ Disponível em: < .http://www.prodirh.ufg.br>. Acesso em: 26 ago. 2013, [RGCG] UNIVERSIDADE FEDERAL DE GOIÁS -­‐UFG. Resolução CEPEC nº 1122/2012, de 09 de novembro de 2012. Aprova o Regulamento Geral dos Cursos de Graduação – RGCG da Universidade Federal de Goiás e revoga as disposições em contrário. Disponível em: < http://www.ufg.br/consultas/resolucoes/arquivos/Resolucao_CEPEC_2012_1122.pdf>. Acesso em: 26 ago. 2013."
+  },
+  "dinamica_ead": {
+    "dinamica_atividades_presenciais_distancia": "Conforme artigo nº 47 do Regulamento Geral dos Cursos de Graduação (RGCG), será facultado ao professor do Curso de Ciência da Computação o direito de utilizar-se da modalidade semi-­‐presencial, desde que esta oferta não ultrapasse vinte por cento (20%) da carga horária total do curso.",
+    "recuperacao_estudos_permanencia": null,
+    "componente_informatica_basica": null,
+    "atuacao_tutoria": null,
+    "atribuicoes_profissionais": null,
+    "material_didatico": null,
+    "ferramentas_comunicacao": null,
+    "carga_horaria_presencial_acompanhamento": null,
+    "armazenamento_gerenciamento_dados": null
+  },
+  "componentes_curriculares": [
+    {
+      "nome": "Cálculo I",
+      "tipo": "disciplina",
+      "natureza": "obrigatoria",
+      "nucleo": "NC",
+      "periodo": 1,
+      "carga_horaria_teorica": 5,
+      "carga_horaria_pratica": 1,
+      "carga_horaria_pcc": 96,
+      "unidade_academica_componente": "Especial de Matemática e Tecnologia - IMTEC",
+      "ementa": "Números, funções e gráficos; Limite e continuidade; Derivada de uma função e cálculo de derivadas; Aplicação de derivadas; Integrais indefinidas; Integrais definidas; Aplicações da integração.",
+      "bibliografias": [
+        {
+          "tipo": "basica",
+          "titulo": "STEWART, J. Cálculo, Volume I, 5a Edição, São Paulo: Pioneira Thomson Learning, 2009.",
+          "autores": "STEWART, J.",
+          "editora": "Pioneira Thomson Learning",
+          "cidade": null,
+          "ano": 2009
+        }
+      ],
+      "relacoes": [
+        {
+          "tipo": "pre_requisito",
+          "componente_relacionado_nome": "Nenhum"
+        }
+      ]
+    },
+    {
+      "nome": "Lógica",
+      "tipo": "disciplina",
+      "natureza": "obrigatoria",
+      "nucleo": "NC",
+      "periodo": 1,
+      "carga_horaria_teorica": 4,
+      "carga_horaria_pratica": 0,
+      "carga_horaria_pcc": 64,
+      "unidade_academica_componente": "Unidade Acadêmica Especial de Biotecnologia - IBIOTEC",
+      "ementa": "Relação da lógica com as questões centrais da filosofia, com ênfase nos aspectos epistemológicos (justificação, dedução, definição), aspectos metafísicos (verdade, essência, individuação) e aspectos linguísticos (termo, proposição, juízo, forma lógica). Noções do desenvolvimento histórico da lógica de Aristóteles a Frege. Lógica Proposicional: linguagem e semântica. Linguagem: Leitura única das Fórmulas. Semântica: Tabelas Verdade, Satisfazibilidade, Consequência Lógica, Equivalência Lógica e Teorema da Substituição. Forma Normal de Fórmulas. Conjuntos Completos de Conectivos. Teorema da Compacidade. Enumerabilidade. Decidibilidade. Lógica de Predicados: Métodos de prova. Método Axiomático. Teorema da Dedução. Teorema da Corretude. Teorema da Completude.",
+      "bibliografias": [
+        {
+          "tipo": "basica",
+          "titulo": "FINGER, M.; de MELO, A. C. V.; SILVA, F.S.C. Lógica para Computação. São Paulo: Editora Thomson Learning, 2006.",
+          "autores": "FINGER, M.; de MELO, A. C. V.; SILVA, F.S.C.",
+          "editora": "Thomson Learning",
+          "cidade": null,
+          "ano": 2006
+        }
+      ],
+      "relacoes": [
+        {
+          "tipo": "pre_requisito",
+          "componente_relacionado_nome": "Nenhum"
+        }
+      ]
+    },
+    {
+      "nome": "Matemática Discreta",
+      "tipo": "disciplina",
+      "natureza": "obrigatoria",
+      "nucleo": "NC",
+      "periodo": 3,
+      "carga_horaria_teorica": 4,
+      "carga_horaria_pratica": 0,
+      "carga_horaria_pcc": 64,
+      "unidade_academica_componente": "Unidade Acadêmica Especial de Biotecnologia - IBIOTEC",
+      "ementa": "Conjuntos, relações, funções, noções sobre números naturais e inteiros. Construções indutivas. Provas por indução; indução forte, indução estrutural. Princípios de contagem, combinatória. Noções sobre grupos e corpos, ordens parciais completas, Criptografia RSA.",
+      "bibliografias": [
+        {
+          "tipo": "basica",
+          "titulo": "GERSTING, J. L., Fundamentos Matemáticos para a Ciência da Computação. 5a. edição, São Paulo: Editora LTC., 2004.",
+          "autores": "GERSTING, J. L.",
+          "editora": "LTC",
+          "cidade": null,
+          "ano": 2004
+        }
+      ],
+      "relacoes": [
+        {
+          "tipo": "pre_requisito",
+          "componente_relacionado_nome": "Nenhum"
+        }
+      ]
+    },
+    {
+      "nome": "Algoritmos e Programação de Computadores 1",
+      "tipo": "disciplina",
+      "natureza": "obrigatoria",
+      "nucleo": "NC",
+      "periodo": 1,
+      "carga_horaria_teorica": 4,
+      "carga_horaria_pratica": 0,
+      "carga_horaria_pcc": 64,
+      "unidade_academica_componente": "Unidade Acadêmica Especial de Biotecnologia - IBIOTEC",
+      "ementa": "Lógica de programação; constantes; tipos de dados primitivos; variáveis; atribuição; expressões aritméticas e lógicas; estruturas de decisão; estruturas de controle; estruturas de dados homogêneas e heterogêneas: vetores (arrays) e matrizes; funções; Desenvolvimento de algoritmos. Domínio de uma linguagem de programação: sintaxe e semântica; estilo de codificação; ambiente de desenvolvimento.",
+      "bibliografias": [
+        {
+          "tipo": "basica",
+          "titulo": "ASCENCIO, A. F. G. et al., Fundamentos da Programação de Computadores: Algoritmos, Pascal, C/C++ e Java. 2a Edição, Editora Pearson, São Paulo, 2008.",
+          "autores": "ASCENCIO, A. F. G. et al.",
+          "editora": "Pearson",
+          "cidade": null,
+          "ano": 2008
+        }
+      ],
+      "relacoes": [
+        {
+          "tipo": "co_requisito",
+          "componente_relacionado_nome": "Laboratório de Programação 1"
+        },
+        {
+          "tipo": "pre_requisito",
+          "componente_relacionado_nome": "Nenhum"
+        }
+      ]
+    },
+    {
+      "nome": "Laboratório de Programação 1",
+      "tipo": "disciplina",
+      "natureza": "obrigatoria",
+      "nucleo": "NC",
+      "periodo": 1,
+      "carga_horaria_teorica": 0,
+      "carga_horaria_pratica": 2,
+      "carga_horaria_pcc": 32,
+      "unidade_academica_componente": "Unidade Acadêmica Especial de Biotecnologia - IBIOTEC",
+      "ementa": "Prática de programação referente ao conteúdo da disciplina Algoritmos e Programação de Computadores 1.",
+      "bibliografias": [
+        {
+          "tipo": "basica",
+          "titulo": "ASCENCIO, A. F. G. et al., Fundamentos da Programação de Computadores: Algoritmos, Pascal, C/C++ e Java. 2a Edição, Editora Pearson, São Paulo, 2008.",
+          "autores": "ASCENCIO, A. F. G. et al.",
+          "editora": "Pearson",
+          "cidade": null,
+          "ano": 2008
+        }
+      ],
+      "relacoes": [
+        {
+          "tipo": "co_requisito",
+          "componente_relacionado_nome": "Algoritmos e Programação de Computadores 1"
+        }
+      ]
+    },
+    {
+      "nome": "Direito em Informática",
+      "tipo": "disciplina",
+      "natureza": "obrigatoria",
+      "nucleo": "NC",
+      "periodo": 1,
+      "carga_horaria_teorica": 4,
+      "carga_horaria_pratica": 0,
+      "carga_horaria_pcc": 64,
+      "unidade_academica_componente": "Unidade Acadêmica de Letras e Linguística - UAELL",
+      "ementa": "Noções básicas de direito aplicado; Direito autoral e propriedade intelectual; Aplicações de Direito do Trabalho; Defesa do Consumidor; Ética profissional; Legislação específica sobre a informática.",
+      "bibliografias": [
+        {
+          "tipo": "basica",
+          "titulo": "ANGHER, A.J. (org.). Vade Mecum Acadêmico de Direito. 12a edição. São Paulo: Rideel, 2011.",
+          "autores": "ANGHER, A.J.",
+          "editora": "Rideel",
+          "cidade": null,
+          "ano": 2011
+        }
+      ],
+      "relacoes": [
+        {
+          "tipo": "pre_requisito",
+          "componente_relacionado_nome": "Nenhum"
+        }
+      ]
+    },
+    {
+      "nome": "Produção de Texto",
+      "tipo": "disciplina",
+      "natureza": "obrigatoria",
+      "nucleo": "NC",
+      "periodo": 1,
+      "carga_horaria_teorica": 4,
+      "carga_horaria_pratica": 0,
+      "carga_horaria_pcc": 64,
+      "unidade_academica_componente": "Unidade Acadêmica de Letras e Linguística - UAELL",
+      "ementa": "Prática de leitura e produção de gêneros técnicos e acadêmicos, com ênfase nos aspectos da organização dos textos.",
+      "bibliografias": [
+        {
+          "tipo": "basica",
+          "titulo": "ANDRADE, M. L. C. V. O Resenha. São Paulo: Paulistana, 2006.",
+          "autores": "ANDRADE, M. L. C. V.",
+          "editora": "Paulistana",
+          "cidade": null,
+          "ano": 2006
+        }
+      ],
+      "relacoes": [
+        {
+          "tipo": "pre_requisito",
+          "componente_relacionado_nome": "Nenhum"
+        }
+      ]
+    }
+  ],
+  "apendices": [
+    {
+      "tipo": "corpo_docente",
+      "titulo": "Corpo Docente do Curso de Ciência da Computação",
+      "descricao": "Lista de docentes do curso de Ciência da Computação da Regional Catalão da UFG, incluindo docentes do NDE e docentes colaboradores."
+    },
+    {
+      "tipo": "quadro_oferta",
+      "titulo": "Quadro de Oferta de Disciplinas",
+      "descricao": "Matriz curricular completa com todas as disciplinas ofertadas ao longo do curso de Ciência da Computação."
+    }
+  ],
+  "membros_nde": [
+    {
+      "nome": "Marcos Aurélio Batista",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": "presidente",
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": true
+    },
+    {
+      "nome": "Dalton Matsuo Tavares",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": "membro",
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": true
+    },
+    {
+      "nome": "Sérgio Francisco da Silva",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": "membro",
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": true
+    },
+    {
+      "nome": "Tércio Alberto dos Santos Filho",
+      "titulacao": null,
+      "regime_trabalho": null,
+      "funcao": "membro",
+      "portaria_designacao": null,
+      "data_inicio": null,
+      "data_fim": null,
+      "ativo": true
+    }
+  ],
+  "ausencias_no_documento": [],
+  "proveniencia_campos": []
+}

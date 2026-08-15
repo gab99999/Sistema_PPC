@@ -1,0 +1,816 @@
+{
+  "pronto_para_revisao": true,
+  "pronto_para_confirmacao": false,
+  "registros_foram_salvos": false,
+  "formularios_ppc_e_curso": {
+    "curso": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "informacoes_gerais": {
+      "valido": false,
+      "erros": {
+        "duracao_media_semestres": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "vice_diretor": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "tipo_ppc": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "duracao_media_semestres": "",
+        "vice_diretor": "",
+        "tipo_ppc": ""
+      }
+    },
+    "apresentacao": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "exposicao_motivos": {
+      "valido": false,
+      "erros": {
+        "tipo_ppc": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "tipo_ppc": ""
+      }
+    },
+    "objetivos": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "principios": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "expectativas": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "estrutura_curricular": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "estagio": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "tcc": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "atividades_complementares": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "politicas_integrada": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "avaliacao_ensino": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "avaliacao_projeto": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "qualificacao": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "requisitos_legais": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    "referencias": {
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    }
+  },
+  "componentes_curriculares": [
+    {
+      "indice": 0,
+      "nome": "Cálculo I",
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {},
+      "bibliografias": [
+        {
+          "indice": 0,
+          "valido": true,
+          "erros": {},
+          "valores_enviados_com_erro": {}
+        }
+      ]
+    },
+    {
+      "indice": 1,
+      "nome": "Lógica",
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {},
+      "bibliografias": [
+        {
+          "indice": 0,
+          "valido": true,
+          "erros": {},
+          "valores_enviados_com_erro": {}
+        }
+      ]
+    },
+    {
+      "indice": 2,
+      "nome": "Matemática Discreta",
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {},
+      "bibliografias": [
+        {
+          "indice": 0,
+          "valido": true,
+          "erros": {},
+          "valores_enviados_com_erro": {}
+        }
+      ]
+    },
+    {
+      "indice": 3,
+      "nome": "Algoritmos e Programação de Computadores 1",
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {},
+      "bibliografias": [
+        {
+          "indice": 0,
+          "valido": true,
+          "erros": {},
+          "valores_enviados_com_erro": {}
+        }
+      ]
+    },
+    {
+      "indice": 4,
+      "nome": "Laboratório de Programação 1",
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {},
+      "bibliografias": [
+        {
+          "indice": 0,
+          "valido": true,
+          "erros": {},
+          "valores_enviados_com_erro": {}
+        }
+      ]
+    },
+    {
+      "indice": 5,
+      "nome": "Direito em Informática",
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {},
+      "bibliografias": [
+        {
+          "indice": 0,
+          "valido": true,
+          "erros": {},
+          "valores_enviados_com_erro": {}
+        }
+      ]
+    },
+    {
+      "indice": 6,
+      "nome": "Produção de Texto",
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {},
+      "bibliografias": [
+        {
+          "indice": 0,
+          "valido": true,
+          "erros": {},
+          "valores_enviados_com_erro": {}
+        }
+      ]
+    }
+  ],
+  "apendices": [
+    {
+      "indice": 0,
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    },
+    {
+      "indice": 1,
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    }
+  ],
+  "membros_nde": [
+    {
+      "indice": 0,
+      "nome": "Marcos Aurélio Batista",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "data_inicio": ""
+      }
+    },
+    {
+      "indice": 1,
+      "nome": "Dalton Matsuo Tavares",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "data_inicio": ""
+      }
+    },
+    {
+      "indice": 2,
+      "nome": "Sérgio Francisco da Silva",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "data_inicio": ""
+      }
+    },
+    {
+      "indice": 3,
+      "nome": "Tércio Alberto dos Santos Filho",
+      "valido": false,
+      "erros": {
+        "titulacao": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "regime_trabalho": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ],
+        "data_inicio": [
+          {
+            "message": "Este campo é obrigatório.",
+            "code": "required"
+          }
+        ]
+      },
+      "valores_enviados_com_erro": {
+        "titulacao": "",
+        "regime_trabalho": "",
+        "data_inicio": ""
+      }
+    }
+  ],
+  "dinamica_ead": {
+    "avaliada": true,
+    "valido": true,
+    "erros": {},
+    "valores_enviados_com_erro": {}
+  },
+  "erros_para_confirmacao": {
+    "formularios_ppc_e_curso": {
+      "curso": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "informacoes_gerais": {
+        "valido": false,
+        "erros": {
+          "duracao_media_semestres": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ],
+          "vice_diretor": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ],
+          "tipo_ppc": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ]
+        },
+        "valores_enviados_com_erro": {
+          "duracao_media_semestres": "",
+          "vice_diretor": "",
+          "tipo_ppc": ""
+        }
+      },
+      "apresentacao": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "exposicao_motivos": {
+        "valido": false,
+        "erros": {
+          "tipo_ppc": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ]
+        },
+        "valores_enviados_com_erro": {
+          "tipo_ppc": ""
+        }
+      },
+      "objetivos": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "principios": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "expectativas": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "estrutura_curricular": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "estagio": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "tcc": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "atividades_complementares": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "politicas_integrada": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "avaliacao_ensino": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "avaliacao_projeto": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "qualificacao": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "requisitos_legais": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      "referencias": {
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      }
+    },
+    "componentes_curriculares": [
+      {
+        "indice": 0,
+        "nome": "Cálculo I",
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {},
+        "bibliografias": [
+          {
+            "indice": 0,
+            "valido": true,
+            "erros": {},
+            "valores_enviados_com_erro": {}
+          }
+        ]
+      },
+      {
+        "indice": 1,
+        "nome": "Lógica",
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {},
+        "bibliografias": [
+          {
+            "indice": 0,
+            "valido": true,
+            "erros": {},
+            "valores_enviados_com_erro": {}
+          }
+        ]
+      },
+      {
+        "indice": 2,
+        "nome": "Matemática Discreta",
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {},
+        "bibliografias": [
+          {
+            "indice": 0,
+            "valido": true,
+            "erros": {},
+            "valores_enviados_com_erro": {}
+          }
+        ]
+      },
+      {
+        "indice": 3,
+        "nome": "Algoritmos e Programação de Computadores 1",
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {},
+        "bibliografias": [
+          {
+            "indice": 0,
+            "valido": true,
+            "erros": {},
+            "valores_enviados_com_erro": {}
+          }
+        ]
+      },
+      {
+        "indice": 4,
+        "nome": "Laboratório de Programação 1",
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {},
+        "bibliografias": [
+          {
+            "indice": 0,
+            "valido": true,
+            "erros": {},
+            "valores_enviados_com_erro": {}
+          }
+        ]
+      },
+      {
+        "indice": 5,
+        "nome": "Direito em Informática",
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {},
+        "bibliografias": [
+          {
+            "indice": 0,
+            "valido": true,
+            "erros": {},
+            "valores_enviados_com_erro": {}
+          }
+        ]
+      },
+      {
+        "indice": 6,
+        "nome": "Produção de Texto",
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {},
+        "bibliografias": [
+          {
+            "indice": 0,
+            "valido": true,
+            "erros": {},
+            "valores_enviados_com_erro": {}
+          }
+        ]
+      }
+    ],
+    "apendices": [
+      {
+        "indice": 0,
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      },
+      {
+        "indice": 1,
+        "valido": true,
+        "erros": {},
+        "valores_enviados_com_erro": {}
+      }
+    ],
+    "membros_nde": [
+      {
+        "indice": 0,
+        "nome": "Marcos Aurélio Batista",
+        "valido": false,
+        "erros": {
+          "titulacao": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ],
+          "regime_trabalho": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ],
+          "data_inicio": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ]
+        },
+        "valores_enviados_com_erro": {
+          "titulacao": "",
+          "regime_trabalho": "",
+          "data_inicio": ""
+        }
+      },
+      {
+        "indice": 1,
+        "nome": "Dalton Matsuo Tavares",
+        "valido": false,
+        "erros": {
+          "titulacao": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ],
+          "regime_trabalho": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ],
+          "data_inicio": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ]
+        },
+        "valores_enviados_com_erro": {
+          "titulacao": "",
+          "regime_trabalho": "",
+          "data_inicio": ""
+        }
+      },
+      {
+        "indice": 2,
+        "nome": "Sérgio Francisco da Silva",
+        "valido": false,
+        "erros": {
+          "titulacao": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ],
+          "regime_trabalho": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ],
+          "data_inicio": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ]
+        },
+        "valores_enviados_com_erro": {
+          "titulacao": "",
+          "regime_trabalho": "",
+          "data_inicio": ""
+        }
+      },
+      {
+        "indice": 3,
+        "nome": "Tércio Alberto dos Santos Filho",
+        "valido": false,
+        "erros": {
+          "titulacao": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ],
+          "regime_trabalho": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ],
+          "data_inicio": [
+            {
+              "message": "Este campo é obrigatório.",
+              "code": "required"
+            }
+          ]
+        },
+        "valores_enviados_com_erro": {
+          "titulacao": "",
+          "regime_trabalho": "",
+          "data_inicio": ""
+        }
+      }
+    ],
+    "dinamica_ead": {
+      "avaliada": true,
+      "valido": true,
+      "erros": {},
+      "valores_enviados_com_erro": {}
+    }
+  },
+  "pendencias_confirmacao": [
+    "O Curso extraído não foi criado nem associado: o fluxo atual exige escolher/criar o Curso antes do PPC.",
+    "As relações entre componentes foram preservadas por nome e só podem ser validadas após a confirmação dos componentes e a criação de seus IDs."
+  ],
+  "relacoes_pendentes": [
+    {
+      "componente": "Cálculo I",
+      "relacoes": [
+        {
+          "tipo": "pre_requisito",
+          "componente_relacionado_nome": "Nenhum"
+        }
+      ]
+    },
+    {
+      "componente": "Lógica",
+      "relacoes": [
+        {
+          "tipo": "pre_requisito",
+          "componente_relacionado_nome": "Nenhum"
+        }
+      ]
+    },
+    {
+      "componente": "Matemática Discreta",
+      "relacoes": [
+        {
+          "tipo": "pre_requisito",
+          "componente_relacionado_nome": "Nenhum"
+        }
+      ]
+    },
+    {
+      "componente": "Algoritmos e Programação de Computadores 1",
+      "relacoes": [
+        {
+          "tipo": "co_requisito",
+          "componente_relacionado_nome": "Laboratório de Programação 1"
+        },
+        {
+          "tipo": "pre_requisito",
+          "componente_relacionado_nome": "Nenhum"
+        }
+      ]
+    },
+    {
+      "componente": "Laboratório de Programação 1",
+      "relacoes": [
+        {
+          "tipo": "co_requisito",
+          "componente_relacionado_nome": "Algoritmos e Programação de Computadores 1"
+        }
+      ]
+    },
+    {
+      "componente": "Direito em Informática",
+      "relacoes": [
+        {
+          "tipo": "pre_requisito",
+          "componente_relacionado_nome": "Nenhum"
+        }
+      ]
+    },
+    {
+      "componente": "Produção de Texto",
+      "relacoes": [
+        {
+          "tipo": "pre_requisito",
+          "componente_relacionado_nome": "Nenhum"
+        }
+      ]
+    }
+  ]
+}
