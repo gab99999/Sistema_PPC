@@ -30,6 +30,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -44,6 +45,44 @@ MODELO_OPENROUTER = "nvidia/nemotron-3.5-lightning:free"
 URL_OPENROUTER_PADRAO = "https://openrouter.ai/api/v1/chat/completions"
 TIMEOUT_SEGUNDOS = 300
 BACKOFF_SEGUNDOS = (2, 4, 8)
+# O alvo é apenas um limite operacional para cada parte *de fallback*. Ele
+# nunca decide sozinho que um PDF será particionado: a decisão usa sinais de
+# estrutura e de volume de saída esperado abaixo.
+ALVO_TOKENS_POR_PARTE = 14_000
+
+
+@dataclass
+class DiagnosticoImportacao:
+    paginas: int = 0
+    caracteres: int = 0
+    tokens_entrada_estimados: int = 0
+    tabelas: int = 0
+    ocorrencias_curriculares: int = 0
+    repeticao_linhas: float = 0.0
+    estrategia: str = "uma_chamada"
+    sinais: list[str] = field(default_factory=list)
+    chamadas: list[dict[str, Any]] = field(default_factory=list)
+    fallback: str | None = None
+    conflitos_consolidacao: list[str] = field(default_factory=list)
+
+    def como_dict(self) -> dict[str, Any]:
+        return {
+            "paginas": self.paginas, "caracteres": self.caracteres,
+            "tokens_entrada_estimados": self.tokens_entrada_estimados,
+            "tabelas": self.tabelas,
+            "ocorrencias_curriculares": self.ocorrencias_curriculares,
+            "repeticao_linhas": round(self.repeticao_linhas, 3),
+            "estrategia": self.estrategia, "sinais": self.sinais,
+            "numero_chamadas": len(self.chamadas), "chamadas": self.chamadas,
+            "fallback": self.fallback,
+            "conflitos_consolidacao": self.conflitos_consolidacao,
+        }
+
+
+@dataclass(frozen=True)
+class DecisaoEstrategia:
+    estrategia: str
+    sinais: tuple[str, ...]
 
 
 def carregar_configuracao_local() -> None:
@@ -204,6 +243,117 @@ def extrair_texto_integral(caminho: Path) -> str:
     return texto
 
 
+def analisar_complexidade_pdf(caminho: Path) -> tuple[str, DiagnosticoImportacao]:
+    """Extrai texto e sinais observáveis sem fazer chamadas remotas.
+
+    A classificação deliberadamente não usa um corte de caracteres: contexto,
+    páginas, tabelas e indícios de listas curriculares precisam convergir para
+    que o processamento em partes seja antecipado.
+    """
+    with pdfplumber.open(caminho) as pdf:
+        paginas = [pagina.extract_text() or "" for pagina in pdf.pages]
+        tabelas = sum(len(pagina.extract_tables()) for pagina in pdf.pages)
+    texto = "\n\n".join(
+        f"--- PÁGINA {numero} ---\n{pagina}" for numero, pagina in enumerate(paginas, 1)
+    )
+    if not texto.strip():
+        raise ValueError("O PDF não possui texto extraível; será necessário OCR antes da análise.")
+    linhas = [linha.strip().lower() for linha in texto.splitlines() if len(linha.strip()) > 20]
+    repetidas = len(linhas) - len(set(linhas))
+    curriculares = len(__import__("re").findall(
+        r"(?i)\b(ementa|bibliografia|componente curricular|carga horária|pré-requisito)\b", texto
+    ))
+    diagnostico = DiagnosticoImportacao(
+        paginas=len(paginas), caracteres=len(texto), tokens_entrada_estimados=(len(texto) + 3) // 4,
+        tabelas=tabelas, ocorrencias_curriculares=curriculares,
+        repeticao_linhas=repetidas / len(linhas) if linhas else 0.0,
+    )
+    return texto, diagnostico
+
+
+def decidir_estrategia(diagnostico: DiagnosticoImportacao) -> DecisaoEstrategia:
+    """Escolhe a menor estratégia que reduz risco de inferência lenta.
+
+    Risco elevado ainda recebe uma única tentativa controlada: os sinais só
+    preparam o fallback semântico, preservando o comportamento comprovado de
+    PDFs grandes que já respondem bem em uma chamada.
+    """
+    sinais: list[str] = []
+    if diagnostico.tokens_entrada_estimados >= 45_000:
+        sinais.append("contexto_de_entrada_elevado")
+    if diagnostico.paginas >= 55:
+        sinais.append("muitas_paginas")
+    if diagnostico.tabelas >= max(8, diagnostico.paginas // 4):
+        sinais.append("muitas_tabelas")
+    if diagnostico.ocorrencias_curriculares >= max(30, diagnostico.paginas * 2):
+        sinais.append("listas_curriculares_densas")
+    if diagnostico.repeticao_linhas >= 0.22:
+        sinais.append("conteudo_repetitivo")
+
+    estruturais = {"muitas_tabelas", "listas_curriculares_densas"}
+    if "contexto_de_entrada_elevado" in sinais and estruturais.intersection(sinais):
+        estrategia = "uma_chamada_com_fallback"
+    elif len(sinais) >= 3 and estruturais.intersection(sinais):
+        estrategia = "uma_chamada_com_fallback"
+    else:
+        estrategia = "uma_chamada"
+    diagnostico.estrategia = estrategia
+    diagnostico.sinais = sinais
+    return DecisaoEstrategia(estrategia, tuple(sinais))
+
+
+def _partes_semanticas(texto: str) -> list[str]:
+    """Agrupa capítulos completos e só usa página como último ponto de corte."""
+    import re
+
+    paginas = re.split(r"(?=--- PÁGINA \d+ ---)", texto)
+    secoes: list[str] = []
+    atual = ""
+    titulo = re.compile(r"(?im)^\s*(?:\d{1,2}(?:\.\d+)*\s+.+|cap[ií]tulo\s+.+)$")
+    for pagina in paginas:
+        # Um capítulo que começa nesta página é uma fronteira preferível; caso
+        # contrário preservamos a página inteira para não partir tabelas/linhas.
+        inicio = titulo.search(pagina)
+        if inicio and atual:
+            secoes.append(atual)
+            atual = pagina
+        else:
+            atual += pagina
+    if atual:
+        secoes.append(atual)
+
+    partes: list[str] = []
+    acumulada = ""
+    for secao in secoes:
+        if acumulada and (len(acumulada) + len(secao)) // 4 > ALVO_TOKENS_POR_PARTE:
+            partes.append(acumulada)
+            acumulada = ""
+        # Uma seção excepcionalmente grande é repartida somente entre páginas.
+        if len(secao) // 4 > ALVO_TOKENS_POR_PARTE:
+            if acumulada:
+                partes.append(acumulada)
+                acumulada = ""
+            paginas_secao = re.split(r"(?=--- PÁGINA \d+ ---)", secao)
+            bloco = ""
+            for pagina in paginas_secao:
+                if bloco and (len(bloco) + len(pagina)) // 4 > ALVO_TOKENS_POR_PARTE:
+                    partes.append(bloco)
+                    bloco = ""
+                bloco += pagina
+            if bloco:
+                partes.append(bloco)
+        else:
+            acumulada += secao
+    if acumulada:
+        partes.append(acumulada)
+    partes = [parte for parte in partes if parte.strip()]
+    # Após um timeout, duas seções pequenas ainda são preferíveis a repetir a
+    # requisição integral idêntica; elas preservam fronteiras semânticas.
+    if len(partes) == 1 and len(secoes) > 1:
+        return [secao for secao in secoes if secao.strip()]
+    return partes
+
+
 def montar_prompt(texto_pdf: str) -> str:
     contrato = json.dumps(CONTRATO_BANCO, ensure_ascii=False, indent=2)
     return f"""Você extrai dados de um Projeto Pedagógico de Curso brasileiro.
@@ -234,9 +384,17 @@ DOCUMENTO COMPLETO:
 class ErroOpenRouter(RuntimeError):
     """Erro preservando se uma tentativa pode ser repetida com segurança."""
 
-    def __init__(self, mensagem: str, recuperavel: bool = False):
+    def __init__(self, mensagem: str, recuperavel: bool = False, *, categoria: str = "desconhecido",
+                 codigo: int | str | None = None, provider: str | None = None):
         super().__init__(mensagem)
         self.recuperavel = recuperavel
+        self.categoria = categoria
+        self.codigo = codigo
+        self.provider = provider
+
+    @property
+    def permite_fallback_particionado(self) -> bool:
+        return self.categoria in {"timeout_provider", "timeout_rede", "contexto"}
 
 
 def _texto_sem_fence(conteudo: str) -> str:
@@ -281,14 +439,25 @@ def _resumo_erro_provider(payload: dict[str, Any], status_http: int | None) -> E
         f"finish_reason={finish}; native_finish_reason={native_finish}; "
         f"error.code={codigo}; error.message={mensagem}; error_type={tipo}."
     )
-    recuperavel = codigo == 502 and tipo == "provider_unavailable"
+    # HTTP 200 não torna o resultado bem-sucedido: Nvidia pode reportar o
+    # timeout dentro de choices[0]. Repetir a mesma carga é contraproducente.
+    if codigo == 504 or "timeout" in str(mensagem).lower() or "timeout" in str(tipo).lower():
+        categoria, recuperavel = "timeout_provider", False
+    elif codigo == 502 and tipo == "provider_unavailable":
+        categoria, recuperavel = "provider_transitorio", True
+    elif codigo in {400, 413} or "context" in str(mensagem).lower():
+        categoria, recuperavel = "contexto", False
+    elif codigo in {401, 403}:
+        categoria, recuperavel = "autenticacao", False
+    else:
+        categoria, recuperavel = "erro_provider", False
     texto = (
         f"OpenRouter recebeu a requisição, mas o provider {provider} retornou erro "
         f"{codigo} ({tipo}): {mensagem}. "
         f"HTTP status da API: {status_http or 'não informado'}; modelo: {modelo}; "
         f"finish_reason: {finish}; native_finish_reason: {native_finish}."
     )
-    return ErroOpenRouter(texto, recuperavel=recuperavel)
+    return ErroOpenRouter(texto, recuperavel=recuperavel, categoria=categoria, codigo=codigo, provider=provider)
 
 
 def _interpretar_resposta(payload: Any, status_http: int | None) -> dict[str, Any]:
@@ -329,7 +498,8 @@ def _interpretar_resposta(payload: Any, status_http: int | None) -> dict[str, An
     return dados
 
 
-def chamar_api(prompt: str, caracteres_documento: int) -> dict[str, Any]:
+def chamar_api(prompt: str, caracteres_documento: int, *, diagnostico: DiagnosticoImportacao | None = None,
+               finalidade: str = "integral") -> dict[str, Any]:
     url = os.getenv("OPENROUTER_API_URL") or os.getenv("LLM_API_URL") or URL_OPENROUTER_PADRAO
     chave = os.getenv("OPENROUTER_API_KEY") or os.getenv("LLM_API_KEY")
     if not chave:
@@ -357,17 +527,33 @@ def chamar_api(prompt: str, caracteres_documento: int) -> dict[str, Any]:
             headers={"Authorization": f"Bearer {chave}", "Content-Type": "application/json"},
             method="POST",
         )
+        inicio = time.monotonic()
         try:
             with urllib.request.urlopen(requisicao, timeout=TIMEOUT_SEGUNDOS) as resposta:
-                return _interpretar_resposta(json.load(resposta), resposta.status)
+                dados = _interpretar_resposta(json.load(resposta), resposta.status)
+                if diagnostico is not None:
+                    diagnostico.chamadas.append({"finalidade": finalidade, "tentativa": tentativa,
+                        "prompt_caracteres": len(prompt), "resposta_caracteres": len(json.dumps(dados, ensure_ascii=False)),
+                        "tempo_segundos": round(time.monotonic() - inicio, 3), "resultado": "sucesso",
+                        "modelo": MODELO_OPENROUTER})
+                return dados
         except urllib.error.HTTPError as erro:
             detalhe = erro.read().decode("utf-8", errors="replace")
-            recuperavel = erro.code >= 500 or erro.code == 429
-            excecao = ErroOpenRouter(f"OpenRouter respondeu HTTP {erro.code}: {detalhe}", recuperavel)
+            categoria = "autenticacao" if erro.code in {401, 403} else "http_transitorio" if erro.code in {429, 502, 503} else "http"
+            recuperavel = categoria == "http_transitorio"
+            excecao = ErroOpenRouter(f"OpenRouter respondeu HTTP {erro.code}: {detalhe}", recuperavel,
+                                     categoria=categoria, codigo=erro.code)
         except ErroOpenRouter as erro:
             excecao = erro
         except (urllib.error.URLError, TimeoutError) as erro:
-            excecao = ErroOpenRouter(f"Falha de rede ao chamar OpenRouter: {erro}", recuperavel=True)
+            excecao = ErroOpenRouter(f"Falha de rede ao chamar OpenRouter: {erro}", recuperavel=False,
+                                     categoria="timeout_rede")
+
+        if diagnostico is not None:
+            diagnostico.chamadas.append({"finalidade": finalidade, "tentativa": tentativa,
+                "prompt_caracteres": len(prompt), "tempo_segundos": round(time.monotonic() - inicio, 3),
+                "resultado": "erro", "categoria_erro": excecao.categoria, "codigo_erro": excecao.codigo,
+                "provider": excecao.provider, "modelo": MODELO_OPENROUTER})
 
         if not excecao.recuperavel or tentativa == 3:
             raise excecao
@@ -570,6 +756,72 @@ def validar_pre_save_django(dados: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _dados_vazios(contrato: Any = CONTRATO_BANCO) -> Any:
+    if isinstance(contrato, dict):
+        return {chave: _dados_vazios(filho) for chave, filho in contrato.items()}
+    if isinstance(contrato, list):
+        return []
+    return None
+
+
+def _mesclar_valores(destino: Any, origem: Any, caminho: str, diagnostico: DiagnosticoImportacao) -> Any:
+    """Consolida patches sem fabricar dados; o primeiro valor explícito vence."""
+    if isinstance(destino, dict) and isinstance(origem, dict):
+        return {chave: _mesclar_valores(destino[chave], origem[chave], f"{caminho}.{chave}", diagnostico)
+                for chave in destino}
+    if isinstance(destino, list) and isinstance(origem, list):
+        resultado, vistos = list(destino), {json.dumps(item, ensure_ascii=False, sort_keys=True) for item in destino}
+        for item in origem:
+            chave = json.dumps(item, ensure_ascii=False, sort_keys=True)
+            if chave not in vistos:
+                resultado.append(item)
+                vistos.add(chave)
+        return resultado
+    if destino is None:
+        return origem
+    if origem is not None and origem != destino:
+        diagnostico.conflitos_consolidacao.append(caminho)
+    return destino
+
+
+def _montar_prompt_parte(texto_parte: str, indice: int, total: int) -> str:
+    return montar_prompt(texto_parte).replace(
+        "Analise TODO o documento a seguir",
+        f"Analise somente a parte semântica {indice}/{total} do documento. "
+        "Retorne o mesmo contrato completo, preenchendo apenas o que estiver claramente nesta parte",
+    )
+
+
+def _extrair_particionado(texto: str, diagnostico: DiagnosticoImportacao, chamador: Any) -> dict[str, Any]:
+    partes = _partes_semanticas(texto)
+    if len(partes) < 2:
+        raise ErroOpenRouter("Não foi possível obter duas partes semânticas para o fallback.", categoria="particionamento")
+    consolidado = _dados_vazios()
+    for indice, parte in enumerate(partes, 1):
+        patch = chamador(_montar_prompt_parte(parte, indice, len(partes)), len(parte), diagnostico=diagnostico,
+                         finalidade=f"parte_{indice}_de_{len(partes)}")
+        validar_estrutura(patch)
+        consolidado = _mesclar_valores(consolidado, patch, "", diagnostico)
+    validar_estrutura(consolidado)
+    return consolidado
+
+
+def analisar_pdf_adaptativo(caminho: Path, *, chamador: Any = chamar_api) -> tuple[dict[str, Any], DiagnosticoImportacao]:
+    """Executa uma chamada por padrão e só particiona sob risco observável/timeout."""
+    texto, diagnostico = analisar_complexidade_pdf(caminho)
+    decisao = decidir_estrategia(diagnostico)
+    try:
+        dados = chamador(montar_prompt(texto), len(texto), diagnostico=diagnostico, finalidade="integral")
+    except ErroOpenRouter as erro:
+        if not erro.permite_fallback_particionado:
+            raise
+        diagnostico.estrategia = "fallback_particionado"
+        diagnostico.fallback = f"{erro.categoria}:{erro.codigo or 'sem_codigo'}"
+        dados = _extrair_particionado(texto, diagnostico, chamador)
+    validar_estrutura(dados)
+    return dados, diagnostico
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Analisa um PPC com uma única chamada à API.")
     parser.add_argument("pdf", type=Path, help="Caminho para o PDF")
@@ -577,10 +829,8 @@ def main() -> int:
     if not args.pdf.is_file():
         parser.error(f"Arquivo não encontrado: {args.pdf}")
 
-    texto = extrair_texto_integral(args.pdf)
-    print(f"{len(texto):,} caracteres extraídos; enviando uma única requisição...")
-    dados = chamar_api(montar_prompt(texto), len(texto))
-    validar_estrutura(dados)
+    dados, diagnostico = analisar_pdf_adaptativo(args.pdf)
+    print(f"Estratégia={diagnostico.estrategia}; sinais={', '.join(diagnostico.sinais) or 'nenhum'}; chamadas={len(diagnostico.chamadas)}.")
     pre_save = validar_pre_save_django(dados)
 
     destino = Path(__file__).parent / "resultados"
@@ -589,6 +839,9 @@ def main() -> int:
     arquivo_saida.write_text(json.dumps(dados, ensure_ascii=False, indent=2), encoding="utf-8")
     arquivo_pre_save = destino / f"{args.pdf.stem}.pre_save.json"
     arquivo_pre_save.write_text(json.dumps(pre_save, ensure_ascii=False, indent=2), encoding="utf-8")
+    (destino / f"{args.pdf.stem}.diagnostico.json").write_text(
+        json.dumps(diagnostico.como_dict(), ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     print(f"Análise estruturada salva em: {arquivo_saida}")
     print(f"Relatório de pré-save Django salvo em: {arquivo_pre_save}")
     print(
