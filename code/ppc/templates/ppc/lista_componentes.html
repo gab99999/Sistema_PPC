@@ -12,6 +12,17 @@
     <br><br>
 
     <h3>Componentes Curriculares</h3>
+    {% if componentes_rascunho %}
+        <div class="alerta alerta-info">Componentes abaixo pertencem ao rascunho de importação e ainda não foram salvos.</div>
+        <table class="tabela-dados">
+            <tr><th>Período</th><th>Nome</th><th>Núcleo</th><th>Natureza</th><th>CH Total</th><th>Revisão</th></tr>
+            {% for componente in componentes_rascunho %}
+                <tr><td>{{ componente.periodo|default:"—" }}</td><td>{{ componente.nome|default:"—" }}</td><td>{{ componente.nucleo|default:"—" }}</td><td>{{ componente.natureza|default:"—" }}</td><td>{{ componente.carga_horaria_teorica|default:0|add:componente.carga_horaria_pratica|default:0 }}h</td><td>{{ componente.ementa|default:"Sem ementa"|truncatechars:80 }}</td></tr>
+                {% if componente.bibliografias %}<tr><td colspan="6"><strong>Bibliografias:</strong> {% for bibliografia in componente.bibliografias %}{{ bibliografia.tipo }} — {{ bibliografia.titulo }}{% if not forloop.last %}; {% endif %}{% endfor %}</td></tr>{% endif %}
+                {% if componente.relacoes %}<tr><td colspan="6"><strong>Relações:</strong> {% for relacao in componente.relacoes %}{{ relacao.tipo }}: {{ relacao.componente_relacionado_nome }}{% if not forloop.last %}; {% endif %}{% endfor %}</td></tr>{% endif %}
+            {% endfor %}
+        </table><br>
+    {% endif %}
     <a href="{% url 'criar_componente' ppc.id %}" class="btn btn-primario">+ Novo Componente</a>
 
     <table class="tabela-dados">

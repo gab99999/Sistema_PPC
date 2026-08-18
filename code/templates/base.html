@@ -27,6 +27,7 @@
         {% endif %}
     </nav>
     <main id="conteudo-principal">
+        {% if messages %}{% for message in messages %}<div class="alerta alerta-{{ message.tags|default:'info' }}" role="status">{{ message }}</div>{% endfor %}{% endif %}
         {% block content %}{% endblock %}
     </main>
     <footer class="rodape">

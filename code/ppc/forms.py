@@ -1,9 +1,28 @@
 from django import forms
+from django.core.exceptions import ValidationError
 from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoComponente, ComponenteCurricular, MembroNDE
 from django.contrib.auth.models import User, Group
 
 class ImportarPDFForm(forms.Form):
-    arquivo = forms.FileField(label="Arquivo PDF do PPC")
+    arquivo = forms.FileField(label="Arquivo PDF do PPC", widget=forms.ClearableFileInput(attrs={"accept": "application/pdf,.pdf"}))
+
+
+# forms.py — ImportarPPCModeloAntigoForm sem codigo_ppc; agora só pede o arquivo
+class ImportarPPCModeloAntigoForm(forms.Form):
+    arquivo = forms.FileField(
+        label="Documento do PPC (PDF)",
+        help_text="PDF do PPC antigo, fora do formato do sistema.",
+    )
+
+    def clean_arquivo(self):
+        arquivo = self.cleaned_data["arquivo"]
+        if not arquivo.name.lower().endswith(".pdf"):
+            raise ValidationError("Envie um arquivo no formato PDF.")
+        inicio = arquivo.read(5)
+        arquivo.seek(0)
+        if inicio != b"%PDF-":
+            raise ValidationError("O arquivo enviado não é um PDF válido.")
+        return arquivo
 
 
 class MembroNDEForm(forms.ModelForm):

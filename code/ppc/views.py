@@ -3,11 +3,13 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.contrib import messages
 from django.template.loader import render_to_string
 from django.db.models import Prefetch
 from django.utils.text import slugify
 from weasyprint import HTML
+from ppc.testes.analisar_pdf_uma_chamada import analisar_pdf_adaptativo, ErroOpenRouter
 from .models import Curso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE
 from .forms import (PPCInformacoesGeraisForm, ObjetivosForm, EditarPermissoesForm, CursoForm,
                     InformacoesGeraisForm, ApresentacaoForm, ExposicaoMotivosForm, PrincipiosForm,
@@ -15,20 +17,35 @@ from .forms import (PPCInformacoesGeraisForm, ObjetivosForm, EditarPermissoesFor
                      PoliticasIntegradaForm, AvaliacaoEnsinoForm, AvalicaoProjetoCursoForm,
                     QualificacaoForm, RequisitosLegaisForm, ApendiceForm, DinamicaEADForm, 
                     EstruturaCurricularForm, ComponenteCurricularForm, BibliografiaForm, RelacaoComponenteForm,
-                    ReferenciasForm, MembroNDEForm, ImportarPDFForm, )
+                    ReferenciasForm, MembroNDEForm, ImportarPDFForm, ImportarPPCModeloAntigoForm, )
 from django.db.models import Q
 from .importacao import extrair_dados_pdf
+from .importacao_modelos_antigos import ErroImportacaoPPC, preparar_importacao_modelo_antigo
+import logging
+from types import SimpleNamespace
+from django.db import transaction
+
+import tempfile
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 CAMPOS_PPC_VALIDOS = {f.name for f in PPC._meta.get_fields()}
 
 @login_required
-def importar_ppc_pdf(request, curso_id):
+def escolher_importacao_ppc(request, curso_id):
+    curso = get_object_or_404(Curso, id=curso_id)
+    return render(request, 'ppc/importar_ppc.html', {'curso': curso})
+
+
+@login_required
+def importar_ppc_modelo_novo(request, curso_id):
+    """Fluxo legado: preserva a extração determinística de ``importacao.py``."""
     curso = get_object_or_404(Curso, id=curso_id)
     if request.method == 'POST':
         form = ImportarPDFForm(request.POST, request.FILES)
         if form.is_valid():
             dados = extrair_dados_pdf(request.FILES['arquivo'])
-
             dados_ppc = {k: v for k, v in dados.items() if k in CAMPOS_PPC_VALIDOS}
             dados_ppc.setdefault('modalidade', 'presencial')
             dados_ppc.setdefault('grau_academico', 'bacharelado')
@@ -39,18 +56,210 @@ def importar_ppc_pdf(request, curso_id):
             dados_ppc.setdefault('duracao_media_semestres', 0)
             dados_ppc.setdefault('duracao_maxima_semestres', 0)
             dados_ppc['status'] = 'rascunho'
-
             ppc = PPC.objects.create(curso=curso, **dados_ppc)
             return redirect('editar_informacoes_gerais', ppc_id=ppc.id)
     else:
         form = ImportarPDFForm()
-    return render(request, 'ppc/importar_ppc.html', {'form': form, 'curso': curso})
+    return render(request, 'ppc/importar_ppc_modelo_novo.html', {'form': form, 'curso': curso})
+
+def _inteiro_nao_negativo(valor) -> int:
+    """PositiveIntegerField não aceita None nem negativo; dado corrompido vira 0
+    para revisão humana posterior, igual ao tratamento de campo ausente."""
+    try:
+        numero = int(valor)
+    except (TypeError, ValueError):
+        return 0
+    return numero if numero >= 0 else 0
+
+
+@login_required
+def importar_ppc_modelo_antigo(request, curso_id):
+    """Caminho 2: cria PPC em rascunho com extração por IA, com revisão humana obrigatória depois."""
+    curso = get_object_or_404(Curso, id=curso_id)
+    if request.method == 'POST':
+        form = ImportarPPCModeloAntigoForm(request.POST, request.FILES)
+        if not form.is_valid():
+            return _resposta_erro_importacao(request, form, curso, "Revise os dados informados.", 400)
+
+        chave = f"importacao_antiga_em_andamento_{curso.id}"
+        if request.session.get(chave):
+            return _resposta_erro_importacao(request, form, curso, "Já existe uma importação em andamento para este curso.", 409)
+        request.session[chave] = True
+        request.session.modified = True
+
+        arquivo_temporario = None
+        try:
+            # analisar_pdf_adaptativo espera um Path em disco, não o UploadedFile do Django.
+            upload = form.cleaned_data['arquivo']
+            with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+                for pedaco in upload.chunks():
+                    tmp.write(pedaco)
+                arquivo_temporario = Path(tmp.name)
+
+            dados, diagnostico = analisar_pdf_adaptativo(arquivo_temporario)
+            with transaction.atomic():
+                ppc = criar_ppc_rascunho_a_partir_de_dados_ia(dados, curso)
+        except (ErroOpenRouter, ValueError) as erro:
+            logger.exception("Falha na importação antiga do PPC, curso id=%s", curso.id)
+            return _resposta_erro_importacao(request, form, curso, _mensagem_amigavel_importacao(erro), 422)
+        except Exception:
+            logger.exception("Erro inesperado na importação antiga do PPC, curso id=%s", curso.id)
+            return _resposta_erro_importacao(request, form, curso, "Não foi possível concluir a importação agora. Tente novamente em alguns minutos.", 500)
+        finally:
+            if arquivo_temporario is not None:
+                arquivo_temporario.unlink(missing_ok=True)
+            request.session.pop(chave, None)
+            request.session.modified = True
+
+        destino = redirect('editar_informacoes_gerais', ppc_id=ppc.id).url
+        if _requisicao_ajax(request):
+            return JsonResponse({"ok": True, "redirect_url": destino})
+        messages.success(request, "PPC importado como rascunho. Revise todos os campos antes de finalizar.")
+        return redirect(destino)
+    return render(request, 'ppc/importar_ppc_modelo_antigo.html', {'form': ImportarPPCModeloAntigoForm(), 'curso': curso})
+
+CAMPOS_PPC_VALIDOS = {  # supondo que já existe algo assim no Caminho 1 — reaproveite se já tiver
+    'modalidade', 'grau_academico', 'turno_funcionamento', 'carga_horaria_total',
+    'numero_vagas_anuais', 'duracao_minima_semestres', 'duracao_media_semestres',
+    'duracao_maxima_semestres', 'diretor', 'vice_diretor', 'coordenador_curso',
+    'numero_resolucao', 'tipo_ppc', 'publico_alvo_ead', 'ato_integracao_uab',
+    'ato_credenciamento_mec', 'polos_ead', 'apresentacao_texto', 'exposicao_motivos',
+    'objetivo_geral', 'objetivo_especifico', 'principios_geral',
+    'principios_pratica_profissional', 'principios_formacao_tecnica',
+    'principios_formacao_etica_social', 'principios_interdisciplinaridade',
+    'principios_articulacao_teoria_pratica', 'perfil_curso', 'perfil_habilidades',
+    'estrutura_curricular_descricao', 'estrutura_curricular_informacoes_complementares',
+    'estagio', 'tcc', 'atividades_complementares', 'politicas_integrada',
+    'avaliacao_ensino_aprendizagem', 'avaliacao_projeto_curso', 'qualificacao',
+    'diretrizes_curriculares_nacionais_curso', 'diretrizes_curriculares_nacionais_educacao_basica',
+    'diretrizes_etnico_raciais_historia_cultura_afro_indigena', 'diretrizes_educacao_direitos_humanos',
+    'protecao_direitos_pessoa_transtorno_espectro_autista', 'componente_curricular_libras',
+    'politicas_educacao_ambiental', 'diretrizes_formacao_professores_educacao_basica',
+    'condicoes_acesso_pessoas_deficiencia_mobilidade_reduzida', 'bibliografias_ppc',
+}
+
+FALLBACKS_PPC_OBRIGATORIOS = {
+    'modalidade': 'presencial',
+    'grau_academico': 'bacharelado',
+    'tipo_ppc': 'novo',
+    'carga_horaria_total': 0,
+    'numero_vagas_anuais': 0,
+    'duracao_minima_semestres': 0,
+    'duracao_media_semestres': 0,
+    'duracao_maxima_semestres': 0,
+}
+
+
+def criar_ppc_rascunho_a_partir_de_dados_ia(dados: dict, curso) -> "PPC":
+    dados_ppc = {k: v for k, v in dados.get('ppc', {}).items() if k in CAMPOS_PPC_VALIDOS and v is not None}
+    for campo, valor_padrao in FALLBACKS_PPC_OBRIGATORIOS.items():
+        dados_ppc.setdefault(campo, valor_padrao)
+    dados_ppc['status'] = 'rascunho'
+
+    ppc = PPC.objects.create(curso=curso, **dados_ppc)
+
+    mapa_componentes = {}
+    for item in dados.get('componentes_curriculares', []):
+        componente = ComponenteCurricular.objects.create(
+            ppc=ppc,
+            nome=item.get('nome') or '',
+            tipo=item.get('tipo') or '',
+            natureza=item.get('natureza') or '',
+            nucleo=item.get('nucleo') or '',
+            periodo=_inteiro_nao_negativo(item.get('periodo')),
+            carga_horaria_teorica=_inteiro_nao_negativo(item.get('carga_horaria_teorica')),
+            carga_horaria_pratica=_inteiro_nao_negativo(item.get('carga_horaria_pratica')),
+            carga_horaria_pcc=_inteiro_nao_negativo(item.get('carga_horaria_pcc')),
+            unidade_academica_componente=item.get('unidade_academica_componente') or '',
+            ementa=item.get('ementa') or '',
+        )
+        mapa_componentes[item.get('nome')] = componente
+
+        for bib in item.get('bibliografias', []):
+            Bibliografia.objects.create(
+                componente=componente,
+                tipo=bib.get('tipo') or '',
+                titulo=bib.get('titulo') or '',
+                autores=bib.get('autores') or '',
+                editora=bib.get('editora') or '',
+                cidade=bib.get('cidade') or '',
+                ano=bib.get('ano'),
+            )
+
+    for item in dados.get('componentes_curriculares', []):
+        origem = mapa_componentes.get(item.get('nome'))
+        if origem is None:
+            continue
+        for relacao in item.get('relacoes', []):
+            destino = mapa_componentes.get(relacao.get('componente_relacionado_nome'))
+            if destino is None or destino == origem:
+                continue  # componente relacionado fora do PDF, ou auto-relação — ignora
+            RelacaoComponente.objects.get_or_create(
+                componente=origem,
+                componente_relacionado=destino,
+                tipo=relacao.get('tipo') or '',
+            )
+
+    return ppc
+
+def _requisicao_ajax(request):
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+
+def _resposta_erro_importacao(request, form, curso, mensagem, status):
+    if _requisicao_ajax(request):
+        return JsonResponse({"ok": False, "erro": mensagem, "campos": form.errors}, status=status)
+    form.add_error(None, mensagem)
+    return render(request, 'ppc/importar_ppc_modelo_antigo.html', {'form': form, 'curso': curso}, status=status)
+
+
+def _rascunho_importacao_antiga(request, ppc_id):
+    """Obtém somente o rascunho associado ao PPC desta sessão."""
+    rascunho = request.session.get(f"rascunho_importacao_antiga_{ppc_id}", {})
+    return rascunho if isinstance(rascunho, dict) else {}
+
+
+def _initial_rascunho(request, ppc, classe_form, secao="ppc"):
+    """Sobrepõe o banco apenas na primeira apresentação do campo em revisão."""
+    dados = _rascunho_importacao_antiga(request, ppc.id).get("dados", {})
+    origem = dados.get(secao, {}) if isinstance(dados, dict) else {}
+    campos = getattr(classe_form.Meta, "fields", [])
+    return {campo: origem[campo] for campo in campos if origem.get(campo) is not None}
+
+
+def _consumir_campos_rascunho(request, ppc, classe_form, secao="ppc"):
+    """Após salvar uma seção, o valor manual passa a ter prioridade sobre o rascunho."""
+    chave = f"rascunho_importacao_antiga_{ppc.id}"
+    rascunho = _rascunho_importacao_antiga(request, ppc.id)
+    dados = rascunho.get("dados", {})
+    origem = dados.get(secao, {}) if isinstance(dados, dict) else {}
+    for campo in getattr(classe_form.Meta, "fields", []):
+        origem.pop(campo, None)
+    if origem is not None:
+        dados[secao] = origem
+    request.session[chave] = rascunho
+    request.session.modified = True
+
+
+def _mensagem_amigavel_importacao(erro):
+    detalhe = str(erro).lower()
+    if 'timeout' in detalhe or '504' in detalhe:
+        return "A análise demorou mais do que o esperado. Nenhuma alteração foi aplicada; tente novamente."
+    if 'openrouter' in detalhe or 'provider' in detalhe:
+        return "O serviço de análise não respondeu corretamente. Tente novamente em alguns minutos."
+    if 'json' in detalhe or 'estrutura' in detalhe:
+        return "O resultado da análise não pôde ser validado. Tente novamente com o PDF original."
+    if 'pdf' in detalhe or 'texto extraível' in detalhe:
+        return "Não foi possível ler este PDF. Confirme se o arquivo é o documento original e tente novamente."
+    return "A importação falhou. Verifique o arquivo e tente novamente."
 
 @login_required
 def lista_nde(request, curso_id):
     curso = get_object_or_404(Curso, id=curso_id)
     membros = curso.membros_nde.filter(ativo=True).order_by('-funcao', 'nome')
-    return render(request, 'ppc/lista_nde.html', {'curso': curso, 'membros': membros})
+    rascunho = _rascunho_importacao_antiga(request, request.GET.get('ppc_id', 0))
+    membros_rascunho = rascunho.get('dados', {}).get('membros_nde', [])
+    return render(request, 'ppc/lista_nde.html', {'curso': curso, 'membros': membros, 'membros_rascunho': membros_rascunho})
 
 
 @login_required
@@ -119,7 +328,7 @@ def editar_referencias(request, ppc_id):
             form.save()
             return redirect('editar_referencias', ppc_id=ppc.id)
     else:
-        form = ReferenciasForm(instance=ppc)
+        form = ReferenciasForm(instance=ppc, initial=_initial_rascunho(request, ppc, ReferenciasForm))
     return render(request, 'ppc/editar_referencias.html', {'form': form, 'ppc': ppc})
 
 
@@ -263,12 +472,15 @@ def lista_componentes(request, ppc_id):
             estrutura_form.save()
             return redirect('lista_componentes', ppc_id=ppc.id)
     else:
-        estrutura_form = EstruturaCurricularForm(instance=ppc)
+        estrutura_form = EstruturaCurricularForm(instance=ppc, initial=_initial_rascunho(request, ppc, EstruturaCurricularForm))
+
+    dados_rascunho = _rascunho_importacao_antiga(request, ppc.id).get('dados', {})
 
     return render(request, 'ppc/lista_componentes.html', {
         'ppc': ppc,
         'componentes': componentes,
         'estrutura_form': estrutura_form,
+        'componentes_rascunho': dados_rascunho.get('componentes_curriculares', []),
     })
 
 
@@ -284,19 +496,20 @@ def editar_apendices(request, ppc_id):
             return redirect('editar_apendices', ppc_id=ppc.id)
     else:
         form = ApendiceForm()
-    return render(request, 'ppc/apendices.html', {'form': form, 'ppc': ppc})
+    apendices_rascunho = _rascunho_importacao_antiga(request, ppc.id).get('dados', {}).get('apendices', [])
+    return render(request, 'ppc/apendices.html', {'form': form, 'ppc': ppc, 'apendices_rascunho': apendices_rascunho})
 
 @login_required
 def editar_dinamicas_ead(request, ppc_id):
     ppc = get_object_or_404(PPC, id=ppc_id)
-    dinamica, criado = DinamicaEAD.objects.get_or_create(ppc=ppc)
+    dinamica = DinamicaEAD.objects.filter(ppc=ppc).first() or DinamicaEAD(ppc=ppc)
     if request.method == 'POST':
         form = DinamicaEADForm(request.POST, instance=dinamica)
         if form.is_valid():
             form.save()
             return redirect('editar_dinamicas_ead', ppc_id=ppc.id)
     else:
-        form = DinamicaEADForm(instance=dinamica)
+        form = DinamicaEADForm(instance=dinamica, initial=_initial_rascunho(request, ppc, DinamicaEADForm, 'dinamica_ead'))
     return render(request, 'ppc/editar_dinamicas_ead.html', {'form': form, 'ppc': ppc})
 @login_required
 def editar_requisitos_legais(request, ppc_id):
@@ -307,7 +520,7 @@ def editar_requisitos_legais(request, ppc_id):
             form.save()
             return redirect('editar_requisitos_legais', ppc_id=ppc.id)
     else:
-        form = RequisitosLegaisForm(instance=ppc)
+        form = RequisitosLegaisForm(instance=ppc, initial=_initial_rascunho(request, ppc, RequisitosLegaisForm))
     return render(request, 'ppc/editar_requisitos_legais.html', {'form': form, 'ppc': ppc})
 
 @login_required
@@ -319,7 +532,7 @@ def editar_qualificacao(request, ppc_id):
             form.save()
             return redirect('editar_qualificacao', ppc_id=ppc.id)
     else:
-        form = PrincipiosForm(instance=ppc)
+        form = QualificacaoForm(instance=ppc, initial=_initial_rascunho(request, ppc, QualificacaoForm))
     return render(request, 'ppc/editar_qualificacao.html', {'form': form, 'ppc': ppc})
 
 @login_required
@@ -331,7 +544,7 @@ def editar_avaliacao_projeto_curso(request, ppc_id):
             form.save()
             return redirect('editar_avaliacao_projeto_curso', ppc_id=ppc.id)
     else:
-        form = AvalicaoProjetoCursoForm(instance=ppc)
+        form = AvalicaoProjetoCursoForm(instance=ppc, initial=_initial_rascunho(request, ppc, AvalicaoProjetoCursoForm))
     return render(request, 'ppc/editar_avaliacao_projeto_curso.html', {'form': form, 'ppc': ppc})
 
 @login_required
@@ -343,7 +556,7 @@ def editar_avaliacao_ensino(request, ppc_id):
             form.save()
             return redirect('editar_avaliacao_ensino', ppc_id=ppc.id)
     else:
-        form = AvaliacaoEnsinoForm(instance=ppc)
+        form = AvaliacaoEnsinoForm(instance=ppc, initial=_initial_rascunho(request, ppc, AvaliacaoEnsinoForm))
     return render(request, 'ppc/editar_avaliacao_ensino.html', {'form': form, 'ppc': ppc})
 
 @login_required
@@ -355,7 +568,7 @@ def editar_politicas_integrada(request, ppc_id):
             form.save()
             return redirect('editar_politicas_integrada', ppc_id=ppc.id)
     else:
-        form = PoliticasIntegradaForm(instance=ppc)
+        form = PoliticasIntegradaForm(instance=ppc, initial=_initial_rascunho(request, ppc, PoliticasIntegradaForm))
     return render(request, 'ppc/editar_politicas_integrada.html', {'form': form, 'ppc': ppc})
 
 @login_required
@@ -367,7 +580,7 @@ def editar_atividades_complementares(request, ppc_id):
             form.save()
             return redirect('editar_atividades_complementares', ppc_id=ppc.id)
     else:
-        form = AtividadesComplementaresForm(instance=ppc)
+        form = AtividadesComplementaresForm(instance=ppc, initial=_initial_rascunho(request, ppc, AtividadesComplementaresForm))
     return render(request, 'ppc/editar_atividades_complementares.html', {'form': form, 'ppc': ppc})
 
 @login_required
@@ -379,7 +592,7 @@ def editar_estagio(request, ppc_id):
             form.save()
             return redirect('editar_estagio', ppc_id=ppc.id)
     else:
-        form = EstagioForm(instance=ppc)
+        form = EstagioForm(instance=ppc, initial=_initial_rascunho(request, ppc, EstagioForm))
     return render(request, 'ppc/editar_estagio.html', {'form': form, 'ppc': ppc})
 
 @login_required
@@ -391,7 +604,7 @@ def editar_tcc(request, ppc_id):
             form.save()
             return redirect('editar_tcc', ppc_id=ppc.id)
     else:
-        form = TccForm(instance=ppc)
+        form = TccForm(instance=ppc, initial=_initial_rascunho(request, ppc, TccForm))
     return render(request, 'ppc/editar_tcc.html', {'form': form, 'ppc': ppc})
 
 @login_required
@@ -403,7 +616,7 @@ def editar_expectativas(request, ppc_id):
             form.save()
             return redirect('editar_expectativas', ppc_id=ppc.id)
     else:
-        form = ExpectativasForm(instance=ppc)
+        form = ExpectativasForm(instance=ppc, initial=_initial_rascunho(request, ppc, ExpectativasForm))
     return render(request, 'ppc/editar_expectativas.html', {'form': form, 'ppc': ppc})
 
 @login_required
@@ -415,7 +628,7 @@ def editar_principios(request, ppc_id):
             form.save()
             return redirect('editar_principios', ppc_id=ppc.id)
     else:
-        form = PrincipiosForm(instance=ppc)
+        form = PrincipiosForm(instance=ppc, initial=_initial_rascunho(request, ppc, PrincipiosForm))
     return render(request, 'ppc/editar_principios.html', {'form': form, 'ppc': ppc})
 
 @login_required
@@ -425,9 +638,10 @@ def editar_informacoes_gerais(request, ppc_id):
         form = InformacoesGeraisForm(request.POST, instance=ppc)
         if form.is_valid():
             form.save()
+            _consumir_campos_rascunho(request, ppc, InformacoesGeraisForm)
             return redirect('editar_informacoes_gerais', ppc_id=ppc.id)
     else:
-        form = InformacoesGeraisForm(instance=ppc)
+        form = InformacoesGeraisForm(instance=ppc, initial=_initial_rascunho(request, ppc, InformacoesGeraisForm))
     return render(request, 'ppc/editar_informacoes_gerais.html', {'form': form, 'ppc': ppc})
 
 
@@ -438,9 +652,10 @@ def editar_apresentacao(request, ppc_id):
         form = ApresentacaoForm(request.POST, instance=ppc)
         if form.is_valid():
             form.save()
+            _consumir_campos_rascunho(request, ppc, ApresentacaoForm)
             return redirect('editar_apresentacao', ppc_id=ppc.id)
     else:
-        form = ApresentacaoForm(instance=ppc)
+        form = ApresentacaoForm(instance=ppc, initial=_initial_rascunho(request, ppc, ApresentacaoForm))
     return render(request, 'ppc/editar_apresentacao.html', {'form': form, 'ppc': ppc})
 
 
@@ -451,9 +666,10 @@ def editar_exposicao_motivos(request, ppc_id):
         form = ExposicaoMotivosForm(request.POST, instance=ppc)
         if form.is_valid():
             form.save()
+            _consumir_campos_rascunho(request, ppc, ExposicaoMotivosForm)
             return redirect('editar_exposicao_motivos', ppc_id=ppc.id)
     else:
-        form = ExposicaoMotivosForm(instance=ppc)
+        form = ExposicaoMotivosForm(instance=ppc, initial=_initial_rascunho(request, ppc, ExposicaoMotivosForm))
     return render(request, 'ppc/editar_exposicao_motivos.html', {'form': form, 'ppc': ppc})
 
 @staff_member_required(login_url='login')
@@ -551,9 +767,10 @@ def editar_objetivos(request, ppc_id):
         form = ObjetivosForm(request.POST, instance=ppc)
         if form.is_valid():
             form.save()
+            _consumir_campos_rascunho(request, ppc, ObjetivosForm)
             return redirect('editar_objetivos', ppc_id=ppc.id)
     else:
-        form = ObjetivosForm(instance=ppc)
+        form = ObjetivosForm(instance=ppc, initial=_initial_rascunho(request, ppc, ObjetivosForm))
     return render(request, 'ppc/editar_objetivos.html', {'form': form, 'ppc': ppc})
 
 

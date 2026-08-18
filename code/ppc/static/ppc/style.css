@@ -113,6 +113,19 @@ select:focus-visible {
     margin-bottom: 1rem;
 }
 
+.ajuda-campo { display: block; margin-top: 0.4rem; color: var(--cor-texto-suave); font-size: 0.82rem; }
+.alerta { margin: 0 0 1rem; padding: 0.8rem 1rem; border: 1px solid var(--cor-borda); border-left-width: 4px; border-radius: var(--raio); background: var(--cor-superficie); }
+.alerta-success { border-left-color: var(--cor-sucesso); }
+.alerta-erro, .alerta-error { border-left-color: var(--cor-perigo); color: var(--cor-perigo); }
+.alerta-info { border-left-color: var(--cor-destaque); }
+.card-importacao { max-width: 760px; }
+.painel-processamento { display: flex; align-items: center; gap: 1rem; max-width: 760px; margin-top: 1rem; padding: 1rem 1.25rem; border: 1px solid var(--cor-borda); border-radius: var(--raio); background: var(--cor-superficie); box-shadow: var(--sombra); }
+.painel-processamento[hidden], .alerta[hidden] { display: none !important; }
+.painel-processamento h2 { margin-bottom: 0.25rem; }
+.painel-processamento p { margin: 0; }
+.spinner { width: 30px; height: 30px; flex: 0 0 auto; border: 4px solid var(--cor-borda); border-top-color: var(--cor-primaria); border-radius: 50%; animation: girar-spinner 0.85s linear infinite; }
+@keyframes girar-spinner { to { transform: rotate(360deg); } }
+
 /* -- Botões -- */
 .btn {
     display: inline-block;
@@ -212,6 +225,7 @@ select:focus-visible {
 .form-secao input[type="text"],
 .form-secao input[type="number"],
 .form-secao input[type="password"],
+.form-secao input[type="file"],
 .form-secao select,
 .form-secao textarea {
     width: 100%;

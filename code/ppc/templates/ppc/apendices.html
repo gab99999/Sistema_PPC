@@ -3,6 +3,11 @@
 {% block ppc_content %}
     <h2>Apêndices</h2>
 
+    {% if apendices_rascunho %}
+        <div class="alerta alerta-info">Apêndices abaixo pertencem ao rascunho e ainda não foram salvos.</div>
+        <ul class="lista-cursos">{% for apendice in apendices_rascunho %}<li class="card"><h3 class="card-titulo">{{ apendice.titulo }}</h3><p class="card-corpo">{{ apendice.tipo }}{% if apendice.descricao %} · {{ apendice.descricao }}{% endif %}</p></li>{% endfor %}</ul>
+    {% endif %}
+
     <ul class="lista-cursos">
         {% for apendice in ppc.apendices.all %}
             <li class="card">

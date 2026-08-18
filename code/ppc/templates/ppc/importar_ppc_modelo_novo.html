@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Importar PPC modelo novo{% endblock %}
+{% block content %}
+    <a href="{% url 'importar_ppc_pdf' curso.id %}" class="link-voltar">← Escolher outro tipo de importação</a>
+    <h1>Importar PPC modelo novo</h1>
+    <p class="card-corpo">Use este fluxo para PDFs gerados pelo formato atual do sistema.</p>
+    <form method="post" enctype="multipart/form-data" class="form-secao">
+        {% csrf_token %}{{ form.as_p }}
+        <button type="submit" class="btn btn-primario">Importar</button>
+    </form>
+{% endblock %}

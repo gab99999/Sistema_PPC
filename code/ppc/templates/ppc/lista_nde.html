@@ -5,6 +5,11 @@
     <h1>Núcleo Docente Estruturante</h1>
     <a href="{% url 'criar_membro_nde' curso.id %}" class="btn btn-primario">+ Novo Membro</a>
 
+    {% if membros_rascunho %}
+        <div class="alerta alerta-info">Membros abaixo pertencem ao rascunho de importação e ainda não foram salvos.</div>
+        <table class="tabela-dados"><tr><th>Nome</th><th>Titulação</th><th>Regime</th><th>Função</th></tr>{% for membro in membros_rascunho %}<tr><td>{{ membro.nome }}</td><td>{{ membro.titulacao|default:"—" }}</td><td>{{ membro.regime_trabalho|default:"—" }}</td><td>{{ membro.funcao|default:"—" }}</td></tr>{% endfor %}</table><br>
+    {% endif %}
+
     <table class="tabela-dados">
         <tr><th>Nome</th><th>Titulação</th><th>Regime</th><th>Função</th><th>Desde</th><th>Ação</th></tr>
         {% for membro in membros %}

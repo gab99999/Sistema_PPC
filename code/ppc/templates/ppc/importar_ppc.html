@@ -1,11 +1,21 @@
 {% extends "base.html" %}
 {% block title %}Importar PPC{% endblock %}
 {% block content %}
-    <h1>Importar PPC (PDF no formato do sistema)</h1>
-    <p class="card-corpo">Funciona para PDFs gerados por este sistema ou que sigam exatamente a mesma estrutura de capítulos. A Estrutura Curricular (componentes) precisa ser cadastrada manualmente depois.</p>
-    <form method="post" enctype="multipart/form-data" class="form-secao">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primario">Importar</button>
-    </form>
+    <a href="{% url 'detalhe_curso' curso.id %}" class="link-voltar">← Voltar para {{ curso.nome }}</a>
+    <div class="card cabecalho-curso">
+        <h1>Importar PPC</h1>
+        <p class="card-corpo">Escolha o tipo de PPC que deseja importar para {{ curso.nome }}.</p>
+    </div>
+    <div class="grade-recursos">
+        <article class="card card-recurso">
+            <h2 class="card-titulo">PPC Modelo Novo</h2>
+            <p class="card-corpo">Utiliza o formato atual de PPC e o fluxo de importação já disponível no sistema.</p>
+            <a href="{% url 'importar_ppc_modelo_novo' curso.id %}" class="btn btn-primario">Importar modelo novo</a>
+        </article>
+        <article class="card card-recurso">
+            <h2 class="card-titulo">PPC Modelo Antigo</h2>
+            <p class="card-corpo">Analisa documentos antigos e prepara os dados para a revisão nos formulários.</p>
+            <a href="{% url 'importar_ppc_modelo_antigo' curso.id %}" class="btn btn-secundario">Importar modelo antigo</a>
+        </article>
+    </div>
 {% endblock %}

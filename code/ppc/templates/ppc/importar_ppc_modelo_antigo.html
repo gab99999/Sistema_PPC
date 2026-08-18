@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Importar PPC modelo antigo{% endblock %}
+{% block content %}
+    <a href="{% url 'escolher_importacao_ppc' curso.id %}" class="link-voltar">← Escolher outro tipo de importação</a>
+    <div class="card cabecalho-curso">
+        <h1>Importar PPC modelo antigo</h1>
+        <p class="card-corpo">Envie o PDF do PPC antigo. Um novo PPC será criado automaticamente como rascunho, com os dados extraídos por IA — a revisão de cada campo é obrigatória depois, nenhum dado é considerado definitivo até você confirmar.</p>
+    </div>
+    <div class="card card-importacao">
+        <h2>Documento</h2>
+        <form method="post" enctype="multipart/form-data" class="form-secao" id="form-importacao" novalidate>
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            {% for field in form %}
+                <p>
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.help_text %}<small class="ajuda-campo">{{ field.help_text }}</small>{% endif %}
+                    {{ field.errors }}
+                </p>
+            {% endfor %}
+            <button type="submit" class="btn btn-primario" id="btn-importar">Importar PPC</button>
+        </form>
+    </div>
+
+    <section class="painel-processamento" id="painel-processamento" hidden aria-live="polite" aria-busy="false">
+        <span class="spinner" aria-hidden="true"></span>
+        <div>
+            <h2>Importando PPC…</h2>
+            <p id="etapa-processamento" class="card-corpo">Lendo o PDF e preparando o texto…</p>
+            <p class="card-corpo texto-auxiliar">Isso pode levar alguns minutos, conforme a extensão e a estrutura do documento. As etapas abaixo são uma estimativa do que costuma acontecer — não refletem o status exato no servidor.</p>
+        </div>
+    </section>
+
+    <div class="alerta alerta-erro" id="erro-importacao" role="alert" hidden></div>
+
+    <script>
+        (() => {
+            const form = document.getElementById('form-importacao');
+            const botao = document.getElementById('btn-importar');
+            const painel = document.getElementById('painel-processamento');
+            const etapaEl = document.getElementById('etapa-processamento');
+            const erro = document.getElementById('erro-importacao');
+            let enviando = false;
+            let intervaloEtapas = null;
+
+            // Mensagens ilustrativas do que costuma acontecer nessa etapa (baseado no
+            // pipeline real: leitura do PDF -> chamada única à IA -> eventual fallback
+            // particionado em caso de timeout). Não é status ao vivo do servidor —
+            // o POST é bloqueante, então não há como saber a etapa real em que está.
+            const etapas = [
+                'Lendo o PDF e preparando o texto…',
+                'Enviando o documento para análise por IA…',
+                'Aguardando resposta do modelo (pode levar alguns minutos)…',
+                'Ainda aguardando — documentos maiores demoram mais…',
+                'Se ainda estiver aqui, o sistema pode estar tentando novamente após um erro temporário…',
+            ];
+
+            function iniciarCicloDeEtapas() {
+                let indice = 0;
+                etapaEl.textContent = etapas[indice];
+                intervaloEtapas = setInterval(() => {
+                    // Fica repetindo a última mensagem (não a lista inteira de novo),
+                    // pra não parecer que "recomeçou do zero" em esperas longas.
+                    indice = Math.min(indice + 1, etapas.length - 1);
+                    etapaEl.textContent = etapas[indice];
+                }, 20000);
+            }
+
+            function pararCicloDeEtapas() {
+                if (intervaloEtapas) {
+                    clearInterval(intervaloEtapas);
+                    intervaloEtapas = null;
+                }
+            }
+
+            form.addEventListener('submit', async (evento) => {
+                evento.preventDefault();
+                if (enviando) return;
+                enviando = true;
+                botao.disabled = true;
+                botao.textContent = 'Importando…';
+                painel.hidden = false;
+                painel.setAttribute('aria-busy', 'true');
+                erro.hidden = true;
+                iniciarCicloDeEtapas();
+
+                try {
+                    const resposta = await fetch(form.action || window.location.href, {
+                        method: 'POST',
+                        body: new FormData(form),
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                        credentials: 'same-origin',
+                    });
+                    const dados = await resposta.json();
+                    if (!resposta.ok || !dados.ok) {
+                        throw new Error(dados.erro || 'Não foi possível concluir a importação.');
+                    }
+                    window.location.assign(dados.redirect_url);
+                } catch (falha) {
+                    pararCicloDeEtapas();
+                    erro.textContent = falha.message || 'A importação falhou. Tente novamente.';
+                    erro.hidden = false;
+                    painel.hidden = true;
+                    painel.setAttribute('aria-busy', 'false');
+                    botao.disabled = false;
+                    botao.textContent = 'Importar PPC';
+                    enviando = false;
+                }
+            });
+        })();
+    </script>
+{% endblock %}

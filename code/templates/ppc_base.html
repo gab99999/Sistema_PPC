@@ -39,6 +39,7 @@
        class="{% if request.resolver_match.url_name == 'editar_referencias' %}ativo{% endif %}">Referências</a>
    <a href="{% url 'editar_apendices' ppc.id %}"
        class="{% if request.resolver_match.url_name == 'editar_apendice' %}ativo{% endif %}">Apêndices</a>
+   <a href="{% url 'lista_nde' ppc.curso.id %}?ppc_id={{ ppc.id }}">Membros do NDE</a>
 </nav>
     <div id="ppc-conteudo">
         {% block ppc_content %}{% endblock %}

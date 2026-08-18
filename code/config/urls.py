@@ -28,7 +28,8 @@ from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario
                         editar_avaliacao_projeto_curso, editar_dinamicas_ead, editar_estagio, editar_politicas_integrada, editar_qualificacao, editar_requisitos_legais,
                         editar_tcc, lista_componentes, criar_componente, editar_componente, detalhe_componente, excluir_componente, 
                         excluir_bibliografia, editar_bibliografia, editar_relacao, excluir_relacao, editar_referencias, excluir_apendice,
-                        gerar_pdf_ppc, lista_nde, criar_membro_nde, editar_membro_nde, excluir_membro_nde, importar_ppc_pdf, )
+                        gerar_pdf_ppc, lista_nde, criar_membro_nde, editar_membro_nde, excluir_membro_nde,
+                        escolher_importacao_ppc, importar_ppc_modelo_novo, importar_ppc_modelo_antigo, )
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -79,7 +80,9 @@ urlpatterns = [
     path('cursos/<int:curso_id>/nde/novo/', criar_membro_nde, name='criar_membro_nde'),
     path('nde/<int:membro_id>/editar/', editar_membro_nde, name='editar_membro_nde'),
     path('nde/<int:membro_id>/excluir/', excluir_membro_nde, name='excluir_membro_nde'),
-    path('cursos/<int:curso_id>/importar/', importar_ppc_pdf, name='importar_ppc_pdf'),
+    path('cursos/<int:curso_id>/importar/', escolher_importacao_ppc, name='importar_ppc_pdf'),
+    path('cursos/<int:curso_id>/importar/modelo-novo/', importar_ppc_modelo_novo, name='importar_ppc_modelo_novo'),
+    path('cursos/<int:curso_id>/importar/modelo-antigo/', importar_ppc_modelo_antigo, name='importar_ppc_modelo_antigo'),
 ]
 
 if settings.DEBUG:

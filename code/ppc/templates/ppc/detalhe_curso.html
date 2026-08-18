@@ -16,7 +16,7 @@
                 <h3 class="card-titulo">{{ ppc.get_tipo_ppc_display }} — {{ ppc.get_grau_academico_display }}</h3>
                 <p class="card-corpo">
                     <span class="status-{{ ppc.status }}">{{ ppc.get_status_display }}</span>
-                    · Criado em {{ ppc.criado_em|date:"d/m/Y" }} · Atualizado em {{ ppc.atualizado_em|date:"d/m/Y" }}
+                    · Código interno: {{ ppc.id }} · Criado em {{ ppc.criado_em|date:"d/m/Y" }} · Atualizado em {{ ppc.atualizado_em|date:"d/m/Y" }}
                 </p>
                 <a href="{% url 'editar_objetivos' ppc.id %}" class="btn btn-secundario">Abrir</a>
             </li>
