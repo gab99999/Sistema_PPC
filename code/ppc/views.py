@@ -17,7 +17,7 @@ from .forms import (PPCInformacoesGeraisForm, ObjetivosForm, EditarPermissoesFor
                      PoliticasIntegradaForm, AvaliacaoEnsinoForm, AvalicaoProjetoCursoForm,
                     QualificacaoForm, RequisitosLegaisForm, ApendiceForm, DinamicaEADForm, 
                     EstruturaCurricularForm, ComponenteCurricularForm, BibliografiaForm, RelacaoComponenteForm,
-                    ReferenciasForm, MembroNDEForm, ImportarPDFForm, ImportarPPCModeloAntigoForm, )
+                    ReferenciasForm, MembroNDEForm, ImportarPDFForm, ImportarPPCModeloAntigoForm, LimitesCargaHorariaFormSet, )
 from django.db.models import Q
 from .importacao import extrair_dados_pdf
 from .importacao_modelos_antigos import ErroImportacaoPPC, preparar_importacao_modelo_antigo
@@ -29,6 +29,8 @@ import tempfile
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+
 
 CAMPOS_PPC_VALIDOS = {f.name for f in PPC._meta.get_fields()}
 
@@ -635,7 +637,7 @@ def editar_principios(request, ppc_id):
 def editar_informacoes_gerais(request, ppc_id):
     ppc = get_object_or_404(PPC, id=ppc_id)
     if request.method == 'POST':
-        form = InformacoesGeraisForm(request.POST, instance=ppc)
+        form = InformacoesGeraisForm(request.POST, instance=ppc, curso=ppc.curso)
         if form.is_valid():
             form.save()
             _consumir_campos_rascunho(request, ppc, InformacoesGeraisForm)
@@ -749,14 +751,14 @@ def detalhe_curso(request, curso_id):
 def criar_ppc(request, curso_id):
     curso = get_object_or_404(Curso, id=curso_id)
     if request.method == 'POST':
-        form = PPCInformacoesGeraisForm(request.POST)
+        form = InformacoesGeraisForm(request.POST, curso=curso)
         if form.is_valid():
             ppc = form.save(commit=False)  # não salva ainda
             ppc.curso = curso              # completa o campo que faltava
             ppc.save()                     # agora sim salva
             return redirect('editar_apresentacao', ppc_id=ppc.id)
     else:
-        form = PPCInformacoesGeraisForm()
+        form = InformacoesGeraisForm()
     return render(request, 'ppc/criar_ppc.html', {'form': form, 'curso': curso})
 
 

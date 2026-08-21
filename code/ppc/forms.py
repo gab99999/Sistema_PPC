@@ -2,12 +2,16 @@ from django import forms
 from django.core.exceptions import ValidationError
 from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoComponente, ComponenteCurricular, MembroNDE
 from django.contrib.auth.models import User, Group
+from django.forms import modelformset_factory
 
+LimitesCargaHorariaFormSet = modelformset_factory(
+    Curso,
+    fields=('carga_horaria_minima', 'carga_horaria_maxima'),
+    extra=0,
+)
 class ImportarPDFForm(forms.Form):
     arquivo = forms.FileField(label="Arquivo PDF do PPC", widget=forms.ClearableFileInput(attrs={"accept": "application/pdf,.pdf"}))
 
-
-# forms.py — ImportarPPCModeloAntigoForm sem codigo_ppc; agora só pede o arquivo
 class ImportarPPCModeloAntigoForm(forms.Form):
     arquivo = forms.FileField(
         label="Documento do PPC (PDF)",
@@ -43,8 +47,8 @@ class ComponenteCurricularForm(forms.ModelForm):
         model = ComponenteCurricular
         fields = [
             'nome', 'tipo', 'natureza', 'nucleo', 'periodo',
-            'carga_horaria_teorica', 'carga_horaria_pratica', 'carga_horaria_pcc',
-            'unidade_academica_componente', 'ementa',
+            'carga_horaria_teorica', 'carga_horaria_pratica', 'carga_horaria_pcc', 'carga_horaria_estudante', 'carga_horaria_professor', 'carga_horaria_acex',
+            'unidade_academica_componente', 'ementa', 
         ]
 
 
@@ -157,20 +161,11 @@ class EditarPermissoesForm(forms.ModelForm):
         model = User
         fields = ['is_staff', 'groups']
 
-class PPCInformacoesGeraisForm(forms.ModelForm):
-    class Meta:
-        model = PPC
-        fields = [
-            'modalidade', 'grau_academico', 'turno_funcionamento',
-            'carga_horaria_total', 'numero_vagas_anuais',
-            'duracao_minima_semestres', 'duracao_media_semestres', 'duracao_maxima_semestres',
-            'diretor', 'vice_diretor', 'coordenador_curso', 'tipo_ppc', 'status', 'numero_resolucao',
-        ]
 
 class CursoForm(forms.ModelForm):
     class Meta:
         model = Curso
-        fields = ['nome', 'unidade_academica', 'area_conhecimento']
+        fields = ['nome', 'unidade_academica', 'area_conhecimento', 'carga_horaria_minima', 'carga_horaria_maxima']
 
 class ObjetivosForm(forms.ModelForm):
     class Meta:
@@ -186,6 +181,25 @@ class InformacoesGeraisForm(forms.ModelForm):
             'duracao_minima_semestres', 'duracao_media_semestres', 'duracao_maxima_semestres',
             'diretor', 'vice_diretor', 'coordenador_curso', 'tipo_ppc', 'status', 'numero_resolucao',
         ]
+
+    def __init__(self, *args, curso=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.curso = curso or getattr(self.instance, 'curso', None)
+
+    def clean_carga_horaria_total(self):
+        total = self.cleaned_data.get('carga_horaria_total')
+        if self.curso is not None and total is not None:
+            minima = self.curso.carga_horaria_minima
+            maxima = self.curso.carga_horaria_maxima
+            if minima is not None and total < minima:
+                raise forms.ValidationError(
+                    f"A carga horária total não pode ser menor que o mínimo do curso ({minima}h)."
+                )
+            if maxima is not None and total > maxima:
+                raise forms.ValidationError(
+                    f"A carga horária total não pode ser maior que o máximo do curso ({maxima}h)."
+                )
+        return total
 
 
 class ApresentacaoForm(forms.ModelForm):

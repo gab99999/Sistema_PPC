@@ -3,11 +3,14 @@ from django.db import models
 from django_ckeditor_5.fields import CKEditor5Field
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
+from django.core.exceptions import ValidationError
 
 class Curso(models.Model):
     nome = models.CharField(max_length=200)
     unidade_academica = models.CharField(max_length=200)
     area_conhecimento = models.CharField(max_length=200)  # áreas CAPES
+    carga_horaria_minima = models.PositiveIntegerField(null=True, blank=True)
+    carga_horaria_maxima = models.PositiveIntegerField(null=True, blank=True)
 
     history = HistoricalRecords()
 
@@ -181,6 +184,36 @@ class ComponenteCurricular(models.Model):
     carga_horaria_pcc = models.PositiveIntegerField(default=0, help_text="Horas de Prática como Componente Curricular (só licenciaturas)")
     unidade_academica_componente = models.CharField(max_length=200)
     ementa = models.TextField()
+
+    carga_horaria_estudante = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text="Atividade Orientada: carga horária máxima prevista para o estudante."
+    )
+    carga_horaria_professor = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text="Atividade Orientada: carga horária do professor — deve ser menor ou igual à do estudante."
+    )
+    carga_horaria_acex = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text="Atividade Curricular de Extensão (núcleo ACEx): carga horária total do componente."
+    )
+
+    def clean(self):
+        super().clean()
+        if self.tipo == 'atividade' and self.carga_horaria_professor is not None and self.carga_horaria_estudante is not None:
+            if self.carga_horaria_professor > self.carga_horaria_estudante:
+                raise ValidationError({
+                    'carga_horaria_professor': "A carga horária do professor não pode ser maior que a do estudante."
+                })
+
+    @property
+    def carga_horaria_computada_total(self):
+        """Carga horária total do componente para fins de matriz curricular.
+        Em Atividade Orientada, só a carga do estudante conta na matriz —
+        a do professor é controle interno, não soma na carga horária da atividade."""
+        if self.tipo == 'atividade':
+            return self.carga_horaria_estudante or 0
+        return self.carga_horaria_teorica + self.carga_horaria_pratica + self.carga_horaria_pcc
 
     history = HistoricalRecords()
 

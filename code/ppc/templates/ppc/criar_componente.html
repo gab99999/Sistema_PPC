@@ -7,4 +7,32 @@
         {{ form.as_p }}
         <button type="submit" class="btn btn-primario">Salvar</button>
     </form>
+
+    <script>
+    (() => {
+        const camposPadrao = ['carga_horaria_teorica', 'carga_horaria_pratica', 'carga_horaria_pcc'];
+        const camposAtividade = ['carga_horaria_estudante', 'carga_horaria_professor'];
+        const camposAcex = ['carga_horaria_acex'];
+
+        function linhaDoCampo(nomeCampo) {
+            const campo = document.getElementById(`id_${nomeCampo}`);
+            return campo ? campo.closest('p') : null;
+        }
+
+        const tipoSelect = document.getElementById('id_tipo');
+        const nucleoSelect = document.getElementById('id_nucleo');
+
+        function alternar() {
+            const ehAtividade = tipoSelect.value === 'atividade';
+            const ehAcex = nucleoSelect.value === 'ACEx';
+            camposPadrao.forEach(nome => { const p = linhaDoCampo(nome); if (p) p.hidden = ehAtividade || ehAcex; });
+            camposAtividade.forEach(nome => { const p = linhaDoCampo(nome); if (p) p.hidden = !ehAtividade; });
+            camposAcex.forEach(nome => { const p = linhaDoCampo(nome); if (p) p.hidden = !ehAcex; });
+        }
+
+        tipoSelect.addEventListener('change', alternar);
+        nucleoSelect.addEventListener('change', alternar);
+        alternar(); // estado inicial — importante também na EDIÇÃO, pra já abrir mostrando o grupo certo
+    })();
+    </script>
 {% endblock %}
