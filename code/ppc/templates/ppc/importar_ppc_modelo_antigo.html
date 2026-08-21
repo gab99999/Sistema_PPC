@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Importar PPC modelo antigo{% endblock %}
 {% block content %}
-    <a href="{% url 'escolher_importacao_ppc' curso.id %}" class="link-voltar">← Escolher outro tipo de importação</a>
+    <a href="{% url 'importar_ppc_pdf' curso.id %}" class="link-voltar">← Escolher outro tipo de importação</a>
     <div class="card cabecalho-curso">
         <h1>Importar PPC modelo antigo</h1>
         <p class="card-corpo">Envie o PDF do PPC antigo. Um novo PPC será criado automaticamente como rascunho, com os dados extraídos por IA — a revisão de cada campo é obrigatória depois, nenhum dado é considerado definitivo até você confirmar.</p>
