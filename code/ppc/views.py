@@ -11,7 +11,7 @@ from django.utils.text import slugify
 from weasyprint import HTML
 from ppc.testes.analisar_pdf_uma_chamada import analisar_pdf_adaptativo, ErroOpenRouter
 from .models import Curso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE
-from .forms import (PPCInformacoesGeraisForm, ObjetivosForm, EditarPermissoesForm, CursoForm,
+from .forms import ( ObjetivosForm, EditarPermissoesForm, CursoForm,
                     InformacoesGeraisForm, ApresentacaoForm, ExposicaoMotivosForm, PrincipiosForm,
                     ExpectativasForm, TccForm, EstagioForm, AtividadesComplementaresForm,
                      PoliticasIntegradaForm, AvaliacaoEnsinoForm, AvalicaoProjetoCursoForm,
