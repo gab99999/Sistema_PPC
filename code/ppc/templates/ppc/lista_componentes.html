@@ -6,7 +6,7 @@
     <h3>Descrição Geral e Informações Complementares</h3>
     <form method="post" class="form-secao">
         {% csrf_token %}
-        {{ estrutura_form.as_p }}
+        {{ form.as_p }}
         <button type="submit" name="salvar_descricao" class="btn btn-primario">Salvar</button>
     </form>
     <br><br>

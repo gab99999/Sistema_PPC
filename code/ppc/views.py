@@ -553,18 +553,18 @@ def lista_componentes(request, ppc_id):
     ppc = get_object_or_404(PPC, id=ppc_id)
 
     if request.method == 'POST' and 'salvar_descricao' in request.POST:
-        estrutura_form = EstruturaCurricularForm(request.POST, instance=ppc)
-        if estrutura_form.is_valid():
-            estrutura_form.save()
+        form = EstruturaCurricularForm(request.POST, instance=ppc)
+        if form.is_valid():
+            form.save()
             return redirect('lista_componentes', ppc_id=ppc.id)
     else:
-        estrutura_form = EstruturaCurricularForm(instance=ppc)
+        form = EstruturaCurricularForm(instance=ppc)
 
     componentes_na_matriz = ppc.matriz_componentes.select_related('componente').order_by('periodo', 'componente__nome')
     return render(request, 'ppc/lista_componentes.html', {
         'ppc': ppc,
         'componentes_na_matriz': componentes_na_matriz,
-        'estrutura_form': estrutura_form,
+        'form': form,
     })
 
 
