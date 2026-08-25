@@ -4,7 +4,10 @@
     <h2>Novo Componente Curricular</h2>
     <form method="post" class="form-secao">
         {% csrf_token %}
-        {{ form.as_p }}
+        <h3>Dados do Componente</h3>
+        {{ form_componente.as_p }}
+        <h3>Vínculo com este PPC</h3>
+        {{ form_vinculo.as_p }}
         <button type="submit" class="btn btn-primario">Salvar</button>
     </form>
 
@@ -32,7 +35,7 @@
 
         tipoSelect.addEventListener('change', alternar);
         nucleoSelect.addEventListener('change', alternar);
-        alternar(); // estado inicial — importante também na EDIÇÃO, pra já abrir mostrando o grupo certo
+        alternar();
     })();
     </script>
 {% endblock %}

@@ -1,0 +1,19 @@
+{% extends "ppc_base.html" %}
+{% block title %}Histórico — {{ componente.nome }}{% endblock %}
+{% block ppc_content %}
+    <h2>Histórico de alterações</h2>
+    <p class="card-corpo">{{ componente.nome }}{% if componente.codigo %} ({{ componente.codigo }}){% endif %}</p>
+    <ul class="lista-cursos">
+        {% for registro in registros %}
+            <li class="card">
+                <p class="card-corpo">
+                    {{ registro.history_date|date:"d/m/Y H:i" }} —
+                    {{ registro.get_history_type_display }}
+                    {% if registro.history_user %} por {{ registro.history_user }}{% endif %}
+                </p>
+            </li>
+        {% empty %}
+            <li>Nenhuma alteração registrada ainda.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

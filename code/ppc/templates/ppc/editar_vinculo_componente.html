@@ -1,0 +1,12 @@
+{% extends "ppc_base.html" %}
+{% block title %}Editar vínculo — {{ componente_na_matriz.componente.nome }}{% endblock %}
+{% block ppc_content %}
+    <h2>Editar Vínculo com este PPC</h2>
+    <p class="card-corpo">{{ componente_na_matriz.componente.nome }} — {{ ppc.curso.nome }}</p>
+    <form method="post" class="form-secao">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primario">Salvar</button>
+    </form>
+    <a href="{% url 'detalhe_componente_na_matriz' componente_na_matriz.id %}" class="link-voltar">← Cancelar</a>
+{% endblock %}

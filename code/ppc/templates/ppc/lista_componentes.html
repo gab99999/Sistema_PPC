@@ -27,14 +27,14 @@
 
     <table class="tabela-dados">
         <tr><th>Período</th><th>Nome</th><th>Núcleo</th><th>Natureza</th><th>CH Total</th><th>Ação</th></tr>
-        {% for componente in componentes %}
+        {% for componente_na_matriz in componentes_na_matriz %}
         <tr>
-            <td>{{ componente.periodo }}</td>
-            <td>{{ componente.nome }}</td>
-            <td>{{ componente.get_nucleo_display }}</td>
-            <td>{{ componente.get_natureza_display }}</td>
-            <td>{{ componente.carga_horaria_teorica|add:componente.carga_horaria_pratica }}h</td>
-            <td><a href="{% url 'detalhe_componente' componente.id %}" class="btn btn-secundario">Abrir</a></td>
+            <td>{{ componente_na_matriz.periodo }}</td>
+            <td>{{ componente_na_matriz.componente.nome }}{% if componente_na_matriz.componente.codigo %} <small>({{ componente_na_matriz.componente.codigo }})</small>{% endif %}</td>
+            <td>{{ componente_na_matriz.componente.get_nucleo_display }}</td>
+            <td>{{ componente_na_matriz.get_natureza_display }}</td>
+            <td>{{ componente_na_matriz.componente.carga_horaria_computada_total }}h</td>
+            <td><a href="{% url 'detalhe_componente_na_matriz' componente_na_matriz.id %}" class="btn btn-secundario">Abrir</a></td>
         </tr>
         {% empty %}
         <tr><td colspan="6">Nenhum componente curricular cadastrado ainda.</td></tr>

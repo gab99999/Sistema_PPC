@@ -1,11 +1,15 @@
 {% extends "ppc_base.html" %}
-{% block title %}Excluir {{ componente.nome }}{% endblock %}
+{% block title %}Remover {{ componente_na_matriz.componente.nome }}{% endblock %}
 {% block ppc_content %}
-    <h2>Excluir Componente</h2>
-    <p>Tem certeza que deseja excluir <strong>{{ componente.nome }}</strong>? Essa ação também apaga suas bibliografias e relações cadastradas.</p>
+    <h2>Remover Componente da Estrutura Curricular</h2>
+    <p>
+        Tem certeza que deseja remover <strong>{{ componente_na_matriz.componente.nome }}</strong> da matriz deste PPC?
+        O componente continua existindo no catálogo (e em qualquer outro PPC que o utilize) —
+        só as bibliografias e relações cadastradas especificamente aqui, neste PPC, serão apagadas junto.
+    </p>
     <form method="post" class="form-secao">
         {% csrf_token %}
-        <button type="submit" class="btn btn-perigo">Confirmar exclusão</button>
-        <a href="{% url 'detalhe_componente' componente.id %}" class="btn btn-secundario">Cancelar</a>
+        <button type="submit" class="btn btn-perigo">Confirmar remoção</button>
+        <a href="{% url 'detalhe_componente_na_matriz' componente_na_matriz.id %}" class="btn btn-secundario">Cancelar</a>
     </form>
 {% endblock %}

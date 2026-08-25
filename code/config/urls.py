@@ -26,10 +26,11 @@ from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario
                         editar_permissoes, criar_curso, editar_exposicao_motivos, editar_apresentacao, editar_informacoes_gerais, 
                         editar_principios, editar_expectativas, editar_apendices, editar_atividades_complementares, editar_avaliacao_ensino,
                         editar_avaliacao_projeto_curso, editar_dinamicas_ead, editar_estagio, editar_politicas_integrada, editar_qualificacao, editar_requisitos_legais,
-                        editar_tcc, lista_componentes, criar_componente, editar_componente, detalhe_componente, excluir_componente, 
+                        editar_tcc, lista_componentes, criar_componente, editar_componente,
                         excluir_bibliografia, editar_bibliografia, editar_relacao, excluir_relacao, editar_referencias, excluir_apendice,
                         gerar_pdf_ppc, lista_nde, criar_membro_nde, editar_membro_nde, excluir_membro_nde,
-                        escolher_importacao_ppc, importar_ppc_modelo_novo, importar_ppc_modelo_antigo, )
+                        escolher_importacao_ppc, importar_ppc_modelo_novo, importar_ppc_modelo_antigo, remover_componente_da_matriz, detalhe_componente_na_matriz, historico_componente, 
+                        editar_vinculo_componente, )
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -64,13 +65,13 @@ urlpatterns = [
     path('ppc/<int:ppc_id>/apendices/', editar_apendices, name='editar_apendices'),
     path('ppc/<int:ppc_id>/componentes/', lista_componentes, name='lista_componentes'),
     path('ppc/<int:ppc_id>/componentes/novo/', criar_componente, name='criar_componente'),
-    path('componentes/<int:componente_id>/', detalhe_componente, name='detalhe_componente'),
+    path('componentes-na-matriz/<int:componente_na_matriz_id>/', detalhe_componente_na_matriz, name='detalhe_componente_na_matriz'),
     path('componentes/<int:componente_id>/editar/', editar_componente, name='editar_componente'),
-    path('componentes/<int:componente_id>/excluir/', excluir_componente, name='excluir_componente'),
+    path('componentes-na-matriz/<int:componente_na_matriz_id>/remover/', remover_componente_da_matriz, name='remover_componente_da_matriz'),
     path('bibliografia/<int:bibliografia_id>/editar/', editar_bibliografia, name='editar_bibliografia'),
     path('bibliografia/<int:bibliografia_id>/excluir/', excluir_bibliografia, name='excluir_bibliografia'),
-    path('relacao/<int:relacao_id>/editar/', editar_relacao, name='editar_relacao'),
-    path('relacao/<int:relacao_id>/excluir/', excluir_relacao, name='excluir_relacao'),
+    path('relacoes/<int:relacao_id>/editar/', editar_relacao, name='editar_relacao'),
+    path('relacoes/<int:relacao_id>/excluir/', excluir_relacao, name='excluir_relacao'),
     path('ppc/<int:ppc_id>/referencias/', editar_referencias, name='editar_referencias'),
     path('ppc/<int:ppc_id>/pdf/', gerar_pdf_ppc, name='gerar_pdf_ppc'),
     path('apendice/<int:apendice_id>/excluir/', excluir_apendice, name='excluir_apendice'),
@@ -83,6 +84,9 @@ urlpatterns = [
     path('cursos/<int:curso_id>/importar/', escolher_importacao_ppc, name='importar_ppc_pdf'),
     path('cursos/<int:curso_id>/importar/modelo-novo/', importar_ppc_modelo_novo, name='importar_ppc_modelo_novo'),
     path('cursos/<int:curso_id>/importar/modelo-antigo/', importar_ppc_modelo_antigo, name='importar_ppc_modelo_antigo'),
+    path('componentes-na-matriz/<int:componente_na_matriz_id>/vinculo/editar/', editar_vinculo_componente, name='editar_vinculo_componente'),
+    path('componentes/<int:componente_id>/historico/', historico_componente, name='historico_componente'),
+
 ]
 
 if settings.DEBUG:

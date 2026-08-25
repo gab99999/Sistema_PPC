@@ -10,29 +10,36 @@ from django.db.models import Prefetch
 from django.utils.text import slugify
 from weasyprint import HTML
 from ppc.testes.analisar_pdf_uma_chamada import analisar_pdf_adaptativo, ErroOpenRouter
-from .models import Curso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE
+from .models import Curso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE, ComponenteNaMatriz
 from .forms import ( ObjetivosForm, EditarPermissoesForm, CursoForm,
                     InformacoesGeraisForm, ApresentacaoForm, ExposicaoMotivosForm, PrincipiosForm,
                     ExpectativasForm, TccForm, EstagioForm, AtividadesComplementaresForm,
                      PoliticasIntegradaForm, AvaliacaoEnsinoForm, AvalicaoProjetoCursoForm,
                     QualificacaoForm, RequisitosLegaisForm, ApendiceForm, DinamicaEADForm, 
                     EstruturaCurricularForm, ComponenteCurricularForm, BibliografiaForm, RelacaoComponenteForm,
-                    ReferenciasForm, MembroNDEForm, ImportarPDFForm, ImportarPPCModeloAntigoForm, LimitesCargaHorariaFormSet, )
+                    ReferenciasForm, MembroNDEForm, ImportarPDFForm, ImportarPPCModeloAntigoForm, LimitesCargaHorariaFormSet,
+                    ComponenteNaMatrizForm,  )
 from django.db.models import Q
 from .importacao import extrair_dados_pdf
 from .importacao_modelos_antigos import ErroImportacaoPPC, preparar_importacao_modelo_antigo
 import logging
 from types import SimpleNamespace
 from django.db import transaction
-
 import tempfile
 from pathlib import Path
-
 logger = logging.getLogger(__name__)
 
 
-
 CAMPOS_PPC_VALIDOS = {f.name for f in PPC._meta.get_fields()}
+
+@login_required
+def historico_componente(request, componente_id):
+    componente = get_object_or_404(ComponenteCurricular, id=componente_id)
+    registros = componente.history.all().order_by('-history_date')
+    return render(request, 'ppc/historico_componente.html', {
+        'componente': componente,
+        'registros': registros,
+    })
 
 @login_required
 def escolher_importacao_ppc(request, curso_id):
@@ -337,125 +344,166 @@ def editar_referencias(request, ppc_id):
 @login_required
 def editar_relacao(request, relacao_id):
     relacao = get_object_or_404(RelacaoComponente, id=relacao_id)
-    componente = relacao.componente
+    componente_na_matriz = relacao.componente_na_matriz
     if request.method == 'POST':
-        form = RelacaoComponenteForm(request.POST, instance=relacao, ppc=componente.ppc, componente_atual=componente)
+        form = RelacaoComponenteForm(
+            request.POST, instance=relacao,
+            ppc=componente_na_matriz.ppc, componente_na_matriz_atual=componente_na_matriz,
+        )
         if form.is_valid():
             form.save()
-            return redirect('detalhe_componente', componente_id=componente.id)
+            return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=componente_na_matriz.id)
     else:
-        form = RelacaoComponenteForm(instance=relacao, ppc=componente.ppc, componente_atual=componente)
+        form = RelacaoComponenteForm(
+            instance=relacao,
+            ppc=componente_na_matriz.ppc, componente_na_matriz_atual=componente_na_matriz,
+        )
     return render(request, 'ppc/editar_relacao.html', {
-        'form': form, 'componente': componente, 'ppc': componente.ppc
+        'form': form, 'componente_na_matriz': componente_na_matriz, 'ppc': componente_na_matriz.ppc,
     })
 
 
 @login_required
 def excluir_relacao(request, relacao_id):
     relacao = get_object_or_404(RelacaoComponente, id=relacao_id)
-    componente_id = relacao.componente.id
+    componente_na_matriz_id = relacao.componente_na_matriz.id
     if request.method == 'POST':
         relacao.delete()
-    return redirect('detalhe_componente', componente_id=componente_id)
+    return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=componente_na_matriz_id)
 
 
 @login_required
 def editar_bibliografia(request, bibliografia_id):
     bib = get_object_or_404(Bibliografia, id=bibliografia_id)
-    componente = bib.componente
+    componente_na_matriz = bib.componente_na_matriz
     if request.method == 'POST':
         form = BibliografiaForm(request.POST, instance=bib)
         if form.is_valid():
             form.save()
-            return redirect('detalhe_componente', componente_id=componente.id)
+            return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=componente_na_matriz.id)
     else:
         form = BibliografiaForm(instance=bib)
     return render(request, 'ppc/editar_bibliografia.html', {
-        'form': form, 'componente': componente, 'ppc': componente.ppc
+        'form': form,
+        'componente_na_matriz': componente_na_matriz,
+        'ppc': componente_na_matriz.ppc,
     })
 
 
 @login_required
 def excluir_bibliografia(request, bibliografia_id):
     bib = get_object_or_404(Bibliografia, id=bibliografia_id)
-    componente_id = bib.componente.id
+    componente_na_matriz_id = bib.componente_na_matriz.id
     if request.method == 'POST':
         bib.delete()
-    return redirect('detalhe_componente', componente_id=componente_id)
-
+    return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=componente_na_matriz_id)
 
 @login_required
 def lista_componentes(request, ppc_id):
     ppc = get_object_or_404(PPC, id=ppc_id)
-    componentes = ppc.componentes_curriculares.all().order_by('periodo', 'nome')
-    return render(request, 'ppc/lista_componentes.html', {'ppc': ppc, 'componentes': componentes})
+    componentes_na_matriz = ppc.matriz_componentes.select_related('componente').order_by('periodo', 'componente__nome')
+    return render(request, 'ppc/lista_componentes.html', {'ppc': ppc, 'componentes_na_matriz': componentes_na_matriz})
 
 
 @login_required
 def criar_componente(request, ppc_id):
     ppc = get_object_or_404(PPC, id=ppc_id)
     if request.method == 'POST':
-        form = ComponenteCurricularForm(request.POST)
-        if form.is_valid():
-            componente = form.save(commit=False)
-            componente.ppc = ppc
-            componente.save()
-            return redirect('detalhe_componente', componente_id=componente.id)
+        form_componente = ComponenteCurricularForm(request.POST)
+        form_vinculo = ComponenteNaMatrizForm(request.POST)
+        if form_componente.is_valid() and form_vinculo.is_valid():
+            componente = form_componente.save()
+            vinculo = form_vinculo.save(commit=False)
+            vinculo.ppc = ppc
+            vinculo.componente = componente
+            vinculo.save()
+            return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=vinculo.id)
     else:
-        form = ComponenteCurricularForm()
-    return render(request, 'ppc/criar_componente.html', {'form': form, 'ppc': ppc})
+        form_componente = ComponenteCurricularForm()
+        form_vinculo = ComponenteNaMatrizForm()
+    return render(request, 'ppc/criar_componente.html', {
+        'form_componente': form_componente,
+        'form_vinculo': form_vinculo,
+        'ppc': ppc,
+    })
 
 
 @login_required
 def editar_componente(request, componente_id):
     componente = get_object_or_404(ComponenteCurricular, id=componente_id)
+    componente_na_matriz_id_retorno = request.GET.get('retorno') or request.POST.get('retorno')
+
     if request.method == 'POST':
         form = ComponenteCurricularForm(request.POST, instance=componente)
         if form.is_valid():
             form.save()
-            return redirect('detalhe_componente', componente_id=componente.id)
+            if componente_na_matriz_id_retorno:
+                return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=componente_na_matriz_id_retorno)
+            return redirect('historico_componente', componente_id=componente.id)
     else:
         form = ComponenteCurricularForm(instance=componente)
-    return render(request, 'ppc/editar_componente.html', {'form': form, 'componente': componente, 'ppc': componente.ppc})
+    return render(request, 'ppc/editar_componente.html', {
+        'form': form,
+        'componente': componente,
+        'retorno': componente_na_matriz_id_retorno,
+    })
 
 
 @login_required
-def excluir_componente(request, componente_id):
-    componente = get_object_or_404(ComponenteCurricular, id=componente_id)
-    ppc_id = componente.ppc.id
+def remover_componente_da_matriz(request, componente_na_matriz_id):
+    componente_na_matriz = get_object_or_404(ComponenteNaMatriz, id=componente_na_matriz_id)
+    ppc_id = componente_na_matriz.ppc.id
     if request.method == 'POST':
-        componente.delete()
+        componente_na_matriz.delete()
         return redirect('lista_componentes', ppc_id=ppc_id)
-    return render(request, 'ppc/excluir_componente.html', {'componente': componente})
+    return render(request, 'ppc/excluir_componente.html', {'componente_na_matriz': componente_na_matriz})
+
+@login_required
+def editar_vinculo_componente(request, componente_na_matriz_id):
+    componente_na_matriz = get_object_or_404(ComponenteNaMatriz, id=componente_na_matriz_id)
+    if request.method == 'POST':
+        form = ComponenteNaMatrizForm(request.POST, instance=componente_na_matriz)
+        if form.is_valid():
+            form.save()
+            return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=componente_na_matriz.id)
+    else:
+        form = ComponenteNaMatrizForm(instance=componente_na_matriz)
+    return render(request, 'ppc/editar_vinculo_componente.html', {
+        'form': form,
+        'componente_na_matriz': componente_na_matriz,
+        'ppc': componente_na_matriz.ppc,
+    })
 
 
 @login_required
-def detalhe_componente(request, componente_id):
-    componente = get_object_or_404(ComponenteCurricular, id=componente_id)
+def detalhe_componente_na_matriz(request, componente_na_matriz_id):
+    componente_na_matriz = get_object_or_404(ComponenteNaMatriz, id=componente_na_matriz_id)
+    componente = componente_na_matriz.componente
     bibliografia_form = BibliografiaForm()
-    relacao_form = RelacaoComponenteForm(ppc=componente.ppc, componente_atual=componente)
+    relacao_form = RelacaoComponenteForm(ppc=componente_na_matriz.ppc, componente_na_matriz_atual=componente_na_matriz)
 
     if request.method == 'POST':
         if 'adicionar_bibliografia' in request.POST:
             bibliografia_form = BibliografiaForm(request.POST)
             if bibliografia_form.is_valid():
                 bib = bibliografia_form.save(commit=False)
-                bib.componente = componente
+                bib.componente_na_matriz = componente_na_matriz
                 bib.save()
-                return redirect('detalhe_componente', componente_id=componente.id)
+                return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=componente_na_matriz.id)
         elif 'adicionar_relacao' in request.POST:
-            relacao_form = RelacaoComponenteForm(request.POST, ppc=componente.ppc, componente_atual=componente)
+            relacao_form = RelacaoComponenteForm(request.POST, ppc=componente_na_matriz.ppc, componente_na_matriz_atual=componente_na_matriz)
             if relacao_form.is_valid():
                 relacao = relacao_form.save(commit=False)
-                relacao.componente = componente
+                relacao.componente_na_matriz = componente_na_matriz
                 relacao.save()
-                return redirect('detalhe_componente', componente_id=componente.id)
+                return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=componente_na_matriz.id)
 
-    bibliografias_basicas = componente.bibliografias.filter(tipo='basica')
-    bibliografias_complementares = componente.bibliografias.filter(tipo='complementar')
+    bibliografias_basicas = componente_na_matriz.bibliografias.filter(tipo='basica')
+    bibliografias_complementares = componente_na_matriz.bibliografias.filter(tipo='complementar')
 
     return render(request, 'ppc/detalhe_componente.html', {
-        'ppc': componente.ppc,
+        'ppc': componente_na_matriz.ppc,
+        'componente_na_matriz': componente_na_matriz,
         'componente': componente,
         'bibliografia_form': bibliografia_form,
         'relacao_form': relacao_form,
@@ -466,24 +514,8 @@ def detalhe_componente(request, componente_id):
 @login_required
 def lista_componentes(request, ppc_id):
     ppc = get_object_or_404(PPC, id=ppc_id)
-    componentes = ppc.componentes_curriculares.all().order_by('periodo', 'nome')
-
-    if request.method == 'POST' and 'salvar_descricao' in request.POST:
-        estrutura_form = EstruturaCurricularForm(request.POST, instance=ppc)
-        if estrutura_form.is_valid():
-            estrutura_form.save()
-            return redirect('lista_componentes', ppc_id=ppc.id)
-    else:
-        estrutura_form = EstruturaCurricularForm(instance=ppc, initial=_initial_rascunho(request, ppc, EstruturaCurricularForm))
-
-    dados_rascunho = _rascunho_importacao_antiga(request, ppc.id).get('dados', {})
-
-    return render(request, 'ppc/lista_componentes.html', {
-        'ppc': ppc,
-        'componentes': componentes,
-        'estrutura_form': estrutura_form,
-        'componentes_rascunho': dados_rascunho.get('componentes_curriculares', []),
-    })
+    componentes_na_matriz = ppc.matriz_componentes.select_related('componente').order_by('periodo', 'componente__nome')
+    return render(request, 'ppc/lista_componentes.html', {'ppc': ppc, 'componentes_na_matriz': componentes_na_matriz})
 
 
 @login_required

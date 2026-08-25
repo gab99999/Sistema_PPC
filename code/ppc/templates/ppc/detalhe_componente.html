@@ -4,13 +4,25 @@
     <a href="{% url 'lista_componentes' ppc.id %}" class="link-voltar">← Voltar para Estrutura Curricular</a>
 
     <div class="card cabecalho-curso">
-        <h2>{{ componente.nome }}</h2>
+        <h2>{{ componente.nome }}{% if componente.codigo %} <small>({{ componente.codigo }})</small>{% endif %}</h2>
         <p class="card-corpo">
-            {{ componente.get_tipo_display }} · {{ componente.get_natureza_display }} · {{ componente.get_nucleo_display }} · Período {{ componente.periodo }}
+            <strong>Dados do componente</strong> (compartilhados com outros PPCs que o utilizem):<br>
+            {{ componente.get_tipo_display }} · {{ componente.get_nucleo_display }}
         </p>
         <div class="btn-group">
-            <a href="{% url 'editar_componente' componente.id %}" class="btn btn-secundario">Editar</a>
-            <a href="{% url 'excluir_componente' componente.id %}" class="btn btn-perigo">Excluir</a>
+            <a href="{% url 'editar_componente' componente.id %}?retorno={{ componente_na_matriz.id }}" class="btn btn-secundario">Editar Componente</a>
+            <a href="{% url 'historico_componente' componente.id %}" class="btn btn-secundario">Histórico</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <p class="card-corpo">
+            <strong>Vínculo com este PPC</strong> ({{ ppc.curso.nome }}):<br>
+            {{ componente_na_matriz.get_natureza_display }} · Período {{ componente_na_matriz.periodo }}
+        </p>
+        <div class="btn-group">
+            <a href="{% url 'editar_vinculo_componente' componente_na_matriz.id %}" class="btn btn-secundario">Editar Vínculo</a>
+            <a href="{% url 'remover_componente_da_matriz' componente_na_matriz.id %}" class="btn btn-perigo">Remover deste PPC</a>
         </div>
     </div>
 
@@ -18,7 +30,7 @@
     <p>{{ componente.ementa }}</p>
 
     <br>
-    <h3>Bibliografia Básica ({{ bibliografias_basicas.count }} — mínimo 3 exigido)</h3>
+    <h3>Bibliografia Básica ({{ bibliografias_basicas.count }} — mínimo 2 exigido)</h3>
         <ul class="lista-cursos">
             {% for bib in bibliografias_basicas %}
                 <li class="card">
@@ -37,7 +49,7 @@
             {% endfor %}
         </ul>
     <br>
-    <h3>Bibliografia Complementar ({{ bibliografias_complementares.count }} — mínimo 5 exigido)</h3>
+    <h3>Bibliografia Complementar ({{ bibliografias_complementares.count }} — mínimo 3 exigido)</h3>
         <ul class="lista-cursos">
             {% for bib in bibliografias_complementares %}
                 <li class="card">
@@ -65,9 +77,9 @@
     <br>
     <h3>Relações (Pré-requisito / Co-requisito / Equivalente)</h3>
     <ul class="lista-cursos">
-        {% for relacao in componente.relacoes.all %}
+        {% for relacao in componente_na_matriz.relacoes.all %}
             <li class="card">
-                <p class="card-corpo">{{ relacao.get_tipo_display }}: {{ relacao.componente_relacionado.nome }}</p>
+                <p class="card-corpo">{{ relacao.get_tipo_display }}: {{ relacao.componente_relacionado_na_matriz.componente.nome }}</p>
                 <div class="btn-group">
                     <a href="{% url 'editar_relacao' relacao.id %}" class="btn btn-secundario">Editar</a>
                     <form method="post" action="{% url 'excluir_relacao' relacao.id %}"

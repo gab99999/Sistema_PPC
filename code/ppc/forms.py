@@ -1,6 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoComponente, ComponenteCurricular, MembroNDE
+from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoComponente, ComponenteCurricular, MembroNDE, ComponenteNaMatriz
 from django.contrib.auth.models import User, Group
 from django.forms import modelformset_factory
 
@@ -9,6 +9,12 @@ LimitesCargaHorariaFormSet = modelformset_factory(
     fields=('carga_horaria_minima', 'carga_horaria_maxima'),
     extra=0,
 )
+
+class ComponenteNaMatrizForm(forms.ModelForm):
+    class Meta:
+        model = ComponenteNaMatriz
+        fields = ['periodo', 'natureza']
+
 class ImportarPDFForm(forms.Form):
     arquivo = forms.FileField(label="Arquivo PDF do PPC", widget=forms.ClearableFileInput(attrs={"accept": "application/pdf,.pdf"}))
 
@@ -46,30 +52,29 @@ class ComponenteCurricularForm(forms.ModelForm):
     class Meta:
         model = ComponenteCurricular
         fields = [
-            'nome', 'tipo', 'natureza', 'nucleo', 'periodo',
-            'carga_horaria_teorica', 'carga_horaria_pratica', 'carga_horaria_pcc', 'carga_horaria_estudante', 'carga_horaria_professor', 'carga_horaria_acex',
-            'unidade_academica_componente', 'ementa', 
+            'codigo', 'nome', 'tipo', 'nucleo',
+            'carga_horaria_teorica', 'carga_horaria_pratica', 'carga_horaria_pcc',
+            'carga_horaria_estudante', 'carga_horaria_professor', 'carga_horaria_acex',
+            'unidade_academica_componente', 'ementa',
         ]
 
 
 class BibliografiaForm(forms.ModelForm):
     class Meta:
         model = Bibliografia
-        fields = ['tipo', 'titulo', 'autores', 'editora', 'cidade', 'ano']
-
-
+        fields = ['tipo', 'titulo', 'autores', 'editora', 'cidade', 'ano']  # sem componente_na_matriz
 class RelacaoComponenteForm(forms.ModelForm):
     class Meta:
         model = RelacaoComponente
-        fields = ['componente_relacionado', 'tipo']
+        fields = ['componente_relacionado_na_matriz', 'tipo']
 
-    def __init__(self, *args, ppc=None, componente_atual=None, **kwargs):
+    def __init__(self, *args, ppc=None, componente_na_matriz_atual=None, **kwargs):
         super().__init__(*args, **kwargs)
         if ppc:
-            qs = ComponenteCurricular.objects.filter(ppc=ppc)
-            if componente_atual:
-                qs = qs.exclude(id=componente_atual.id)
-            self.fields['componente_relacionado'].queryset = qs
+            qs = ComponenteNaMatriz.objects.filter(ppc=ppc).select_related('componente')
+            if componente_na_matriz_atual:
+                qs = qs.exclude(id=componente_na_matriz_atual.id)
+            self.fields['componente_relacionado_na_matriz'].queryset = qs
 
 
 class EstruturaCurricularForm(forms.ModelForm):

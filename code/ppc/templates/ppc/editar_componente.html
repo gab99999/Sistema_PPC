@@ -4,6 +4,7 @@
     <h2>Editar Componente</h2>
     <form method="post" class="form-secao">
         {% csrf_token %}
+        {% if retorno %}<input type="hidden" name="retorno" value="{{ retorno }}">{% endif %}
         {{ form.as_p }}
         <button type="submit" class="btn btn-primario">Salvar</button>
     </form>

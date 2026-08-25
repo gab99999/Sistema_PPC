@@ -152,15 +152,12 @@ class DinamicaEAD(models.Model):
         return f"Dinâmica EAD - {self.ppc.curso.nome}" 
 
 class ComponenteCurricular(models.Model):
+    """Catálogo compartilhado. Só o que é intrínseco ao componente, não muda por PPC."""
     TIPO_CHOICES = [
         ("disciplina", "Disciplina"),
         ("modulo", "Módulo"),
         ("seminario", "Seminário de Integração"),
         ("atividade", "Atividade Orientada"),
-    ]
-    NATUREZA_CHOICES = [
-        ("obrigatoria", "Obrigatória"),
-        ("optativa", "Optativa"),
     ]
     NUCLEO_CHOICES = [
         ("NC", "Núcleo Comum"),
@@ -169,48 +166,28 @@ class ComponenteCurricular(models.Model):
         ("AC", "Atividade Complementar"),
         ("ACEx", "Atividade Curricular de Extensão"),
     ]
-    ppc = models.ForeignKey(
-        PPC,
-        on_delete=models.CASCADE,
-        related_name="componentes_curriculares"
-    )
+    codigo = models.CharField(max_length=20, blank=True)
     nome = models.CharField(max_length=200)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
-    natureza = models.CharField(max_length=20, choices=NATUREZA_CHOICES)
     nucleo = models.CharField(max_length=4, choices=NUCLEO_CHOICES)
-    periodo = models.PositiveSmallIntegerField()
     carga_horaria_teorica = models.PositiveIntegerField()
     carga_horaria_pratica = models.PositiveIntegerField()
     carga_horaria_pcc = models.PositiveIntegerField(default=0, help_text="Horas de Prática como Componente Curricular (só licenciaturas)")
     unidade_academica_componente = models.CharField(max_length=200)
     ementa = models.TextField()
 
-    carga_horaria_estudante = models.PositiveIntegerField(
-        null=True, blank=True,
-        help_text="Atividade Orientada: carga horária máxima prevista para o estudante."
-    )
-    carga_horaria_professor = models.PositiveIntegerField(
-        null=True, blank=True,
-        help_text="Atividade Orientada: carga horária do professor — deve ser menor ou igual à do estudante."
-    )
-    carga_horaria_acex = models.PositiveIntegerField(
-        null=True, blank=True,
-        help_text="Atividade Curricular de Extensão (núcleo ACEx): carga horária total do componente."
-    )
+    carga_horaria_estudante = models.PositiveIntegerField(null=True, blank=True)
+    carga_horaria_professor = models.PositiveIntegerField(null=True, blank=True)
+    carga_horaria_acex = models.PositiveIntegerField(null=True, blank=True)
 
     def clean(self):
         super().clean()
         if self.tipo == 'atividade' and self.carga_horaria_professor is not None and self.carga_horaria_estudante is not None:
             if self.carga_horaria_professor > self.carga_horaria_estudante:
-                raise ValidationError({
-                    'carga_horaria_professor': "A carga horária do professor não pode ser maior que a do estudante."
-                })
+                raise ValidationError({'carga_horaria_professor': "A carga horária do professor não pode ser maior que a do estudante."})
 
     @property
     def carga_horaria_computada_total(self):
-        """Carga horária total do componente para fins de matriz curricular.
-        Em Atividade Orientada, só a carga do estudante conta na matriz —
-        a do professor é controle interno, não soma na carga horária da atividade."""
         if self.tipo == 'atividade':
             return self.carga_horaria_estudante or 0
         return self.carga_horaria_teorica + self.carga_horaria_pratica + self.carga_horaria_pcc
@@ -218,11 +195,32 @@ class ComponenteCurricular(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-            return f"Componente Curricular - {self.ppc.curso.nome}"
+        return f"{self.nome} ({self.codigo})" if self.codigo else self.nome
+
+
+class ComponenteNaMatriz(models.Model):
+    """O vínculo: este componente está na matriz deste PPC, neste período, com esta natureza."""
+    NATUREZA_CHOICES = [
+        ("obrigatoria", "Obrigatória"),
+        ("optativa", "Optativa"),
+    ]
+    ppc = models.ForeignKey(PPC, on_delete=models.CASCADE, related_name="matriz_componentes")
+    componente = models.ForeignKey(ComponenteCurricular, on_delete=models.PROTECT, related_name="uso_em_ppcs")
+    periodo = models.PositiveSmallIntegerField()
+    natureza = models.CharField(max_length=20, choices=NATUREZA_CHOICES)
+
+    class Meta:
+        unique_together = ('ppc', 'componente')
+
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return f"{self.componente.nome} — {self.ppc.curso.nome} (período {self.periodo})"
+
 
 class Bibliografia(models.Model):
     TIPO_CHOICES = [("basica", "Básica"), ("complementar", "Complementar")]
-    componente = models.ForeignKey(ComponenteCurricular, on_delete=models.CASCADE, related_name="bibliografias")
+    componente_na_matriz = models.ForeignKey(ComponenteNaMatriz, on_delete=models.CASCADE, related_name="bibliografias")
     tipo = models.CharField(max_length=15, choices=TIPO_CHOICES)
     titulo = models.CharField(max_length=300)
     autores = models.CharField(max_length=300)
@@ -232,6 +230,31 @@ class Bibliografia(models.Model):
 
     def __str__(self):
         return self.titulo
+
+
+class RelacaoComponente(models.Model):
+    TIPO_CHOICES = [
+        ("pre_requisito", "Pré-requisito"),
+        ("co_requisito", "Co-requisito"),
+        ("equivalente", "Equivalente"),
+    ]
+    componente_na_matriz = models.ForeignKey(ComponenteNaMatriz, on_delete=models.CASCADE, related_name="relacoes")
+    componente_relacionado_na_matriz = models.ForeignKey(ComponenteNaMatriz, on_delete=models.CASCADE, related_name="relacionado_em")
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+
+    class Meta:
+        unique_together = ('componente_na_matriz', 'componente_relacionado_na_matriz', 'tipo')
+
+    def clean(self):
+        super().clean()
+        if self.componente_na_matriz_id and self.componente_relacionado_na_matriz_id:
+            if self.componente_na_matriz.ppc_id != self.componente_relacionado_na_matriz.ppc_id:
+                raise ValidationError("Os dois componentes da relação precisam estar na mesma matriz (mesmo PPC).")
+
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return f"{self.componente_na_matriz.componente.nome} → {self.get_tipo_display()} → {self.componente_relacionado_na_matriz.componente.nome}"
 class Apendice(models.Model):
     TIPO_CHOICES = [
         ("corpo_docente","Relação do corpo docente e titulação"),
@@ -248,32 +271,6 @@ class Apendice(models.Model):
 
     def __str__(self):
         return self.titulo
-
-class RelacaoComponente(models.Model):
-    TIPO_CHOICES = [
-        ("pre_requisito", "Pré-requisito"),
-        ("co_requisito", "Co-requisito"),
-        ("equivalente", "Equivalente"),
-    ]
-    componente = models.ForeignKey(
-        ComponenteCurricular,
-        on_delete=models.CASCADE,
-        related_name="relacoes"
-    )
-    componente_relacionado = models.ForeignKey(
-        ComponenteCurricular,
-        on_delete=models.CASCADE,
-        related_name="relacionado_em"
-    )
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
-
-    class Meta:
-        unique_together = ('componente', 'componente_relacionado', 'tipo')
-
-    history = HistoricalRecords()
-
-    def __str__(self):
-        return f"{self.componente.nome} → {self.get_tipo_display()} → {self.componente_relacionado.nome}"
 
 
 class MembroNDE(models.Model):
