@@ -1,6 +1,6 @@
-{% extends "ppc_base.html" %}
+{% extends "base.html" %}
 {% block title %}Histórico — {{ componente.nome }}{% endblock %}
-{% block ppc_content %}
+{% block content %}
     <h2>Histórico de alterações</h2>
     <p class="card-corpo">{{ componente.nome }}{% if componente.codigo %} ({{ componente.codigo }}){% endif %}</p>
     <ul class="lista-cursos">

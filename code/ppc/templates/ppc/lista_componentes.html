@@ -23,7 +23,10 @@
             {% endfor %}
         </table><br>
     {% endif %}
-    <a href="{% url 'criar_componente' ppc.id %}" class="btn btn-primario">+ Novo Componente</a>
+    <div class="btn-group">
+        <a href="{% url 'criar_componente' ppc.id %}" class="btn btn-primario">+ Novo Componente</a>
+        <a href="{% url 'buscar_componente_existente' ppc.id %}" class="btn btn-secundario">+ Usar Componente Existente</a>
+    </div>
 
     <table class="tabela-dados">
         <tr><th>Período</th><th>Nome</th><th>Núcleo</th><th>Natureza</th><th>CH Total</th><th>Ação</th></tr>

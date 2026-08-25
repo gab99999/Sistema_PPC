@@ -1,0 +1,18 @@
+{% extends "ppc_base.html" %}
+{% block title %}Adicionar {{ componente.nome }} — {{ ppc.curso.nome }}{% endblock %}
+{% block ppc_content %}
+    <h2>Adicionar Componente Existente</h2>
+    <div class="card">
+        <p class="card-corpo">
+            <strong>{{ componente.nome }}</strong>{% if componente.codigo %} ({{ componente.codigo }}){% endif %}<br>
+            {{ componente.get_tipo_display }} · {{ componente.get_nucleo_display }}<br>
+            {{ componente.ementa }}
+        </p>
+    </div>
+    <h3>Vínculo com este PPC</h3>
+    <form method="post" class="form-secao">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primario">Adicionar à Estrutura Curricular</button>
+    </form>
+{% endblock %}

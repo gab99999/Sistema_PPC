@@ -1,6 +1,6 @@
-{% extends "ppc_base.html" %}
+{% extends "base.html" %}
 {% block title %}Editar {{ componente.nome }}{% endblock %}
-{% block ppc_content %}
+{% block content %}
     <h2>Editar Componente</h2>
     <form method="post" class="form-secao">
         {% csrf_token %}
@@ -33,7 +33,7 @@
 
         tipoSelect.addEventListener('change', alternar);
         nucleoSelect.addEventListener('change', alternar);
-        alternar(); // essencial aqui: ao abrir pra editar, o form já vem com tipo/núcleo preenchidos do banco
+        alternar();
     })();
     </script>
 {% endblock %}

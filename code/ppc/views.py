@@ -456,7 +456,10 @@ def remover_componente_da_matriz(request, componente_na_matriz_id):
     if request.method == 'POST':
         componente_na_matriz.delete()
         return redirect('lista_componentes', ppc_id=ppc_id)
-    return render(request, 'ppc/excluir_componente.html', {'componente_na_matriz': componente_na_matriz})
+    return render(request, 'ppc/excluir_componente.html', {
+        'componente_na_matriz': componente_na_matriz,
+        'ppc': componente_na_matriz.ppc,
+    })
 
 @login_required
 def editar_vinculo_componente(request, componente_na_matriz_id):
@@ -512,10 +515,57 @@ def detalhe_componente_na_matriz(request, componente_na_matriz_id):
     })
 
 @login_required
+def buscar_componente_existente(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    termo = request.GET.get('q', '').strip()
+    ja_usados_ids = set(ppc.matriz_componentes.values_list('componente_id', flat=True))
+    resultados = []
+    if termo:
+        resultados = ComponenteCurricular.objects.filter(nome__icontains=termo).exclude(id__in=ja_usados_ids)
+    return render(request, 'ppc/buscar_componente_existente.html', {
+        'ppc': ppc, 'termo': termo, 'resultados': resultados,
+    })
+
+@login_required
+def adicionar_componente_existente(request, ppc_id, componente_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    componente = get_object_or_404(ComponenteCurricular, id=componente_id)
+    if ComponenteNaMatriz.objects.filter(ppc=ppc, componente=componente).exists():
+        messages.warning(request, "Este componente já está na matriz deste PPC.")
+        return redirect('lista_componentes', ppc_id=ppc.id)
+
+    if request.method == 'POST':
+        form = ComponenteNaMatrizForm(request.POST)
+        if form.is_valid():
+            vinculo = form.save(commit=False)
+            vinculo.ppc = ppc
+            vinculo.componente = componente
+            vinculo.save()
+            return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=vinculo.id)
+    else:
+        form = ComponenteNaMatrizForm()
+    return render(request, 'ppc/adicionar_componente_existente.html', {
+        'ppc': ppc, 'componente': componente, 'form': form,
+    })
+
+@login_required
 def lista_componentes(request, ppc_id):
     ppc = get_object_or_404(PPC, id=ppc_id)
+
+    if request.method == 'POST' and 'salvar_descricao' in request.POST:
+        estrutura_form = EstruturaCurricularForm(request.POST, instance=ppc)
+        if estrutura_form.is_valid():
+            estrutura_form.save()
+            return redirect('lista_componentes', ppc_id=ppc.id)
+    else:
+        estrutura_form = EstruturaCurricularForm(instance=ppc)
+
     componentes_na_matriz = ppc.matriz_componentes.select_related('componente').order_by('periodo', 'componente__nome')
-    return render(request, 'ppc/lista_componentes.html', {'ppc': ppc, 'componentes_na_matriz': componentes_na_matriz})
+    return render(request, 'ppc/lista_componentes.html', {
+        'ppc': ppc,
+        'componentes_na_matriz': componentes_na_matriz,
+        'estrutura_form': estrutura_form,
+    })
 
 
 @login_required

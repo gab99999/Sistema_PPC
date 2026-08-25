@@ -1,0 +1,26 @@
+{% extends "ppc_base.html" %}
+{% block title %}Buscar Componente Existente — {{ ppc.curso.nome }}{% endblock %}
+{% block ppc_content %}
+    <a href="{% url 'lista_componentes' ppc.id %}" class="link-voltar">← Voltar para Estrutura Curricular</a>
+    <h2>Buscar Componente Existente</h2>
+    <form method="get" class="form-secao">
+        <input type="text" name="q" value="{{ termo }}" placeholder="Buscar por nome…">
+        <button type="submit" class="btn btn-primario">Buscar</button>
+    </form>
+
+    {% if termo %}
+        <ul class="lista-cursos">
+            {% for componente in resultados %}
+                <li class="card">
+                    <p class="card-corpo">
+                        <strong>{{ componente.nome }}</strong>{% if componente.codigo %} <small>({{ componente.codigo }})</small>{% endif %}<br>
+                        {{ componente.ementa|truncatechars:150 }}
+                    </p>
+                    <a href="{% url 'adicionar_componente_existente' ppc.id componente.id %}" class="btn btn-primario">Usar este componente</a>
+                </li>
+            {% empty %}
+                <li>Nenhum componente encontrado com esse nome.</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock %}
