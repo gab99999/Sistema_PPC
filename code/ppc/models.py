@@ -5,8 +5,31 @@ from django.utils import timezone
 from simple_history.models import HistoricalRecords
 from django.core.exceptions import ValidationError
 
+
+class CineBrasilCurso(models.Model):
+    nome_curso = models.CharField(max_length=255)
+    area_geral_codigo = models.CharField(max_length=2)
+    area_geral_nome = models.CharField(max_length=255)
+
+    rotulo_codigo = models.CharField(max_length=8)
+    rotulo_nome = models.CharField(max_length=255)
+
+    origem = models.CharField(
+        max_length=10,
+        choices=[
+            ("DCN", "DCN"),
+            ("CNCST", "CNCST"),
+        ],
+        blank=True,
+    )
 class Curso(models.Model):
     nome = models.CharField(max_length=200)
+    cine_brasil = models.ForeignKey(
+        CineBrasilCurso,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
     unidade_academica = models.CharField(max_length=200)
     area_conhecimento = models.CharField(max_length=200)  # áreas CAPES
     carga_horaria_minima = models.PositiveIntegerField(null=True, blank=True)
@@ -26,10 +49,12 @@ class PPC(models.Model):
     MODALIDADE_CHOICES = [
         ('presencial', 'Presencial'),
         ('ead', 'A Distância'),
+        ('semipresencial', 'Semipresencial'),
     ]
     GRAU_CHOICES = [
         ('bacharelado', 'Bacharelado'),
         ('licenciatura', 'Licenciatura'),
+        ('tecnologo', 'Tecnólogo',)
     ]
     STATUS_CHOICES = [
         ('rascunho', 'Rascunho'),

@@ -1,0 +1,328 @@
+nome_curso,area_geral_codigo,area_geral_nome,rotulo_codigo,rotulo_nome,origem
+Administração,04,"Negócios, administração e direito",0413A01,Administração,DCN
+Administração pública,04,"Negócios, administração e direito",0413A02,Administração pública,DCN
+Agronomia/Engenharia Agronômica,08,"Agricultura, silvicultura, pesca e veterinária",0811A04,Agronomia,DCN
+Arquitetura e urbanismo,07,"Engenharia, produção e construção",0731A02,Arquitetura e urbanismo,DCN
+Arquivologia,03,"Ciências sociais, comunicação e informação",0322A01,Arquivologia,DCN
+Artes visuais,01,Educação,0114A02,Artes visuais formação de professor,DCN
+Artes visuais,02,Artes e humanidades,0213A03,Artes visuais,DCN
+Biblioteconomia,03,"Ciências sociais, comunicação e informação",0322B01,Biblioteconomia,DCN
+Biomedicina,09,Saúde e bem-estar,0914B01,Biomedicina,DCN
+Ciência da computação,06,Computação e Tecnologias da Informação e Comunicação (TIC),0613C01,Ciência da computação,DCN
+Ciência Política,03,"Ciências sociais, comunicação e informação",0312C01,Ciência Política,DCN
+Ciências aeronáuticas,10,Serviços,1041C01,Ciências aeronáuticas,DCN
+Ciências biológicas,01,Educação,0114B01,Biologia formação de professor,DCN
+Ciências biológicas,05,"Ciências naturais, matemática e estatística",0511B01,Biologia,DCN
+Ciências contábeis,04,"Negócios, administração e direito",0411C01,Contabilidade,DCN
+Ciências da religião,02,Artes e humanidades,0221C01,Ciências da religião,DCN
+Ciências econômicas,03,"Ciências sociais, comunicação e informação",0311E01,Economia,DCN
+"Ciências sociais – Antropologia, Ciência Política e Sociologia",01,Educação,0114C03,Ciências sociais formação de professor,DCN
+"Ciências sociais – Antropologia, Ciência Política e Sociologia",03,"Ciências sociais, comunicação e informação",0312C02,Ciências sociais,DCN
+Cinema e audiovisual,01,Educação,0114C04,Cinema e audiovisual formação de professor,DCN
+Cinema e audiovisual,02,Artes e humanidades,0211C01,Cinema e audiovisual,DCN
+Computação,01,Educação,0114C05,Computação formação de professor,DCN
+Comunicação social,03,"Ciências sociais, comunicação e informação",0321C01,Comunicação social,DCN
+Dança,01,Educação,0114D01,Dança formação de professor,DCN
+Dança,02,Artes e humanidades,0215D01,Dança,DCN
+Design,02,Artes e humanidades,0212D02,Design,DCN
+Direito,04,"Negócios, administração e direito",0421D01,Direito,DCN
+Economia doméstica,01,Educação,0114E01,Economia doméstica formação de professor,DCN
+Economia doméstica,10,Serviços,1011E01,Economia doméstica,DCN
+Educação física,01,Educação,0114E03,Educação física formação de professor,DCN
+Educação física,09,Saúde e bem-estar,0915E01,Educação física,DCN
+Educação indígena,01,Educação,0113E03,Educação indígena formação de professor,DCN
+Educação indígena,01,Educação,0114E04,Educação indígena em áreas de conhecimento da educação básica formação de professor,DCN
+Enfermagem,01,Educação,0114E05,Enfermagem formação de professor,DCN
+Enfermagem,09,Saúde e bem-estar,0913E01,Enfermagem,DCN
+Engenharia acústica,07,"Engenharia, produção e construção",0714E02,Engenharia acústica,DCN
+Engenharia aeroespacial,07,"Engenharia, produção e construção",0716E01,Engenharia aeroespacial,DCN
+Engenharia aeronáutica,07,"Engenharia, produção e construção",0716E02,Engenharia aeronáutica,DCN
+Engenharia agrícola,08,"Agricultura, silvicultura, pesca e veterinária",0811E01,Engenharia agrícola,DCN
+Engenharia agronômica,08,"Agricultura, silvicultura, pesca e veterinária",0811A04,Agronomia,DCN
+Engenharia ambiental,07,"Engenharia, produção e construção",0712E02,Engenharia ambiental e sanitária,DCN
+Engenharia ambiental e sanitária,07,"Engenharia, produção e construção",0712E02,Engenharia ambiental e sanitária,DCN
+Engenharia automotiva,07,"Engenharia, produção e construção",0716E03,Engenharia automotiva,DCN
+Engenharia bioenergética,07,"Engenharia, produção e construção",0713E03,Engenharia bioenergética,DCN
+Engenharia biomédica,07,"Engenharia, produção e construção",0714E03,Engenharia biomédica,DCN
+Engenharia bioquímica,07,"Engenharia, produção e construção",0711E01,Engenharia bioquímica,DCN
+Engenharia cartográfica,07,"Engenharia, produção e construção",0731E01,Engenharia cartográfica,DCN
+Engenharia civil,07,"Engenharia, produção e construção",0732E01,Engenharia civil,DCN
+Engenharia de agrimensura,07,"Engenharia, produção e construção",0731E02,Engenharia de agrimensura,DCN
+Engenharia de agrimensura e cartográfica,07,"Engenharia, produção e construção",0731E03,Engenharia de agrimensura e cartográfica,DCN
+Engenharia de alimentos,07,"Engenharia, produção e construção",0721E01,Engenharia de alimentos,DCN
+Engenharia de bioprocessos,07,"Engenharia, produção e construção",0711E02,Engenharia de bioprocessos,DCN
+Engenharia de biossistemas,08,"Agricultura, silvicultura, pesca e veterinária",0811E02,Engenharia de biossistemas,DCN
+Engenharia de biotecnologia,07,"Engenharia, produção e construção",0711E03,Engenharia de biotecnologia,DCN
+Engenharia de computação,07,"Engenharia, produção e construção",0714E04,Engenharia de computação,DCN
+Engenharia de controle e automação,07,"Engenharia, produção e construção",0714E05,Engenharia de controle e automação,DCN
+Engenharia de energia,07,"Engenharia, produção e construção",0713E04,Engenharia de energia,DCN
+Engenharia de informação,07,"Engenharia, produção e construção",0714E06,Engenharia de informação,DCN
+Engenharia de manufatura,07,"Engenharia, produção e construção",0725E01,Engenharia de manufatura,DCN
+Engenharia de materiais,07,"Engenharia, produção e construção",0722E01,Engenharia de materiais,DCN
+Engenharia de minas,07,"Engenharia, produção e construção",0724E01,Engenharia de minas,DCN
+Engenharia de nanotecnologia,07,"Engenharia, produção e construção",0711E04,Engenharia de nanotecnologia,DCN
+Engenharia de pesca,08,"Agricultura, silvicultura, pesca e veterinária",0831E01,Engenharia de pesca,DCN
+Engenharia de petróleo,07,"Engenharia, produção e construção",0724E02,Engenharia de petróleo,DCN
+Engenharia de produção,07,"Engenharia, produção e construção",0725E02,Engenharia de produção,DCN
+Engenharia de recursos hídricos,07,"Engenharia, produção e construção",0732E02,Engenharia de recursos hídricos,DCN
+Engenharia de software,06,Computação e Tecnologias da Informação e Comunicação (TIC),0613E01,Engenharia de software,DCN
+Engenharia de telecomunicações,07,"Engenharia, produção e construção",0714E07,Engenharia de telecomunicações,DCN
+Engenharia de transportes,07,"Engenharia, produção e construção",0732E03,Engenharia de transportes,DCN
+Engenharia elétrica,07,"Engenharia, produção e construção",0713E05,Engenharia elétrica,DCN
+Engenharia eletrônica,07,"Engenharia, produção e construção",0714E08,Engenharia eletrônica,DCN
+Engenharia ferroviária e metroviária,07,"Engenharia, produção e construção",0716E04,Engenharia ferroviária e metroviária,DCN
+Engenharia física,07,"Engenharia, produção e construção",0715E01,Engenharia física,DCN
+Engenharia florestal,08,"Agricultura, silvicultura, pesca e veterinária",0821E01,Engenharia florestal,DCN
+Engenharia geológica,05,"Ciências naturais, matemática e estatística",0532G02,Geologia,DCN
+Engenharia industrial,07,"Engenharia, produção e construção",0725E03,Engenharia industrial,DCN
+Engenharia mecânica,07,"Engenharia, produção e construção",0715E02,Engenharia mecânica,DCN
+Engenharia mecatrônica,07,"Engenharia, produção e construção",0714E09,Engenharia mecatrônica,DCN
+Engenharia metalúrgica,07,"Engenharia, produção e construção",0715E03,Engenharia metalúrgica,DCN
+Engenharia naval,07,"Engenharia, produção e construção",0716E05,Engenharia naval,DCN
+Engenharia nuclear,07,"Engenharia, produção e construção",0713E06,Engenharia nuclear,DCN
+Engenharia portuária,07,"Engenharia, produção e construção",0732E04,Engenharia portuária,DCN
+Engenharia química,07,"Engenharia, produção e construção",0711E05,Engenharia química,DCN
+Engenharia sanitária,07,"Engenharia, produção e construção",0712E02,Engenharia ambiental e sanitária,DCN
+Engenharia têxtil,07,"Engenharia, produção e construção",0723E01,Engenharia têxtil,DCN
+Estatística,05,"Ciências naturais, matemática e estatística",0542E01,Estatística,DCN
+Farmácia,09,Saúde e bem-estar,0916F01,Farmácia,DCN
+Filosofia,01,Educação,0114F01,Filosofia formação de professor,DCN
+Filosofia,02,Artes e humanidades,0223F01,Filosofia,DCN
+Física,01,Educação,0114F02,Física formação de professor,DCN
+Física,05,"Ciências naturais, matemática e estatística",0533F01,Física,DCN
+Física,05,"Ciências naturais, matemática e estatística",0533F02,Física aplicada,DCN
+Fisioterapia,09,Saúde e bem-estar,0915F01,Fisioterapia,DCN
+Fonoaudiologia,09,Saúde e bem-estar,0915F02,Fonoaudiologia,DCN
+Formação de docentes para a educação básica,01,Educação,0113F01,Formação pedagógica de professor para a educação básica,DCN
+Geografia,01,Educação,0114G01,Geografia formação de professor,DCN
+Geografia,03,"Ciências sociais, comunicação e informação",0312G01,Geografia,DCN
+Geologia,05,"Ciências naturais, matemática e estatística",0532G02,Geologia,DCN
+História,01,Educação,0114H01,História formação de professor,DCN
+História,02,Artes e humanidades,0222H01,História,DCN
+Hotelaria,10,Serviços,1015H01,Hotelaria,DCN
+Jornalismo,03,"Ciências sociais, comunicação e informação",0321J01,Jornalismo,DCN
+Letras,01,Educação,0115L02,Letras espanhol formação de professor,DCN
+Letras,01,Educação,0115L03,Letras francês formação de professor,DCN
+Letras,01,Educação,0115L04,Letras inglês formação de professor,DCN
+Letras,01,Educação,0115L05,Letras italiano formação de professor,DCN
+Letras,01,Educação,0115L06,Letras japonês formação de professor,DCN
+Letras,01,Educação,0115L07,Letras língua brasileira de sinais formação de professor,DCN
+Letras,01,Educação,0115L08,Letras línguas estrangeiras clássicas formação de professor,DCN
+Letras,01,Educação,0115L09,Letras linguística formação de professor,DCN
+Letras,01,Educação,0115L10,Letras outras línguas estrangeiras modernas formação de professor,DCN
+Letras,01,Educação,0115L11,Letras português alemão formação de professor,DCN
+Letras,01,Educação,0115L12,Letras português espanhol formação de professor,DCN
+Letras,01,Educação,0115L13,Letras português formação de professor,DCN
+Letras,01,Educação,0115L14,Letras português francês formação de professor,DCN
+Letras,01,Educação,0115L15,Letras português inglês formação de professor,DCN
+Letras,01,Educação,0115L16,Letras português italiano formação de professor,DCN
+Letras,01,Educação,0115L17,Letras português japonês formação de professor,DCN
+Letras,01,Educação,0115L18,Letras português língua brasileira de sinais formação de professor,DCN
+Letras,01,Educação,0115L19,Letras português línguas estrangeiras clássicas formação de professor,DCN
+Letras,01,Educação,0115L20,Letras português outras línguas estrangeiras modernas formação de professor,DCN
+Letras,01,Educação,0115L21,Letras tradutor e intérprete formação de professor,DCN
+Letras,01,Educação,0231L01,Letras alemão,DCN
+Letras,01,Educação,0231L02,Letras escrita criativa,DCN
+Letras,01,Educação,0231L03,Letras espanhol,DCN
+Letras,01,Educação,0231L04,Letras francês,DCN
+Letras,01,Educação,0231L05,Letras inglês,DCN
+Letras,01,Educação,0231L06,Letras italiano,DCN
+Letras,01,Educação,0231L07,Letras japonês,DCN
+Letras,01,Educação,0231L08,Letras língua brasileira de sinais,DCN
+Letras,01,Educação,0231L09,Letras línguas estrangeiras clássicas,DCN
+Letras,01,Educação,0231L10,Letras linguística,DCN
+Letras,01,Educação,0231L11,Letras outras línguas estrangeiras modernas,DCN
+Letras,01,Educação,0231L12,Letras português,DCN
+Letras,01,Educação,0231L13,Letras português alemão,DCN
+Letras,01,Educação,0231L14,Letras português espanhol,DCN
+Letras,02,Artes e humanidades,0231L15,Letras português francês,DCN
+Letras,02,Artes e humanidades,0231L16,Letras português inglês,DCN
+Letras,02,Artes e humanidades,0231L17,Letras português italiano,DCN
+Letras,02,Artes e humanidades,0231L18,Letras português japonês,DCN
+Letras,02,Artes e humanidades,0231L19,Letras português língua brasileira de sinais,DCN
+Letras,02,Artes e humanidades,0231L20,Letras português línguas estrangeiras clássicas,DCN
+Letras,02,Artes e humanidades,0231L21,Letras português outras línguas estrangeiras modernas,DCN
+Letras,02,Artes e humanidades,0231L22,Letras tradutor e intérprete,DCN
+Matemática,01,Educação,0114M01,Matemática formação de professor,DCN
+Matemática,05,"Ciências naturais, matemática e estatística",0541M01,Matemática,DCN
+Medicina,09,Saúde e bem-estar,0912M01,Medicina,DCN
+Medicina veterinária,08,"Agricultura, silvicultura, pesca e veterinária",0841M01,Medicina veterinária,DCN
+Meteorologia,05,"Ciências naturais, matemática e estatística",0532M01,Meteorologia,DCN
+Moda,02,Artes e humanidades,0212M1,Moda,DCN
+Museologia,03,"Ciências sociais, comunicação e informação",0322M01,Museologia,DCN
+Música,01,Educação,0114M02,Música formação de professor,DCN
+Música,02,Artes e humanidades,0215M01,Música,DCN
+Nutrição,09,Saúde e bem-estar,0915N01,Nutrição,DCN
+Oceanografia,05,"Ciências naturais, matemática e estatística",0532O01,Oceanografia,DCN
+Odontologia,09,Saúde e bem-estar,0911O01,Odontologia,DCN
+Pedagogia,01,Educação,0113P01,Pedagogia,DCN
+Psicologia,01,Educação,0114P01,Psicologia formação de professor,DCN
+Psicologia,03,"Ciências sociais, comunicação e informação",0313P01,Psicologia,DCN
+Publicidade,04,"Negócios, administração e direito",0414P01,Publicidade e Propanda,DCN
+Química,01,Educação,0114Q01,Química formação de professor,DCN
+Química,05,"Ciências naturais, matemática e estatística",0531Q01,Química,DCN
+Relações internacionais,03,"Ciências sociais, comunicação e informação",0312R01,Relações internacionais,DCN
+Relações públicas,04,"Negócios, administração e direito",0414R01,Relações públicas,DCN
+Saúde coletiva,09,Saúde e bem-estar,0918S01,Saúde coletiva,DCN
+Secretariado executivo,04,"Negócios, administração e direito",0415S01,Secretariado,DCN
+Serviço social,09,Saúde e bem-estar,0923S01,Serviço social,DCN
+Sistemas de informação,06,Computação e Tecnologias da Informação e Comunicação (TIC),0615S02,Sistemas de informação,DCN
+Teatro,01,Educação,0114T01,Teatro formação de professor,DCN
+Teatro,02,Artes e humanidades,0215T01,Teatro,DCN
+Teologia,02,Artes e humanidades,0221T01,Teologia,DCN
+Terapia ocupacional,09,Saúde e bem-estar,0915T01,Terapia ocupacional,DCN
+Turismo,10,Serviços,1015T01,Turismo,DCN
+Zootecnia,08,"Agricultura, silvicultura, pesca e veterinária",0811Z01,Zootecnia,DCN
+Agrimensura,07,"Engenharia, produção e construção",0731A01,Agrimensura,CNCST
+Agrocomputação,06,Computação e Tecnologias da Informação e Comunicação (TIC),0681A01,Agrocomputação,CNCST
+Agroecologia,08,"Agricultura, silvicultura, pesca e veterinária",0811A01,Agroecologia,CNCST
+Agroindústria,08,"Agricultura, silvicultura, pesca e veterinária",0811A02,Agroindústria,CNCST
+Alimentos,07,"Engenharia, produção e construção",0721A01,Alimentos,CNCST
+Análise e desenvolvimento de sistemas,06,Computação e Tecnologias da Informação e Comunicação (TIC),0613S01,Sistemas de informação,CNCST
+Apicultura e Meliponicultura,08,"Agricultura, silvicultura, pesca e veterinária",0811A05,Agropecuária,CNCST
+Aquicultura,08,"Agricultura, silvicultura, pesca e veterinária",0831A01,Aquicultura,CNCST
+Artilharia,10,Serviços,1031C01,Ciências militares,CNCST
+Automação industrial,07,"Engenharia, produção e construção",0714A01,Automação industrial,CNCST
+Banco de dados,06,Computação e Tecnologias da Informação e Comunicação (TIC),0612B01,Banco de dados,CNCST
+Biocombustíveis,07,"Engenharia, produção e construção",0711B01,Biocombustíveis,CNCST
+Biotecnologia,05,"Ciências naturais, matemática e estatística",0512B02,Biotecnologia,CNCST
+Cafeicultura,08,"Agricultura, silvicultura, pesca e veterinária",0811C01,Cafeicultura,CNCST
+Cavalaria,10,Serviços,1031C01,Ciências militares,CNCST
+Celulose e papel,07,"Engenharia, produção e construção",0722P01,Papel e celulose,CNCST
+Cerâmica,07,"Engenharia, produção e construção",0722C01,Cerâmica,CNCST
+Comércio exterior,04,"Negócios, administração e direito",0413C01,Comércio exterior,CNCST
+Comunicação assistiva,02,Artes e humanidades,0211C02,Comunicação assistiva,CNCST
+Comunicação institucional,04,"Negócios, administração e direito",0414R01,Relações públicas,CNCST
+Comunicações aeronáuticas,10,Serviços,1031C01,Ciências militares,CNCST
+Comunicações militares,10,Serviços,1031C01,Ciências militares,CNCST
+Conservação e restauro,02,Artes e humanidades,0222C01,Conservação e restauro,CNCST
+Construção de edifícios,07,"Engenharia, produção e construção",0716C01,Construção de edifícios,CNCST
+Construções militares,07,"Engenharia, produção e construção",1031C01,Ciências militares,CNCST
+Construção naval,10,Serviços,0716C01,Construção naval,CNCST
+Controle de obras,07,"Engenharia, produção e construção",0732C02,Controle de obras,CNCST
+Cosméticos,05,"Ciências naturais, matemática e estatística",0531Q02,Química industrial e tecnológica,CNCST
+Design de animação,02,Artes e humanidades,0211A01,Animação,CNCST
+Design de interiores,02,Artes e humanidades,0212D03,Design de interiores,CNCST
+Design de moda,02,Artes e humanidades,0212M01,Moda,CNCST
+Design de produto,02,Artes e humanidades,0212D04,Design de produto,CNCST
+Design educacional,01,Educação,0188P01,Programas interdisciplinares abrangendo educação,CNCST
+Design gráfico,02,Artes e humanidades,0211D01,Design gráfico,CNCST
+Educação social,01,Educação,0188P01,Programas interdisciplinares abrangendo educação,CNCST
+Eletrônica industrial,07,"Engenharia, produção e construção",0714E01,Eletrônica industrial,CNCST
+Eletrotécnica industrial,07,"Engenharia, produção e construção",0713E01,Eletrotécnica industrial,CNCST
+Energias renováveis,07,"Engenharia, produção e construção",0713E02,Energias renováveis,CNCST
+Escrita criativa,02,Artes e humanidades,0231L02,Letras escrita criativa,CNCST
+Estética e cosmética,10,Serviços,1012E01,Estética e cosmética,CNCST
+Estradas,07,"Engenharia, produção e construção",0732E05,Estradas,CNCST
+Fabricação mecânica,07,"Engenharia, produção e construção",0715F01,Fabricação mecânica,CNCST
+Fotografia,02,Artes e humanidades,0211F01,Fotografia,CNCST
+Fotointeligência,10,Serviços,1031C01,Ciências militares,CNCST
+Fruticultura,08,"Agricultura, silvicultura, pesca e veterinária",0811F01,Fruticultura,CNCST
+Gastronomia,10,Serviços,1013G01,Gastronomia,CNCST
+Geoprocessamento,05,"Ciências naturais, matemática e estatística",0532G03,Geoprocessamento,CNCST
+Gerenciamento de tráfego aéreo,10,Serviços,1031C01,Ciências militares,CNCST
+Gestão ambiental,07,"Engenharia, produção e construção",0712G01,Gestão ambiental,CNCST
+Gestão comercial,04,"Negócios, administração e direito",0416G01,Gestão comercial,CNCST
+Gestão da munutenção aeronáutica militar,10,Serviços,1031C01,Ciências militares,CNCST
+Gestão da produção industrial,04,"Negócios, administração e direito",0413G01,Gestão da produção,CNCST
+Gestão da qualidade,04,"Negócios, administração e direito",0413G02,Gestão da qualidade,CNCST
+Gestão da tecnologia da informação informação,06,Computação e Tecnologias da Informação e Comunicação (TIC),0612G01,Gestão da tecnologia da,CNCST
+Gestão de cooperativas,04,"Negócios, administração e direito",0413G04,Gestão de cooperativas,CNCST
+Gestão de energia e eficiência energética,07,"Engenharia, produção e construção",0713S01,Sistemas elétricos,CNCST
+Gestão de eventos,10,Serviços,1015E01,Eventos,CNCST
+Gestão de Negócios Imobiliários,04,"Negócios, administração e direito",0416N01,Negócios Imobiliários,CNCST
+Gestão de recursos hídricos,07,"Engenharia, produção e construção",0732G01,Gestão de recursos hídricos,CNCST
+Gestão de recursos humanos,04,"Negócios, administração e direito",0413G07,Gestão de pessoas,CNCST
+Gestão de resíduos sólidos,07,"Engenharia, produção e construção",0712G02,Gestão de resíduos,CNCST
+Gestão de segurança privada,10,Serviços,1032S02,Segurança privada,CNCST
+Gestão de serviços judiciais e notariais,04,"Negócios, administração e direito",0421S01,Serviços jurídicos e cartoriais,CNCST
+Gestão de turismo,10,Serviços,1015T01,Turismo,CNCST
+Gestão desportiva e de lazer,10,Serviços,1014G01,Gestão desportiva e de lazer,CNCST
+Gestão do agronegócio,04,"Negócios, administração e direito",0413G09,Gestão do agronegócio,CNCST
+Gestão financeira,04,"Negócios, administração e direito",0412G01,Gestão financeira,CNCST
+Gestão hospitalar,04,"Negócios, administração e direito",0413G11,Gestão hospitalar,CNCST
+Gestão portuária,10,Serviços,1041G01,Gestão portuária,CNCST
+Gestão pública,04,"Negócios, administração e direito",0413G12,Gestão pública,CNCST
+Horticultura,08,"Agricultura, silvicultura, pesca e veterinária",0812H01,Horticultura,CNCST
+Hotelaria,10,Serviços,1015H01,Hotelaria,CNCST
+Infantaria,10,Serviços,031C01,Ciências militares,CNCST
+Intendência,10,Serviços,031C01,Ciências militares,CNCST
+Internet das coisas,06,Computação e Tecnologias da Informação e Comunicação (TIC),0613I02,Internet das coisas,CNCST
+Investigação e perícia judicial,10,Serviços,1032I01,Investigação e perícia,CNCST
+Irrigação e drenagem,08,"Agricultura, silvicultura, pesca e veterinária",0811I01,Irrigação e drenagem,CNCST
+Jogos digitais,06,Computação e Tecnologias da Informação e Comunicação (TIC),0681J01,Jogos digitais,CNCST
+Laticínios,07,"Engenharia, produção e construção",0721L01,Laticínios,CNCST
+Logística,04,"Negócios, administração e direito",0413L01,Logística,CNCST
+Luteria,02,Artes e humanidades,0214F01,Fabricação de instrumentos musicais não industrial,CNCST
+Manutenção de aeronaves,07,"Engenharia, produção e construção",0716M01,Manutenção de aeronaves,CNCST
+Manutenção de aeronaves de asa rotativa,10,Serviços,1031C01,Ciências militares,CNCST
+Manutenção de armamento militar,10,Serviços,1031C01,Ciências militares,CNCST
+Manutenção de comunicações militares,10,Serviços,1031C01,Ciências militares,CNCST
+Manutenção de Viatura Blindada,10,Serviços,1031C01,Ciências militares,CNCST
+Manutenção de viatura militar,10,Serviços,1031C01,Ciências militares,CNCST
+Manutenção industrial,07,"Engenharia, produção e construção",0715M01,Manutenção industrial,CNCST
+Manutenção metal-mecânica militar,10,Serviços,1031C01,Ciências militares,CNCST
+Marketing,04,"Negócios, administração e direito",0414M01,Marketing,CNCST
+Mecânica de precisão,07,"Engenharia, produção e construção",0715M02,Mecânica de precisão,CNCST
+Mecanização em agricultura de precisão,08,"Agricultura, silvicultura, pesca e veterinária",0811E02,Engenharia agrícola,CNCST
+Mecatrônica industrial,07,"Engenharia, produção e construção",0714M01,Mecatrônica industrial,CNCST
+Meteorologia aeronáutica,10,Serviços,1031C01,Ciências militares,CNCST
+Mídias sociais digitais,02,Artes e humanidades,0211P05,Produção multimídia,CNCST
+Mineração,07,"Engenharia, produção e construção",0724M01,Mineração,CNCST
+Música militar,10,Serviços,1031C01,Ciências militares,CNCST
+Oftálmica,09,Saúde e bem-estar,0914O01,Oftálmica,CNCST
+Petróleo e gás,07,"Engenharia, produção e construção",0724P01,Petróleo e gás,CNCST
+Pilotagem profissional de aeronaves,10,Serviços,1041C01,Ciências aeronáuticas,CNCST
+Podologia,09,Saúde e bem-estar,0915P01,Podologia,CNCST
+Polímeros,07,"Engenharia, produção e construção",0722P02,Polímeros,CNCST
+Processos escolares,01,Educação,0111P01,Processos escolares,CNCST
+Processos gerenciais,04,"Negócios, administração e direito",0413G05,Gestão de negócios,CNCST
+Processos metalúrgicos,07,"Engenharia, produção e construção",0715P01,Processos metalúrgicos,CNCST
+Processos químicos,05,"Ciências naturais, matemática e estatística",0531Q02,Química industrial e tecnológica,CNCST
+Produção audiovisual,02,Artes e humanidades,0211P01,Produção audiovisual,CNCST
+Produção cênica,02,Artes e humanidades,0211P02,Produção cênica,CNCST
+Produção cultural,02,Artes e humanidades,0211P03,Produção cultural,CNCST
+Produção de cacau e chocolate,08,"Agricultura, silvicultura, pesca e veterinária",0811A02,Agroindústria,CNCST
+Produção de cachaça,07,"Engenharia, produção e construção",0721P02,Produção de cachaça,CNCST
+Produção de cerveja,07,"Engenharia, produção e construção",0721P04,Produção de cerveja,CNCST
+Produção de grãos,08,"Agricultura, silvicultura, pesca e veterinária",0811M01,Manejo da produção agrícola,CNCST
+Produção de vestuário,07,"Engenharia, produção e construção",0723P01,Produção de vestuário,CNCST
+Produção fonográfica,02,Artes e humanidades,0211P04,Produção fonográfica,CNCST
+Produção gráfica,07,"Engenharia, produção e construção",0725P01,Produção gráfica,CNCST
+Produção joalheira,07,"Engenharia, produção e construção",0722P03,Produção joalheira,CNCST
+Produção moveleira,07,"Engenharia, produção e construção",0722P04,Produção moveleira,CNCST
+Produção multimídia,02,Artes e humanidades,0211P05,Produção multimídia,CNCST
+Produção pesqueira,08,"Agricultura, silvicultura, pesca e veterinária",0831P01,Produção pesqueira,CNCST
+Produção publicitária,04,"Negócios, administração e direito",0414P01,Publicidade e propaganda,CNCST
+Produção sucroalcooleira,07,"Engenharia, produção e construção",0721P03,Produção sucroalcooleira,CNCST
+Produção têxtil,07,"Engenharia, produção e construção",0723P02,Produção têxtil,CNCST
+Projetos de estruturas aeronáuticas,07,"Engenharia, produção e construção",0716E02,Engenharia aeronáutica,CNCST
+Radiologia,09,Saúde e bem-estar,0914R01,Radiologia,CNCST
+Redes de computadores,06,Computação e Tecnologias da Informação e Comunicação (TIC),0612R01,Redes de computadores,CNCST
+Redes de telecomunicações,07,"Engenharia, produção e construção",0714R01,Redes de telecomunicações,CNCST
+Refrigeração e climatização,07,"Engenharia, produção e construção",0713R01,Refrigeração e climatização,CNCST
+Rochas ornamentais,07,"Engenharia, produção e construção",0724R01,Rochas ornamentais,CNCST
+Saneamento ambiental,07,"Engenharia, produção e construção",0712S01,Saneamento ambiental,CNCST
+Saúde militar,10,Serviços,1031C01,Ciências militares,CNCST
+Secretariado,04,"Negócios, administração e direito",0415S01,Secretariado,CNCST
+Segurança cibernética,06,Computação e Tecnologias da Informação e Comunicação (TIC),0612D01,Defesa cibernética,CNCST
+Segurança da informação,06,Computação e Tecnologias da Informação e Comunicação (TIC),0612S01,Segurança da informação,CNCST
+Segurança no trabalho,10,Serviços,1022S01,Segurança no trabalho,CNCST
+Segurança no trânsito,10,Serviços,1032S01,Segurança no trânsito,CNCST
+Segurança pública,10,Serviços,1032S03,Segurança pública,CNCST
+Serviços penais,10,Serviços,1032S04,Serviços penais,CNCST
+Silvicultura,08,"Agricultura, silvicultura, pesca e veterinária",0821S01,Silvicultura,CNCST
+Sistemas automotivos,07,"Engenharia, produção e construção",0716S01,Sistemas automotivos,CNCST
+Sistemas biomédicos,07,"Engenharia, produção e construção",0714S01,Sistemas biomédicos,CNCST
+Sistemas de armas de aeronáutica,10,Serviços,1031C01,Ciências militares,CNCST
+Sistemas de navegação fluvial,07,"Engenharia, produção e construção",0716S02,Sistemas de navegação fluvial,CNCST
+Sistemas de telecomunicações,07,"Engenharia, produção e construção",0714S02,Sistemas de telecomunicações,CNCST
+Sistemas elétricos,07,"Engenharia, produção e construção",0713S01,Sistemas elétricos,CNCST
+Sistemas embarcados,06,Computação e Tecnologias da Informação e Comunicação (TIC),0714S03,Sistemas embarcados,CNCST
+Sistemas para internet,06,Computação e Tecnologias da Informação e Comunicação (TIC),0613S02,Sistemas para internet,CNCST
+Soldagem,07,"Engenharia, produção e construção",0715S01,Soldagem,CNCST
+Telemática,07,"Engenharia, produção e construção",0714T01,Telemática,CNCST
+Topografia militar,10,Serviços,1031C01,Ciências militares,CNCST
+Transporte aéreo,10,Serviços,1041T01,Transporte aéreo,CNCST
+Transporte terrestre,10,Serviços,1041T02,Transporte terrestre,CNCST
+Viticultura e enologia,08,"Agricultura, silvicultura, pesca e veterinária",0811V01,Viticultura e enologia,CNCST

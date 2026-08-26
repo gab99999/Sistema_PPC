@@ -1,6 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoComponente, ComponenteCurricular, MembroNDE, ComponenteNaMatriz
+from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoComponente, ComponenteCurricular, MembroNDE, ComponenteNaMatriz, CineBrasilCurso
 from django.contrib.auth.models import User, Group
 from django.forms import modelformset_factory
 
@@ -84,11 +84,12 @@ class EstruturaCurricularForm(forms.ModelForm):
 
 
 
-
 class ApendiceForm(forms.ModelForm):
     class Meta:
         model = Apendice
         fields = ['tipo', 'titulo', 'descricao', 'arquivo']
+
+
 class DinamicaEADForm(forms.ModelForm):
     class Meta:
         model = DinamicaEAD
@@ -170,8 +171,17 @@ class EditarPermissoesForm(forms.ModelForm):
 class CursoForm(forms.ModelForm):
     class Meta:
         model = Curso
-        fields = ['nome', 'unidade_academica', 'area_conhecimento', 'carga_horaria_minima', 'carga_horaria_maxima']
+        fields = ['nome', 'cine_brasil', 'unidade_academica', 'area_conhecimento',
+                  'carga_horaria_minima', 'carga_horaria_maxima']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['cine_brasil'].required = False
+        # Evita carregar centenas de opções de uma vez — o JS popula via busca.
+        if self.instance.pk and self.instance.cine_brasil_id:
+            self.fields['cine_brasil'].queryset = CineBrasilCurso.objects.filter(pk=self.instance.cine_brasil_id)
+        else:
+            self.fields['cine_brasil'].queryset = CineBrasilCurso.objects.none()
 class ObjetivosForm(forms.ModelForm):
     class Meta:
         model = PPC

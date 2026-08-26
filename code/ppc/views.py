@@ -10,7 +10,7 @@ from django.db.models import Prefetch
 from django.utils.text import slugify
 from weasyprint import HTML
 from ppc.testes.analisar_pdf_uma_chamada import analisar_pdf_adaptativo, ErroOpenRouter
-from .models import Curso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE, ComponenteNaMatriz
+from .models import Curso, CineBrasilCurso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE, ComponenteNaMatriz
 from .forms import ( ObjetivosForm, EditarPermissoesForm, CursoForm,
                     InformacoesGeraisForm, ApresentacaoForm, ExposicaoMotivosForm, PrincipiosForm,
                     ExpectativasForm, TccForm, EstagioForm, AtividadesComplementaresForm,
@@ -31,6 +31,19 @@ logger = logging.getLogger(__name__)
 
 
 CAMPOS_PPC_VALIDOS = {f.name for f in PPC._meta.get_fields()}
+
+@login_required
+def buscar_cine_brasil_curso(request):
+    termo = request.GET.get('q', '').strip()
+    resultados = []
+    if len(termo) >= 3:
+        qs = CineBrasilCurso.objects.filter(nome_curso__icontains=termo).order_by('nome_curso')[:20]
+        resultados = [
+            {'id': c.id, 'nome_curso': c.nome_curso, 'area_geral_nome': c.area_geral_nome, 'rotulo_nome': c.rotulo_nome}
+            for c in qs
+        ]
+    return JsonResponse({'resultados': resultados})
+
 
 @login_required
 def historico_componente(request, componente_id):

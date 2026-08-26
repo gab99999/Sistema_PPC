@@ -7,4 +7,45 @@
         {{ form.as_p }}
         <button type="submit" class="btn btn-primario">Criar Curso</button>
     </form>
+
+    <script>
+    (() => {
+        const campoNome = document.getElementById('id_nome');
+        const selectCineBrasil = document.getElementById('id_cine_brasil');
+        const paragrafoNome = campoNome.closest('p');
+
+        const listaSugestoes = document.createElement('ul');
+        listaSugestoes.className = 'lista-sugestoes-cine-brasil';
+        paragrafoNome.appendChild(listaSugestoes);
+
+        let temporizador = null;
+
+        campoNome.addEventListener('input', () => {
+            clearTimeout(temporizador);
+            const termo = campoNome.value.trim();
+            listaSugestoes.innerHTML = '';
+            if (termo.length < 3) return;
+
+            temporizador = setTimeout(async () => {
+                const resposta = await fetch(`{% url 'buscar_cine_brasil_curso' %}?q=${encodeURIComponent(termo)}`);
+                const dados = await resposta.json();
+                listaSugestoes.innerHTML = '';
+                dados.resultados.forEach(resultado => {
+                    const item = document.createElement('li');
+                    item.textContent = `${resultado.nome_curso} — ${resultado.area_geral_nome} (${resultado.rotulo_nome})`;
+                    item.addEventListener('click', () => {
+                        selectCineBrasil.innerHTML = '';
+                        const opcao = document.createElement('option');
+                        opcao.value = resultado.id;
+                        opcao.textContent = `${resultado.nome_curso} — ${resultado.area_geral_nome}`;
+                        selectCineBrasil.appendChild(opcao);
+                        selectCineBrasil.value = resultado.id;
+                        listaSugestoes.innerHTML = '';
+                    });
+                    listaSugestoes.appendChild(item);
+                });
+            }, 300);
+        });
+    })();
+    </script>
 {% endblock %}
