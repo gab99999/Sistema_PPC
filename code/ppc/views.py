@@ -618,6 +618,8 @@ def lista_componentes(request, ppc_id):
         'ppc': ppc,
         'componentes_na_matriz': componentes_na_matriz,
         'form': form,
+        'soma_componentes': soma_componentes,
+        'diferenca_carga_horaria': diferenca_carga_horaria,
     })
 
 

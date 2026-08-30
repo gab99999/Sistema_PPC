@@ -10,7 +10,9 @@
             {{ componente.get_tipo_display }} · {{ componente.get_nucleo_display }}
         </p>
         <div class="btn-group">
-            <a href="{% url 'editar_componente' componente.id %}?retorno={{ componente_na_matriz.id }}" class="btn btn-secundario">Editar Componente</a>
+            {% if user.is_staff %}
+                <a href="{% url 'editar_componente' componente.id %}?retorno={{ componente_na_matriz.id }}" class="btn btn-secundario">Editar Componente</a>
+            {% endif %}            
             <a href="{% url 'historico_componente' componente.id %}" class="btn btn-secundario">Histórico</a>
         </div>
     </div>
