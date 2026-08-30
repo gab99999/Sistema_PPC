@@ -516,6 +516,28 @@ h3 {
     transform: scale(1.06);
 }
 
+
+.lista-sugestoes-cine-brasil {
+    list-style: none;
+    margin: 4px 0 0 0;
+    padding: 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+.lista-sugestoes-cine-brasil:empty {
+    border: none;
+}
+.lista-sugestoes-cine-brasil li {
+    padding: 6px 10px;
+    cursor: pointer;
+}
+.lista-sugestoes-cine-brasil li:hover {
+    background-color: #f0f0f0;
+}
+
+
 /* -- Responsivo -- */
 @media (max-width: 720px) {
     .ppc-layout {

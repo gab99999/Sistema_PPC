@@ -4,6 +4,7 @@ from django_ckeditor_5.fields import CKEditor5Field
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 from django.core.exceptions import ValidationError
+from django.conf import settings
 
 
 class CineBrasilCurso(models.Model):
@@ -191,6 +192,21 @@ class ComponenteCurricular(models.Model):
         ("AC", "Atividade Complementar"),
         ("ACEx", "Atividade Curricular de Extensão"),
     ]
+
+    STATUS_CHOICES = [
+        ("pendente", "Pendente de aprovação"),
+        ("aprovado", "Aprovado"),
+    ]
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='aprovado')
+
+    criado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='componentes_criados',
+    )
+
     codigo = models.CharField(max_length=20, blank=True)
     nome = models.CharField(max_length=200)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)

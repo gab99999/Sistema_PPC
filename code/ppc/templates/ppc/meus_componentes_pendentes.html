@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Meus Componentes Pendentes{% endblock %}
+{% block content %}
+    <h1>Meus Componentes Pendentes de Aprovação</h1>
+    <ul class="lista-cursos">
+        {% for componente in pendentes %}
+            <li class="card">
+                <p class="card-corpo">
+                    <strong>{{ componente.nome }}</strong>{% if componente.codigo %} ({{ componente.codigo }}){% endif %}<br>
+                    {{ componente.get_tipo_display }} · {{ componente.get_nucleo_display }}<br>
+                    Aguardando aprovação de um administrador.
+                </p>
+            </li>
+        {% empty %}
+            <li>Você não tem componentes pendentes no momento.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

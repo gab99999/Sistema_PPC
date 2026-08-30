@@ -30,7 +30,8 @@ from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario
                         excluir_bibliografia, editar_bibliografia, editar_relacao, excluir_relacao, editar_referencias, excluir_apendice,
                         gerar_pdf_ppc, lista_nde, criar_membro_nde, editar_membro_nde, excluir_membro_nde,
                         escolher_importacao_ppc, importar_ppc_modelo_novo, importar_ppc_modelo_antigo, remover_componente_da_matriz, detalhe_componente_na_matriz, historico_componente, 
-                        editar_vinculo_componente, buscar_componente_existente, adicionar_componente_existente, buscar_cine_brasil_curso,  )
+                        editar_vinculo_componente, buscar_componente_existente, adicionar_componente_existente, buscar_cine_brasil_curso, fila_aprovacao_componentes, 
+                        rejeitar_componente, aprovar_componente, meus_componentes_pendentes,   )
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -89,6 +90,10 @@ urlpatterns = [
     path('ppc/<int:ppc_id>/componentes/buscar/', buscar_componente_existente, name='buscar_componente_existente'),
     path('ppc/<int:ppc_id>/componentes/adicionar/<int:componente_id>/', adicionar_componente_existente, name='adicionar_componente_existente'),
     path('cine-brasil-curso/buscar/', buscar_cine_brasil_curso, name='buscar_cine_brasil_curso'),
+    path('componentes/aprovacao/', fila_aprovacao_componentes, name='fila_aprovacao_componentes'),
+    path('componentes/<int:componente_id>/aprovar/', aprovar_componente, name='aprovar_componente'),
+    path('componentes/<int:componente_id>/rejeitar/', rejeitar_componente, name='rejeitar_componente'),
+    path('componentes/meus-pendentes/', meus_componentes_pendentes, name='meus_componentes_pendentes'),
 ]
 
 if settings.DEBUG:

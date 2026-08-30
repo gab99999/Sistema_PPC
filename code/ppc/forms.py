@@ -177,11 +177,16 @@ class CursoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['cine_brasil'].required = False
-        # Evita carregar centenas de opções de uma vez — o JS popula via busca.
-        if self.instance.pk and self.instance.cine_brasil_id:
+        if self.data.get('cine_brasil'):
+            # Form sendo validado com dado enviado (POST) — o queryset de validação
+            # precisa incluir o valor que veio, senão o Django rejeita como inválido
+            # mesmo sendo o valor certo.
+            self.fields['cine_brasil'].queryset = CineBrasilCurso.objects.filter(pk=self.data.get('cine_brasil'))
+        elif self.instance.pk and self.instance.cine_brasil_id:
             self.fields['cine_brasil'].queryset = CineBrasilCurso.objects.filter(pk=self.instance.cine_brasil_id)
         else:
             self.fields['cine_brasil'].queryset = CineBrasilCurso.objects.none()
+
 class ObjetivosForm(forms.ModelForm):
     class Meta:
         model = PPC
@@ -197,9 +202,21 @@ class InformacoesGeraisForm(forms.ModelForm):
             'diretor', 'vice_diretor', 'coordenador_curso', 'tipo_ppc', 'status', 'numero_resolucao',
         ]
 
-    def __init__(self, *args, curso=None, **kwargs):
+    def __init__(self, *args, curso=None, usuario=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.curso = curso or getattr(self.instance, 'curso', None)
+        self.usuario = usuario
+        if usuario is not None and not usuario.is_staff:
+            # Usuário comum não pode escolher 'aprovado' — remove da lista de opções
+            self.fields['status'].choices = [
+                (valor, rotulo) for valor, rotulo in PPC.STATUS_CHOICES if valor != 'aprovado'
+            ]
+
+    def clean_status(self):
+        status = self.cleaned_data.get('status')
+        if status == 'aprovado' and self.usuario is not None and not self.usuario.is_staff:
+            raise forms.ValidationError("Somente um administrador pode marcar um PPC como aprovado.")
+        return status
 
     def clean_carga_horaria_total(self):
         total = self.cleaned_data.get('carga_horaria_total')

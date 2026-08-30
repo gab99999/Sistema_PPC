@@ -23,6 +23,19 @@
             {% endfor %}
         </table><br>
     {% endif %}
+
+    <div class="alerta {% if diferenca_carga_horaria != 0 %}alerta-erro{% else %}alerta-sucesso{% endif %}">
+        Carga horária total do PPC: {{ ppc.carga_horaria_total }}h —
+        Soma dos componentes: {{ soma_componentes }}h —
+        {% if diferenca_carga_horaria > 0 %}
+            Faltam {{ diferenca_carga_horaria }}h de componentes pra bater com o total declarado.
+        {% elif diferenca_carga_horaria < 0 %}
+            A soma dos componentes excede o total declarado em {{ diferenca_carga_horaria|cut:"-" }}h.
+        {% else %}
+            Carga horária bate certinho.
+        {% endif %}
+    </div>
+
     <div class="btn-group">
         <a href="{% url 'criar_componente' ppc.id %}" class="btn btn-primario">+ Novo Componente</a>
         <a href="{% url 'buscar_componente_existente' ppc.id %}" class="btn btn-secundario">+ Usar Componente Existente</a>

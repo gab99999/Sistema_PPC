@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Aprovação de Componentes{% endblock %}
+{% block content %}
+    <h1>Componentes Pendentes de Aprovação</h1>
+    <ul class="lista-cursos">
+        {% for componente in pendentes %}
+            <li class="card">
+                <p class="card-corpo">
+                    <strong>{{ componente.nome }}</strong>{% if componente.codigo %} ({{ componente.codigo }}){% endif %}<br>
+                    {{ componente.get_tipo_display }} · {{ componente.get_nucleo_display }}<br>
+                    {{ componente.ementa|truncatechars:200 }}
+                </p>
+                <div class="btn-group">
+                    <form method="post" action="{% url 'aprovar_componente' componente.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primario">Aprovar</button>
+                    </form>
+                    <form method="post" action="{% url 'rejeitar_componente' componente.id %}" onsubmit="return confirm('Rejeitar e remover este componente?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-perigo">Rejeitar</button>
+                    </form>
+                </div>
+            </li>
+        {% empty %}
+            <li>Nenhum componente pendente.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

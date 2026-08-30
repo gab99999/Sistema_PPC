@@ -9,6 +9,7 @@ from django.template.loader import render_to_string
 from django.db.models import Prefetch
 from django.utils.text import slugify
 from weasyprint import HTML
+from django.http import HttpResponseForbidden, Http404
 from ppc.testes.analisar_pdf_uma_chamada import analisar_pdf_adaptativo, ErroOpenRouter
 from .models import Curso, CineBrasilCurso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE, ComponenteNaMatriz
 from .forms import ( ObjetivosForm, EditarPermissoesForm, CursoForm,
@@ -31,6 +32,32 @@ logger = logging.getLogger(__name__)
 
 
 CAMPOS_PPC_VALIDOS = {f.name for f in PPC._meta.get_fields()}
+
+@staff_member_required(login_url='login')
+def fila_aprovacao_componentes(request):
+    pendentes = ComponenteCurricular.objects.filter(status='pendente').order_by('-id')
+    return render(request, 'ppc/fila_aprovacao_componentes.html', {'pendentes': pendentes})
+
+
+@staff_member_required(login_url='login')
+def aprovar_componente(request, componente_id):
+    componente = get_object_or_404(ComponenteCurricular, id=componente_id)
+    if request.method == 'POST':
+        componente.status = 'aprovado'
+        componente.save()
+        messages.success(request, f"{componente.nome} aprovado.")
+    return redirect('fila_aprovacao_componentes')
+
+
+@staff_member_required(login_url='login')
+def rejeitar_componente(request, componente_id):
+    componente = get_object_or_404(ComponenteCurricular, id=componente_id)
+    if request.method == 'POST':
+        with transaction.atomic():
+            componente.uso_em_ppcs.all().delete()  # tira o vínculo primeiro — PROTECT exige isso
+            componente.delete()
+        messages.success(request, "Componente rejeitado e removido.")
+    return redirect('fila_aprovacao_componentes')
 
 @login_required
 def buscar_cine_brasil_curso(request):
@@ -411,12 +438,13 @@ def excluir_bibliografia(request, bibliografia_id):
         bib.delete()
     return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=componente_na_matriz_id)
 
-@login_required
-def lista_componentes(request, ppc_id):
-    ppc = get_object_or_404(PPC, id=ppc_id)
-    componentes_na_matriz = ppc.matriz_componentes.select_related('componente').order_by('periodo', 'componente__nome')
-    return render(request, 'ppc/lista_componentes.html', {'ppc': ppc, 'componentes_na_matriz': componentes_na_matriz})
 
+@login_required
+def meus_componentes_pendentes(request):
+    pendentes = ComponenteCurricular.objects.filter(
+        criado_por=request.user, status='pendente'
+    ).order_by('-id')
+    return render(request, 'ppc/meus_componentes_pendentes.html', {'pendentes': pendentes})
 
 @login_required
 def criar_componente(request, ppc_id):
@@ -425,40 +453,46 @@ def criar_componente(request, ppc_id):
         form_componente = ComponenteCurricularForm(request.POST)
         form_vinculo = ComponenteNaMatrizForm(request.POST)
         if form_componente.is_valid() and form_vinculo.is_valid():
-            componente = form_componente.save()
+            componente = form_componente.save(commit=False)
+            componente.status = 'aprovado' if request.user.is_staff else 'pendente'
+            componente.criado_por = request.user
+            componente.save()
             vinculo = form_vinculo.save(commit=False)
             vinculo.ppc = ppc
             vinculo.componente = componente
             vinculo.save()
+            if componente.status == 'pendente':
+                messages.info(request, "Componente enviado para aprovação de um administrador — ficará oculto até ser aprovado.")
+                return redirect('lista_componentes', ppc_id=ppc.id)
             return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=vinculo.id)
     else:
         form_componente = ComponenteCurricularForm()
         form_vinculo = ComponenteNaMatrizForm()
     return render(request, 'ppc/criar_componente.html', {
-        'form_componente': form_componente,
-        'form_vinculo': form_vinculo,
-        'ppc': ppc,
+        'form_componente': form_componente, 'form_vinculo': form_vinculo, 'ppc': ppc,
     })
 
 
 @login_required
 def editar_componente(request, componente_id):
+    if not request.user.is_staff:
+        return HttpResponseForbidden("Somente administradores podem editar componentes.")
     componente = get_object_or_404(ComponenteCurricular, id=componente_id)
     componente_na_matriz_id_retorno = request.GET.get('retorno') or request.POST.get('retorno')
 
     if request.method == 'POST':
         form = ComponenteCurricularForm(request.POST, instance=componente)
         if form.is_valid():
-            form.save()
+            componente = form.save(commit=False)
+            componente.status = 'aprovado'  # edição de admin é sempre automática, mesmo se estava pendente
+            componente.save()
             if componente_na_matriz_id_retorno:
                 return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=componente_na_matriz_id_retorno)
             return redirect('historico_componente', componente_id=componente.id)
     else:
         form = ComponenteCurricularForm(instance=componente)
     return render(request, 'ppc/editar_componente.html', {
-        'form': form,
-        'componente': componente,
-        'retorno': componente_na_matriz_id_retorno,
+        'form': form, 'componente': componente, 'retorno': componente_na_matriz_id_retorno,
     })
 
 
@@ -495,6 +529,8 @@ def editar_vinculo_componente(request, componente_na_matriz_id):
 def detalhe_componente_na_matriz(request, componente_na_matriz_id):
     componente_na_matriz = get_object_or_404(ComponenteNaMatriz, id=componente_na_matriz_id)
     componente = componente_na_matriz.componente
+    if componente.status != 'aprovado' and not request.user.is_staff:
+        raise Http404("Componente ainda não aprovado.")
     bibliografia_form = BibliografiaForm()
     relacao_form = RelacaoComponenteForm(ppc=componente_na_matriz.ppc, componente_na_matriz_atual=componente_na_matriz)
 
@@ -534,7 +570,7 @@ def buscar_componente_existente(request, ppc_id):
     ja_usados_ids = set(ppc.matriz_componentes.values_list('componente_id', flat=True))
     resultados = []
     if termo:
-        resultados = ComponenteCurricular.objects.filter(nome__icontains=termo).exclude(id__in=ja_usados_ids)
+        resultados = ComponenteCurricular.objects.filter(nome__icontains=termo, status='aprovado').exclude(id__in=ja_usados_ids)
     return render(request, 'ppc/buscar_componente_existente.html', {
         'ppc': ppc, 'termo': termo, 'resultados': resultados,
     })
@@ -573,7 +609,11 @@ def lista_componentes(request, ppc_id):
     else:
         form = EstruturaCurricularForm(instance=ppc)
 
-    componentes_na_matriz = ppc.matriz_componentes.select_related('componente').order_by('periodo', 'componente__nome')
+    componentes_na_matriz = ppc.matriz_componentes.select_related('componente').filter(
+        componente__status='aprovado'
+    ).order_by('periodo', 'componente__nome')
+    soma_componentes = sum(cm.componente.carga_horaria_computada_total for cm in componentes_na_matriz)
+    diferenca_carga_horaria = ppc.carga_horaria_total - soma_componentes
     return render(request, 'ppc/lista_componentes.html', {
         'ppc': ppc,
         'componentes_na_matriz': componentes_na_matriz,
@@ -732,13 +772,13 @@ def editar_principios(request, ppc_id):
 def editar_informacoes_gerais(request, ppc_id):
     ppc = get_object_or_404(PPC, id=ppc_id)
     if request.method == 'POST':
-        form = InformacoesGeraisForm(request.POST, instance=ppc, curso=ppc.curso)
+        form = InformacoesGeraisForm(request.POST, instance=ppc, curso=ppc.curso, usuario=request.user)
         if form.is_valid():
             form.save()
             _consumir_campos_rascunho(request, ppc, InformacoesGeraisForm)
             return redirect('editar_informacoes_gerais', ppc_id=ppc.id)
     else:
-        form = InformacoesGeraisForm(instance=ppc, initial=_initial_rascunho(request, ppc, InformacoesGeraisForm))
+        form = InformacoesGeraisForm(instance=ppc, curso=ppc.curso, usuario=request.user, initial=_initial_rascunho(request, ppc, InformacoesGeraisForm))
     return render(request, 'ppc/editar_informacoes_gerais.html', {'form': form, 'ppc': ppc})
 
 
@@ -846,14 +886,14 @@ def detalhe_curso(request, curso_id):
 def criar_ppc(request, curso_id):
     curso = get_object_or_404(Curso, id=curso_id)
     if request.method == 'POST':
-        form = InformacoesGeraisForm(request.POST, curso=curso)
+        form = InformacoesGeraisForm(request.POST, curso=curso, usuario=request.user)
         if form.is_valid():
-            ppc = form.save(commit=False)  # não salva ainda
-            ppc.curso = curso              # completa o campo que faltava
-            ppc.save()                     # agora sim salva
+            ppc = form.save(commit=False)
+            ppc.curso = curso
+            ppc.save()
             return redirect('editar_apresentacao', ppc_id=ppc.id)
     else:
-        form = InformacoesGeraisForm()
+        form = InformacoesGeraisForm(curso=curso, usuario=request.user)
     return render(request, 'ppc/criar_ppc.html', {'form': form, 'curso': curso})
 
 
