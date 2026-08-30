@@ -917,16 +917,20 @@ def editar_objetivos(request, ppc_id):
 def gerar_pdf_ppc(request, ppc_id):
     """Gera uma representação de impressão independente das telas de edição."""
     bibliografias = Bibliografia.objects.order_by('tipo', 'autores', 'titulo')
-    relacoes = RelacaoComponente.objects.select_related('componente_relacionado').order_by(
-        'tipo', 'componente_relacionado__nome'
-    )
-    componentes = ComponenteCurricular.objects.order_by('periodo', 'nome').prefetch_related(
+    relacoes = RelacaoComponente.objects.select_related(
+        'componente_relacionado_na_matriz__componente'
+    ).order_by('tipo', 'componente_relacionado_na_matriz__componente__nome')
+
+    componentes_na_matriz = ComponenteNaMatriz.objects.filter(
+        componente__status='aprovado'
+    ).select_related('componente').order_by('periodo', 'componente__nome').prefetch_related(
         Prefetch('bibliografias', queryset=bibliografias),
         Prefetch('relacoes', queryset=relacoes),
     )
+
     ppc = get_object_or_404(
         PPC.objects.select_related('curso').prefetch_related(
-            Prefetch('componentes_curriculares', queryset=componentes),
+            Prefetch('matriz_componentes', queryset=componentes_na_matriz),
             Prefetch('apendices', queryset=Apendice.objects.order_by('tipo', 'titulo')),
         ),
         id=ppc_id,
@@ -936,7 +940,7 @@ def gerar_pdf_ppc(request, ppc_id):
     dinamica_ead = DinamicaEAD.objects.filter(ppc=ppc).first()
     html = render_to_string('ppc/pdf/ppc_documento.html', {
         'ppc': ppc,
-        'componentes': ppc.componentes_curriculares.all(),
+        'componentes_na_matriz': ppc.matriz_componentes.all(),
         'dinamica_ead': dinamica_ead,
     }, request=request)
 
