@@ -35,6 +35,10 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"Erros inesperados: {len(relatorio['erros'])}"))
             for e in relatorio["erros"][:10]:
                 self.stdout.write(f"  linha {e['linha']['linha_origem']}: {e['erro']}")
+        if relatorio["pendentes_revisao"] or relatorio["duplicadas_conflitantes"] or relatorio["sem_mapeamento"]:
+            self.stdout.write(
+                "\nPendências gravadas em Pendências de Importação (admin) para revisão."
+            )
 
         if dry_run:
             self.stdout.write(self.style.WARNING(

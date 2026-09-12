@@ -6,7 +6,47 @@ from ppc.models import (
     ComponenteNaMatrizReferencia,
     MapeamentoImportacaoMatriz,
 )
+from ppc.models import ImportacaoPendencia
 
+def _persistir_pendencias(relatorio):
+    """Grava (ou regrava) as pendências desta rodada de import no banco,
+    para revisão posterior via admin. Idempotente por rodada: apaga as
+    pendências não resolvidas do mesmo tipo antes de recriar, para não
+    duplicar a cada dry-run repetido."""
+
+    tipos_map = {
+        "pendentes_revisao": "ambigua",
+        "duplicadas_conflitantes": "duplicada_conflitante",
+        "sem_mapeamento": "sem_mapeamento",
+    }
+
+    for chave_relatorio, tipo in tipos_map.items():
+        ImportacaoPendencia.objects.filter(tipo=tipo, resolvido=False).delete()
+
+        novas = []
+        for item in relatorio[chave_relatorio]:
+            if tipo == "duplicada_conflitante":
+                linha = item["linha_atual"]
+                detalhe = (
+                    f"Linha {linha['linha_origem']} conflita com linha "
+                    f"{item['linha_anterior']['linha_origem']}: "
+                    f"periodo/natureza diferentes para o mesmo código."
+                )
+            else:
+                linha = item
+                detalhe = linha.get("motivo_ambiguidade", "") or ""
+
+            novas.append(ImportacaoPendencia(
+                tipo=tipo,
+                identificador_origem=linha["identificador_origem"],
+                codigo=linha["codigo"],
+                nome=linha["nome"],
+                linha_origem=linha["linha_origem"],
+                detalhe=detalhe,
+                dados_brutos=item,
+            ))
+
+        ImportacaoPendencia.objects.bulk_create(novas)
 
 def importar_linhas_normalizadas(linhas, dry_run=True):
     """
@@ -56,6 +96,8 @@ def importar_linhas_normalizadas(linhas, dry_run=True):
 
         vistas[chave] = linha
         relatorio["ok"].append(linha)
+
+    _persistir_pendencias(relatorio)
 
     if dry_run:
         return relatorio
