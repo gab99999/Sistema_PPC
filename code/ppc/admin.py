@@ -1,7 +1,8 @@
 
 from django.contrib import admin
-from .models import Curso, PPC, ComponenteCurricular, RelacaoComponente, Bibliografia, Apendice, DinamicaEAD
+from .models import Curso, PPC, ComponenteCurricular, RelacaoComponente, Bibliografia, Apendice, DinamicaEAD, models
 from simple_history.admin import SimpleHistoryAdmin
+
 
 admin.site.register(PPC, SimpleHistoryAdmin)
 admin.site.register(Curso, SimpleHistoryAdmin)

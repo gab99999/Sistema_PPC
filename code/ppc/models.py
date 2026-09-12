@@ -348,3 +348,126 @@ class MembroNDE(models.Model):
     def __str__(self):
         return f"{self.nome} ({self.curso.nome})"
 
+
+
+
+class MatrizReferenciaCurricular(models.Model):
+    """Matriz institucional de referência para um Curso — independente de qualquer PPC específico.
+    Um Curso pode ter mais de uma matriz de referência vigente ao mesmo tempo
+    (ex: turnos diferentes)."""
+    curso = models.ForeignKey(
+        Curso,
+        on_delete=models.CASCADE,
+        related_name="matrizes_referencia",
+    )
+    nome = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Ex: 'Matriz de Referência — Noturno'. Opcional, útil quando há mais de uma por curso.",
+    )
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    history = HistoricalRecords()
+
+    def __str__(self):
+        if self.nome:
+            return f"{self.nome} ({self.curso.nome})"
+        return f"Matriz de Referência — {self.curso.nome}"
+
+
+class ComponenteNaMatrizReferencia(models.Model):
+    """Vínculo: este componente está nesta matriz de referência, neste período, com esta natureza.
+    Mesmo papel que ComponenteNaMatriz cumpre para PPC, mas em nível institucional."""
+    NATUREZA_CHOICES = [
+        ("obrigatoria", "Obrigatória"),
+        ("optativa", "Optativa"),
+    ]
+
+    matriz = models.ForeignKey(
+        MatrizReferenciaCurricular,
+        on_delete=models.CASCADE,
+        related_name="componentes",
+    )
+    componente = models.ForeignKey(
+        ComponenteCurricular,
+        on_delete=models.PROTECT,
+        related_name="uso_em_matrizes_referencia",
+    )
+    periodo = models.PositiveSmallIntegerField()
+    natureza = models.CharField(max_length=20, choices=NATUREZA_CHOICES)
+    ordem = models.PositiveIntegerField(
+        default=0,
+        help_text="Posição dentro do período, para uso futuro no drag-and-drop.",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["matriz", "componente"],
+                name="uniq_componente_matriz_referencia",
+            )
+        ]
+        ordering = ["periodo", "ordem"]
+
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return f"{self.componente.nome} — {self.matriz} (período {self.periodo})"
+
+class MapeamentoImportacaoMatriz(models.Model):
+    """De-para entre o identificador de matriz na planilha da UFCAT e o Curso/matriz
+    de referência do sistema. Preenchido manualmente antes de importar."""
+    identificador_origem = models.CharField(
+        max_length=50,
+        unique=True,
+        help_text="Ex: 'FIS-LN-2C', como aparece na coluna matriz_curricular da planilha.",
+    )
+    curso = models.ForeignKey(Curso, on_delete=models.PROTECT)
+    nome_matriz_referencia = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Nome a dar à MatrizReferenciaCurricular criada (ex: 'Noturno'). Opcional.",
+    )
+    observacao = models.CharField(max_length=300, blank=True)
+
+    def __str__(self):
+        return f"{self.identificador_origem} → {self.curso.nome}"
+
+
+class ImportacaoPendencia(models.Model):
+    """Guarda linhas da planilha que precisam de revisão manual antes/depois do
+    import: ambíguas, duplicadas conflitantes, ou sem mapeamento de curso.
+    Não é dado oficial — é fila de trabalho de quem está conduzindo o import."""
+
+    TIPO_CHOICES = [
+        ("ambigua", "Ambígua (núcleo/natureza indeterminados)"),
+        ("duplicada_conflitante", "Duplicada com dado conflitante"),
+        ("sem_mapeamento", "Sem mapeamento de curso"),
+    ]
+
+    tipo = models.CharField(max_length=30, choices=TIPO_CHOICES)
+    identificador_origem = models.CharField(max_length=50)
+    codigo = models.CharField(max_length=20, blank=True)
+    nome = models.CharField(max_length=200, blank=True)
+    linha_origem = models.PositiveIntegerField(null=True, blank=True)
+    detalhe = models.TextField(
+        blank=True,
+        help_text="Motivo da ambiguidade, ou comparação da linha conflitante, conforme o tipo.",
+    )
+    dados_brutos = models.JSONField(
+        help_text="Linha(s) originais normalizadas, para referência/depuração."
+    )
+
+    resolvido = models.BooleanField(default=False)
+    resolvido_em = models.DateTimeField(null=True, blank=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Pendência de importação"
+        verbose_name_plural = "Pendências de importação"
+        ordering = ["resolvido", "tipo", "linha_origem"]
+
+    def __str__(self):
+        return f"[{self.get_tipo_display()}] {self.codigo or self.identificador_origem} (linha {self.linha_origem})"
