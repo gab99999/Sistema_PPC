@@ -217,3 +217,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+# Planilha institucional com dados sensíveis - não deve ser pública
+componentes_curriculares.xlsx
