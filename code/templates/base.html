@@ -18,6 +18,7 @@
         {% if user.is_authenticated %}
             <a href="{% url 'meus_componentes_pendentes' %}">Meus Componentes Pendentes</a>
             <a href="{% url 'lista_matrizes_referencia' %}">Matrizes de Referência</a>
+            <a href="{% url 'lista_pendencias_por_matriz' %}">Pendências de Importação</a>
         {% endif %}
         <a href="{% url 'ajuda' %}">Ajuda</a>
 
