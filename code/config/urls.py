@@ -31,7 +31,8 @@ from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario
                         gerar_pdf_ppc, lista_nde, criar_membro_nde, editar_membro_nde, excluir_membro_nde,
                         escolher_importacao_ppc, importar_ppc_modelo_novo, importar_ppc_modelo_antigo, remover_componente_da_matriz, detalhe_componente_na_matriz, historico_componente, 
                         editar_vinculo_componente, buscar_componente_existente, adicionar_componente_existente, buscar_cine_brasil_curso, fila_aprovacao_componentes, 
-                        rejeitar_componente, aprovar_componente, meus_componentes_pendentes,   )
+                        rejeitar_componente, aprovar_componente, meus_componentes_pendentes, lista_matrizes_referencia, matriz_referencia_detalhe, mover_item_matriz_referencia, vincular_curso_matriz_referencia,
+                           lista_pendencias_por_matriz, revisar_pendencias_matriz,  )
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -94,6 +95,12 @@ urlpatterns = [
     path('componentes/<int:componente_id>/aprovar/', aprovar_componente, name='aprovar_componente'),
     path('componentes/<int:componente_id>/rejeitar/', rejeitar_componente, name='rejeitar_componente'),
     path('componentes/meus-pendentes/', meus_componentes_pendentes, name='meus_componentes_pendentes'),
+    path("matrizes-referencia/", lista_matrizes_referencia, name="lista_matrizes_referencia"),
+    path("matrizes-referencia/<int:matriz_id>/", matriz_referencia_detalhe, name="matriz_referencia_detalhe"),
+    path("matrizes-referencia/<int:matriz_id>/vincular-curso/", vincular_curso_matriz_referencia, name="vincular_curso_matriz_referencia"),
+    path("matrizes-referencia/item/<int:item_id>/mover/", mover_item_matriz_referencia, name="mover_item_matriz_referencia"),
+    path("pendencias-matriz/", lista_pendencias_por_matriz, name="lista_pendencias_por_matriz"),
+    path("pendencias-matriz/<str:identificador_origem>/", revisar_pendencias_matriz, name="revisar_pendencias_matriz"),
 ]
 
 if settings.DEBUG:

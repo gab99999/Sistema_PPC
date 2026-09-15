@@ -23,13 +23,19 @@ class Command(BaseCommand):
         linhas = normalizar_planilha_matriz(caminho)
         self.stdout.write(f"{len(linhas)} linhas lidas.\n")
 
+        #temporario
+        from collections import Counter
+
+        self.stdout.write(
+            f"Períodos encontrados: {Counter(linha['periodo'] for linha in linhas)}"
+        )
+        # ------------------------------------
         relatorio = importar_linhas_normalizadas(linhas, dry_run=dry_run)
 
         self.stdout.write(self.style.SUCCESS(f"OK (prontas/gravadas): {len(relatorio['ok'])}"))
         self.stdout.write(self.style.WARNING(f"Pendentes de revisão (ambíguas): {len(relatorio['pendentes_revisao'])}"))
         self.stdout.write(f"Duplicadas idênticas (ignoradas): {len(relatorio['duplicadas_identicas'])}")
         self.stdout.write(self.style.ERROR(f"Duplicadas conflitantes (não gravadas): {len(relatorio['duplicadas_conflitantes'])}"))
-        self.stdout.write(self.style.ERROR(f"Sem mapeamento de curso (não gravadas): {len(relatorio['sem_mapeamento'])}"))
 
         if relatorio["erros"]:
             self.stdout.write(self.style.ERROR(f"Erros inesperados: {len(relatorio['erros'])}"))

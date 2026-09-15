@@ -1,0 +1,45 @@
+{# ppc/templates/ppc/pendencias/revisar_por_matriz.html #}
+{% extends "base.html" %}
+{% block content %}
+<a href="{% url 'lista_pendencias_por_matriz' %}" class="link-voltar">← Voltar para pendências</a>
+<h1>Revisar pendências — {{ identificador_origem }}</h1>
+<p>{{ pendencias|length }} componente(s) com natureza indefinida.</p>
+
+<div class="atalhos-revisao">
+  <button type="button" class="btn btn-secundario" onclick="marcarTodos('obrigatoria')">Marcar todos como Obrigatória</button>
+  <button type="button" class="btn btn-secundario" onclick="marcarTodos('optativa')">Marcar todos como Optativa</button>
+  <button type="button" class="btn btn-secundario" onclick="marcarTodos('pendente')">Deixar todos pendentes</button>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+  <table class="tabela-dados">
+    <thead><tr><th>Código</th><th>Nome</th><th>Linha</th><th>Motivo</th><th>Decisão</th></tr></thead>
+    <tbody>
+      {% for pendencia in pendencias %}
+      <tr>
+        <td class="item-codigo">{{ pendencia.codigo }}</td>
+        <td>{{ pendencia.nome }}</td>
+        <td>{{ pendencia.linha_origem }}</td>
+        <td class="motivo-pendencia">{{ pendencia.detalhe }}</td>
+        <td>
+          <select name="decisao_{{ pendencia.id }}" class="select-decisao">
+            <option value="pendente" selected>Deixar pendente</option>
+            <option value="obrigatoria">Obrigatória</option>
+            <option value="optativa">Optativa</option>
+          </select>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <br>
+  <button type="submit" class="btn btn-primario">Salvar decisões</button>
+</form>
+
+<script>
+function marcarTodos(valor) {
+    document.querySelectorAll(".select-decisao").forEach((select) => { select.value = valor; });
+}
+</script>
+{% endblock %}

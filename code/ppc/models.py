@@ -352,19 +352,21 @@ class MembroNDE(models.Model):
 
 
 class MatrizReferenciaCurricular(models.Model):
-    """Matriz institucional de referência para um Curso — independente de qualquer PPC específico.
-    Um Curso pode ter mais de uma matriz de referência vigente ao mesmo tempo
-    (ex: turnos diferentes)."""
     curso = models.ForeignKey(
         Curso,
         on_delete=models.CASCADE,
-        related_name="matrizes_referencia",
-    )
-    nome = models.CharField(
-        max_length=200,
+        null=True,
         blank=True,
-        help_text="Ex: 'Matriz de Referência — Noturno'. Opcional, útil quando há mais de uma por curso.",
+        related_name="matrizes_referencia",
+        help_text="Pode ficar em branco até alguém identificar a que curso esta matriz pertence.",
     )
+    identificador_origem = models.CharField(
+        max_length=50,
+        unique=True,
+        blank=True,
+        help_text="Identificador original da planilha (ex: 'FIS-LN-2C'), para rastreio antes/depois de vincular a um Curso.",
+    )
+    nome = models.CharField(max_length=200, blank=True)
 
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
@@ -372,9 +374,9 @@ class MatrizReferenciaCurricular(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        if self.nome:
-            return f"{self.nome} ({self.curso.nome})"
-        return f"Matriz de Referência — {self.curso.nome}"
+        if self.curso:
+            return self.nome or f"Matriz de Referência — {self.curso.nome}"
+        return f"Matriz sem curso vinculado ({self.identificador_origem})"
 
 
 class ComponenteNaMatrizReferencia(models.Model):
@@ -424,7 +426,13 @@ class MapeamentoImportacaoMatriz(models.Model):
         unique=True,
         help_text="Ex: 'FIS-LN-2C', como aparece na coluna matriz_curricular da planilha.",
     )
-    curso = models.ForeignKey(Curso, on_delete=models.PROTECT)
+    curso = models.ForeignKey(
+        Curso,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Deixe em branco até identificar a que curso este identificador pertence.",
+    )
     nome_matriz_referencia = models.CharField(
         max_length=200,
         blank=True,

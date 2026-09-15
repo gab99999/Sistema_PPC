@@ -557,3 +557,183 @@ h3 {
         padding: 1.25rem;
     }
 }
+
+
+/* ==========================================================
+   Matrizes de Referência — quadro de períodos e edição inline
+   ========================================================== */
+
+.form-vinculo-matriz {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-vinculo-matriz label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    color: var(--cor-texto-suave);
+    font-weight: 500;
+}
+
+.form-vinculo-matriz input[type="text"],
+.form-vinculo-matriz select {
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    font-family: var(--fonte-corpo);
+    font-size: 0.9rem;
+}
+
+#status-salvamento-matriz {
+    display: inline-block;
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+    margin-bottom: 1rem;
+}
+#status-salvamento-matriz.sucesso { color: var(--cor-sucesso); }
+#status-salvamento-matriz.erro { color: var(--cor-perigo); }
+
+/* -- Quadro de colunas por período -- */
+#colunas-periodos {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+}
+
+.coluna-periodo {
+    min-width: 260px;
+    flex-shrink: 0;
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+    padding: 0.85rem;
+}
+
+.coluna-periodo-cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--cor-borda);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.coluna-periodo-cabecalho h3 {
+    margin: 0;
+}
+
+.coluna-periodo-total {
+    font-size: 0.78rem;
+    color: var(--cor-texto-suave);
+}
+
+/* -- Card de componente dentro da coluna -- */
+.item-componente {
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: 0.6rem 0.7rem;
+    margin-bottom: 0.5rem;
+    background-color: var(--cor-fundo);
+    cursor: grab;
+}
+.item-componente:active { cursor: grabbing; }
+
+.item-codigo {
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: var(--cor-texto-suave);
+}
+
+.item-nome {
+    font-size: 0.9rem;
+    line-height: 1.3;
+}
+
+.item-carga-horaria {
+    font-size: 0.78rem;
+    color: var(--cor-texto-suave);
+    margin-top: 0.25rem;
+}
+
+.badge-natureza {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 0.1rem 0.55rem;
+    border-radius: 10px;
+    margin-top: 0.35rem;
+}
+.badge-obrigatoria {
+    background-color: rgba(178, 58, 72, 0.12);
+    color: var(--cor-perigo);
+}
+.badge-optativa {
+    background-color: rgba(192, 138, 46, 0.15);
+    color: var(--cor-destaque);
+}
+
+/* -- Painel de edição inline do componente -- */
+.painel-edicao {
+    display: none;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--cor-borda);
+}
+.painel-edicao.aberto { display: block; }
+
+.painel-edicao-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    margin-bottom: 0.45rem;
+}
+.painel-edicao-campo label {
+    font-size: 0.72rem;
+    color: var(--cor-texto-suave);
+}
+.painel-edicao-campo input,
+.painel-edicao-campo select {
+    padding: 0.3rem 0.45rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    font-family: var(--fonte-corpo);
+    font-size: 0.85rem;
+}
+
+.painel-edicao-acoes {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+/* -- Tela de revisão de pendências -- */
+.atalhos-revisao {
+    display: flex;
+    gap: 0.6rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.motivo-pendencia {
+    font-size: 0.8rem;
+    color: var(--cor-texto-suave);
+    font-style: italic;
+}
+
+.aviso-sem-curso {
+    color: var(--cor-destaque);
+    font-size: 0.85rem;
+}

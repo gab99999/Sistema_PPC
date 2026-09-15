@@ -1,0 +1,20 @@
+{# ppc/templates/ppc/pendencias/lista_por_matriz.html #}
+{% extends "base.html" %}
+{% block content %}
+<h1>Pendências de importação por matriz</h1>
+<p>Componentes com natureza (obrigatória/optativa) ambígua na planilha original, agrupados por matriz de origem.</p>
+<table class="tabela-dados">
+  <thead><tr><th>Identificador de origem</th><th>Componentes pendentes</th><th></th></tr></thead>
+  <tbody>
+    {% for grupo in grupos %}
+    <tr>
+      <td>{{ grupo.identificador_origem }}</td>
+      <td>{{ grupo.total }}</td>
+      <td><a href="{% url 'revisar_pendencias_matriz' grupo.identificador_origem %}">Revisar</a></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="3">Nenhuma pendência ambígua no momento.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

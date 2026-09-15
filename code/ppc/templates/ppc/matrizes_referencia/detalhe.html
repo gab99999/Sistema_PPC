@@ -1,0 +1,199 @@
+{# ppc/templates/ppc/matrizes_referencia/detalhe.html #}
+{% extends "base.html" %}
+{% block content %}
+<a href="{% url 'lista_matrizes_referencia' %}" class="link-voltar">← Voltar para matrizes</a>
+<h1>{{ matriz }}</h1>
+
+<form method="post" action="{% url 'vincular_curso_matriz_referencia' matriz.id %}" class="form-vinculo-matriz">
+  {% csrf_token %}
+  <label>Nome da matriz
+    <input type="text" name="nome" value="{{ matriz.nome }}">
+  </label>
+  <label>Curso vinculado
+    <select name="curso_id">
+      <option value="">— sem curso —</option>
+      {% for curso in cursos %}
+        <option value="{{ curso.id }}" {% if matriz.curso_id == curso.id %}selected{% endif %}>
+          {{ curso.nome }}
+        </option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit" class="btn btn-primario">Salvar</button>
+</form>
+
+<span id="status-salvamento-matriz"></span>
+
+<div id="colunas-periodos">
+  {% for periodo, itens in periodos %}
+  <div class="coluna-periodo" data-periodo="{{ periodo }}">
+    <div class="coluna-periodo-cabecalho">
+      <h3>Período {{ periodo }}</h3>
+      <span class="coluna-periodo-total">{{ itens|length }} componente(s)</span>
+    </div>
+    <div class="lista-itens">
+      {% for item in itens %}
+      <div class="item-componente" draggable="true" data-item-id="{{ item.id }}">
+        <div class="item-codigo">{{ item.componente.codigo }}</div>
+        <div class="item-nome">{{ item.componente.nome }}</div>
+        <span class="badge-natureza badge-{{ item.natureza }}">{{ item.get_natureza_display }}</span>
+        <div class="item-carga-horaria">
+          {{ item.componente.carga_horaria_teorica }}h teóricas · {{ item.componente.carga_horaria_pratica }}h práticas
+        </div>
+        <button type="button" class="link-botao botao-editar" data-item-id="{{ item.id }}">Editar</button>
+
+        <div class="painel-edicao" id="painel-{{ item.id }}">
+          <div class="alerta alerta-info">
+            Nome e carga horária são do catálogo compartilhado — a alteração afeta todos os PPCs e matrizes que usam este componente.
+          </div>
+          <div class="painel-edicao-campo">
+            <label>Nome</label>
+            <input type="text" class="campo-nome" value="{{ item.componente.nome }}">
+          </div>
+          <div class="painel-edicao-campo">
+            <label>Natureza</label>
+            <select class="campo-natureza">
+              <option value="obrigatoria" {% if item.natureza == "obrigatoria" %}selected{% endif %}>Obrigatória</option>
+              <option value="optativa" {% if item.natureza == "optativa" %}selected{% endif %}>Optativa</option>
+            </select>
+          </div>
+          <div class="painel-edicao-campo">
+            <label>Carga horária teórica</label>
+            <input type="number" class="campo-carga-teorica" value="{{ item.componente.carga_horaria_teorica }}" min="0">
+          </div>
+          <div class="painel-edicao-campo">
+            <label>Carga horária prática</label>
+            <input type="number" class="campo-carga-pratica" value="{{ item.componente.carga_horaria_pratica }}" min="0">
+          </div>
+          <div class="painel-edicao-acoes">
+            <button type="button" class="btn btn-primario botao-salvar-edicao" data-item-id="{{ item.id }}">Salvar</button>
+            <button type="button" class="btn btn-secundario botao-cancelar-edicao" data-item-id="{{ item.id }}">Cancelar</button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+function getCookie(nome) {
+    const valor = document.cookie.split("; ").find((linha) => linha.startsWith(nome + "="));
+    return valor ? decodeURIComponent(valor.split("=")[1]) : null;
+}
+const csrftoken = getCookie("csrftoken");
+const statusEl = document.getElementById("status-salvamento-matriz");
+
+function mostrarStatus(texto, classe) {
+    statusEl.textContent = texto;
+    statusEl.className = classe || "";
+    if (classe === "sucesso") {
+        setTimeout(() => { statusEl.textContent = ""; statusEl.className = ""; }, 1500);
+    }
+}
+
+let itemArrastado = null;
+
+document.querySelectorAll(".item-componente").forEach((item) => {
+    item.addEventListener("dragstart", (evento) => {
+        if (evento.target.closest("button, input, select")) {
+            evento.preventDefault();
+            return;
+        }
+        itemArrastado = item;
+        item.style.opacity = "0.4";
+    });
+    item.addEventListener("dragend", () => { item.style.opacity = "1"; });
+});
+
+document.querySelectorAll(".lista-itens").forEach((lista) => {
+    lista.addEventListener("dragover", (evento) => {
+        evento.preventDefault();
+        if (!itemArrastado) return;
+        const apos = elementoApos(lista, evento.clientY);
+        if (apos == null) lista.appendChild(itemArrastado);
+        else lista.insertBefore(itemArrastado, apos);
+    });
+
+    lista.addEventListener("drop", (evento) => {
+        evento.preventDefault();
+        if (!itemArrastado) return;
+        const coluna = lista.closest(".coluna-periodo");
+        const novoPeriodo = parseInt(coluna.dataset.periodo, 10);
+        const novaOrdem = Array.from(lista.children).indexOf(itemArrastado);
+        salvarPosicao(itemArrastado.dataset.itemId, novoPeriodo, novaOrdem);
+    });
+});
+
+function elementoApos(container, y) {
+    const itens = [...container.querySelectorAll(".item-componente:not([style*='opacity: 0.4'])")];
+    return itens.reduce((maisProximo, item) => {
+        const caixa = item.getBoundingClientRect();
+        const deslocamento = y - caixa.top - caixa.height / 2;
+        if (deslocamento < 0 && deslocamento > maisProximo.deslocamento) {
+            return { deslocamento, elemento: item };
+        }
+        return maisProximo;
+    }, { deslocamento: Number.NEGATIVE_INFINITY, elemento: null }).elemento;
+}
+
+function salvarPosicao(itemId, novoPeriodo, novaOrdem) {
+    mostrarStatus("Salvando...", "");
+    fetch(`/matrizes-referencia/item/${itemId}/mover/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken },
+        body: JSON.stringify({ novo_periodo: novoPeriodo, nova_ordem: novaOrdem }),
+    })
+        .then((resposta) => { if (!resposta.ok) throw new Error(); return resposta.json(); })
+        .then(() => mostrarStatus("✓ Salvo", "sucesso"))
+        .catch(() => mostrarStatus("⚠ Não foi possível salvar. Recarregue a página.", "erro"));
+}
+
+document.querySelectorAll(".botao-editar").forEach((botao) => {
+    botao.addEventListener("click", () => {
+        document.getElementById(`painel-${botao.dataset.itemId}`).classList.add("aberto");
+    });
+});
+document.querySelectorAll(".botao-cancelar-edicao").forEach((botao) => {
+    botao.addEventListener("click", () => {
+        document.getElementById(`painel-${botao.dataset.itemId}`).classList.remove("aberto");
+    });
+});
+document.querySelectorAll(".botao-salvar-edicao").forEach((botao) => {
+    botao.addEventListener("click", () => {
+        const itemId = botao.dataset.itemId;
+        const painel = document.getElementById(`painel-${itemId}`);
+        const nome = painel.querySelector(".campo-nome").value.trim();
+        const natureza = painel.querySelector(".campo-natureza").value;
+        const cargaTeorica = painel.querySelector(".campo-carga-teorica").value;
+        const cargaPratica = painel.querySelector(".campo-carga-pratica").value;
+
+        mostrarStatus("Salvando...", "");
+        fetch(`/matrizes-referencia/item/${itemId}/editar/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken },
+            body: JSON.stringify({
+                nome, natureza,
+                carga_horaria_teorica: cargaTeorica,
+                carga_horaria_pratica: cargaPratica,
+            }),
+        })
+            .then((resposta) => resposta.json().then((dados) => ({ ok: resposta.ok, dados })))
+            .then(({ ok, dados }) => {
+                if (!ok) throw new Error(dados.erro || "Erro ao salvar.");
+                const card = document.querySelector(`.item-componente[data-item-id="${itemId}"]`);
+                card.querySelector(".item-nome").textContent = dados.nome;
+                const badge = card.querySelector(".badge-natureza");
+                badge.textContent = dados.natureza === "obrigatoria" ? "Obrigatória" : "Optativa";
+                badge.className = `badge-natureza badge-${dados.natureza}`;
+                card.querySelector(".item-carga-horaria").textContent =
+                    `${cargaTeorica}h teóricas · ${cargaPratica}h práticas`;
+                painel.classList.remove("aberto");
+                mostrarStatus("✓ Salvo", "sucesso");
+            })
+            .catch((erro) => mostrarStatus(`⚠ ${erro.message}`, "erro"));
+    });
+});
+</script>
+{% endblock %}

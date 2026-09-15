@@ -30,6 +30,137 @@ import tempfile
 from pathlib import Path
 logger = logging.getLogger(__name__)
 
+import json
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .models import MatrizReferenciaCurricular, ComponenteNaMatrizReferencia
+# ppc/views.py (adicionar)
+from django.db.models import Count
+from .models import ImportacaoPendencia
+from .services.resolucao_pendencias import resolver_pendencia_ambigua
+
+
+@staff_member_required
+def lista_pendencias_por_matriz(request):
+    grupos = (
+        ImportacaoPendencia.objects
+        .filter(tipo="ambigua", resolvido=False)
+        .values("identificador_origem")
+        .annotate(total=Count("id"))
+        .order_by("-total")
+    )
+    return render(request, "ppc/pendencias/lista_por_matriz.html", {"grupos": grupos})
+
+
+@staff_member_required
+def revisar_pendencias_matriz(request, identificador_origem):
+    pendencias = (
+        ImportacaoPendencia.objects
+        .filter(tipo="ambigua", resolvido=False, identificador_origem=identificador_origem)
+        .order_by("linha_origem")
+    )
+
+    if request.method == "POST":
+        resolvidas = 0
+        for pendencia in pendencias:
+            decisao = request.POST.get(f"decisao_{pendencia.id}")
+            if decisao in ("obrigatoria", "optativa"):
+                if resolver_pendencia_ambigua(pendencia, decisao):
+                    resolvidas += 1
+            # decisao == "pendente" ou ausente -> não faz nada, continua pendente
+
+        return render(
+            request, "ppc/pendencias/revisao_concluida.html",
+            {"identificador_origem": identificador_origem, "resolvidas": resolvidas},
+        )
+
+    return render(
+        request, "ppc/pendencias/revisar_por_matriz.html",
+        {"identificador_origem": identificador_origem, "pendencias": pendencias},
+    )
+
+@login_required
+def lista_matrizes_referencia(request):
+    matrizes = (
+        MatrizReferenciaCurricular.objects
+        .select_related("curso")
+        .order_by("curso__nome", "nome")
+    )
+    return render(request, "ppc/matrizes_referencia/lista.html", {"matrizes": matrizes})
+
+
+@login_required
+def matriz_referencia_detalhe(request, matriz_id):
+    matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    itens = (
+        matriz.componentes
+        .select_related("componente")
+        .order_by("periodo", "ordem")
+    )
+
+    periodos = {}
+    for item in itens:
+        periodos.setdefault(item.periodo, []).append(item)
+
+    context = {
+        "matriz": matriz,
+        "periodos": sorted(periodos.items()),
+        "cursos": Curso.objects.order_by("nome"),
+    }
+    return render(request, "ppc/matrizes_referencia/detalhe.html", context)
+
+
+@login_required
+@require_POST
+def vincular_curso_matriz_referencia(request, matriz_id):
+    matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+
+    curso_id = request.POST.get("curso_id")
+    nome = request.POST.get("nome", "").strip()
+
+    matriz.curso = get_object_or_404(Curso, pk=curso_id) if curso_id else None
+    matriz.nome = nome
+
+    matriz.save()
+    return redirect("matriz_referencia_detalhe", matriz_id=matriz.id)
+
+
+@login_required
+@require_POST
+def mover_item_matriz_referencia(request, item_id):
+    """Recebe o novo período/posição de um item arrastado e reordena os
+    irmãos do período de destino para não haver 'ordem' duplicada."""
+    try:
+        payload = json.loads(request.body)
+        novo_periodo = int(payload["novo_periodo"])
+        nova_ordem = int(payload["nova_ordem"])
+    except (KeyError, ValueError, TypeError, json.JSONDecodeError):
+        return JsonResponse({"erro": "Dados inválidos."}, status=400)
+
+    item = get_object_or_404(ComponenteNaMatrizReferencia, pk=item_id)
+
+    with transaction.atomic():
+        item.periodo = novo_periodo
+        item.ordem = nova_ordem
+        item.save(update_fields=["periodo", "ordem"])
+
+        irmaos = (
+            ComponenteNaMatrizReferencia.objects
+            .filter(matriz=item.matriz, periodo=novo_periodo)
+            .exclude(pk=item.pk)
+            .order_by("ordem")
+        )
+        posicao = 0
+        for irmao in irmaos:
+            if posicao == nova_ordem:
+                posicao += 1
+            if irmao.ordem != posicao:
+                irmao.ordem = posicao
+                irmao.save(update_fields=["ordem"])
+            posicao += 1
+
+    return JsonResponse({"ok": True})
+
 
 CAMPOS_PPC_VALIDOS = {f.name for f in PPC._meta.get_fields()}
 

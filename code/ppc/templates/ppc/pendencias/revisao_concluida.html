@@ -1,0 +1,7 @@
+{# ppc/templates/ppc/pendencias/revisao_concluida.html #}
+{% extends "base.html" %}
+{% block content %}
+<h1>Revisão concluída</h1>
+<p>{{ resolvidas }} componente(s) resolvido(s) para a matriz {{ identificador_origem }}.</p>
+<a href="{% url 'lista_pendencias_por_matriz' %}">Voltar para lista de pendências</a>
+{% endblock %}

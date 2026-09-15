@@ -1,0 +1,23 @@
+{# ppc/templates/ppc/matrizes_referencia/lista.html #}
+{% extends "base.html" %}
+{% block content %}
+<h1>Matrizes de Referência</h1>
+<table class="tabela-dados">
+  <thead>
+    <tr><th>Identificador de origem</th><th>Nome</th><th>Curso</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for matriz in matrizes %}
+    <tr>
+      <td>{{ matriz.identificador_origem|default:"—" }}</td>
+      <td>{{ matriz.nome|default:"—" }}</td>
+      <td>
+        {% if matriz.curso %}{{ matriz.curso.nome }}
+        {% else %}<span class="aviso-sem-curso">sem curso vinculado</span>{% endif %}
+      </td>
+      <td><a href="{% url 'matriz_referencia_detalhe' matriz.id %}">Gerenciar</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
