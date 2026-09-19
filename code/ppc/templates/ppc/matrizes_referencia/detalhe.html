@@ -95,6 +95,8 @@
           </div>
         </div>
       </div>
+      {% empty %}
+      <div class="placeholder-vazio">Arraste um componente aqui</div>
       {% endfor %}
     </div>
   </div>
@@ -136,6 +138,21 @@ function mostrarStatus(texto, classe) {
     if (classe === "sucesso") {
         setTimeout(() => { statusEl.textContent = ""; statusEl.className = ""; }, 1500);
     }
+}
+
+function atualizarPlaceholders() {
+    document.querySelectorAll(".lista-itens").forEach((lista) => {
+        const temItens = lista.querySelector(".item-componente") !== null;
+        const placeholderExistente = lista.querySelector(".placeholder-vazio");
+        if (!temItens && !placeholderExistente) {
+            const placeholder = document.createElement("div");
+            placeholder.className = "placeholder-vazio";
+            placeholder.textContent = "Arraste um componente aqui";
+            lista.appendChild(placeholder);
+        } else if (temItens && placeholderExistente) {
+            placeholderExistente.remove();
+        }
+    });
 }
 
 let itemArrastado = null;
@@ -239,6 +256,26 @@ document.querySelectorAll(".botao-salvar-edicao").forEach((botao) => {
             })
             .catch((erro) => mostrarStatus(`⚠ ${erro.message}`, "erro"));
     });
+});
+
+lista.addEventListener("dragover", (evento) => {
+    evento.preventDefault();
+    if (!itemArrastado) return;
+    const placeholder = lista.querySelector(".placeholder-vazio");
+    if (placeholder) placeholder.remove();   // <-- novo: some assim que o item entra
+    const apos = elementoApos(lista, evento.clientY);
+    if (apos == null) lista.appendChild(itemArrastado);
+    else lista.insertBefore(itemArrastado, apos);
+});
+
+lista.addEventListener("drop", (evento) => {
+    evento.preventDefault();
+    if (!itemArrastado) return;
+    const coluna = lista.closest(".coluna-periodo");
+    const novoPeriodo = parseInt(coluna.dataset.periodo, 10);
+    const novaOrdem = Array.from(lista.children).indexOf(itemArrastado);
+    salvarPosicao(itemArrastado.dataset.itemId, novoPeriodo, novaOrdem);
+    atualizarPlaceholders();   // <-- novo: reconcilia todas as colunas (a de origem pode ter ficado vazia)
 });
 </script>
 {% endblock %}

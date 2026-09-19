@@ -214,7 +214,7 @@ class ComponenteCurricular(models.Model):
     carga_horaria_teorica = models.PositiveIntegerField()
     carga_horaria_pratica = models.PositiveIntegerField()
     carga_horaria_pcc = models.PositiveIntegerField(default=0, help_text="Horas de Prática como Componente Curricular (só licenciaturas)")
-    unidade_academica_componente = models.CharField(max_length=200)
+    unidade_academica_componente = models.CharField(max_length=200, blank=True)
     ementa = models.TextField()
 
     carga_horaria_estudante = models.PositiveIntegerField(null=True, blank=True)

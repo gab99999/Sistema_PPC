@@ -738,3 +738,16 @@ h3 {
     color: var(--cor-destaque);
     font-size: 0.85rem;
 }
+
+.lista-itens {
+    min-height: 56px;
+}
+
+.placeholder-vazio {
+    border: 1px dashed var(--cor-borda);
+    border-radius: var(--raio);
+    padding: 0.75rem;
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--cor-texto-suave);
+}

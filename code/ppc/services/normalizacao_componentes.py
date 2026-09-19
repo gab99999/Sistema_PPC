@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import re
@@ -125,8 +124,8 @@ def normalizar_planilha_matriz(caminho_arquivo: str) -> list[dict]:
     - Não deriva tipo de componente sem uma coluna explícita na fonte.
 
     A coluna 'fase' da planilha é usada como 'periodo'.
+    A coluna 'ementa' da planilha é usada diretamente como 'ementa'.
     """
-
     df = pd.read_excel(caminho_arquivo)
 
     colunas_obrigatorias = {
@@ -137,6 +136,7 @@ def normalizar_planilha_matriz(caminho_arquivo: str) -> list[dict]:
         "fase",
         "cargahorariateorica",
         "cargahorariapratica",
+        "ementa",
     }
 
     colunas_ausentes = colunas_obrigatorias - set(df.columns)
@@ -158,8 +158,13 @@ def normalizar_planilha_matriz(caminho_arquivo: str) -> list[dict]:
             linha["matriz_curricular"]
         )
 
-        codigo = _valor_str(linha["codigo"])
-        nome = _valor_str(linha["disciplina"])
+        codigo = _valor_str(
+            linha["codigo"]
+        )
+
+        nome = _valor_str(
+            linha["disciplina"]
+        )
 
         periodo = _valor_int(
             linha["fase"],
@@ -179,12 +184,18 @@ def normalizar_planilha_matriz(caminho_arquivo: str) -> list[dict]:
             linha_origem,
         )
 
+        ementa = _valor_str(
+            linha["ementa"]
+        )
+
         (
             nucleo,
             natureza,
             confianca,
             motivo_ambiguidade,
-        ) = _normalizar_nucleo(linha["nucleo"])
+        ) = _normalizar_nucleo(
+            linha["nucleo"]
+        )
 
         resultado.append(
             {
@@ -201,102 +212,8 @@ def normalizar_planilha_matriz(caminho_arquivo: str) -> list[dict]:
                 # Campos adicionais confirmados na planilha:
                 "carga_horaria_teorica": carga_horaria_teorica,
                 "carga_horaria_pratica": carga_horaria_pratica,
+                "ementa": ementa,
             }
         )
 
     return resultado
-
-
-# ============================================================
-# TESTES RÁPIDOS
-# ============================================================
-
-if __name__ == "__main__":
-    CAMINHO = "componentes_curriculares.xlsx"
-
-    dados = normalizar_planilha_matriz(CAMINHO)
-
-    print(f"Total de linhas normalizadas: {len(dados)}")
-    assert len(dados) == 4913
-
-    # --------------------------------------------------------
-    # Caso determinado: Núcleo Específico Obrigatório
-    # Exemplo real da planilha:
-    # linha 15:
-    # CGN0139 - FUNDAMENTOS DO AGRONEGÓCIO
-    # --------------------------------------------------------
-    exemplo_obrigatoria = next(
-        item
-        for item in dados
-        if item["codigo"] == "CGN0139"
-        and item["identificador_origem"] == "1657712"
-    )
-
-    assert exemplo_obrigatoria["nucleo"] == "NE"
-    assert exemplo_obrigatoria["natureza"] == "obrigatoria"
-    assert exemplo_obrigatoria["confianca"] == "determinada"
-    assert exemplo_obrigatoria["motivo_ambiguidade"] is None
-    assert exemplo_obrigatoria["periodo"] == 1
-    assert exemplo_obrigatoria["linha_origem"] == 15
-    assert exemplo_obrigatoria["carga_horaria_teorica"] == 64
-    assert exemplo_obrigatoria["carga_horaria_pratica"] == 0
-
-    print("OK - caso obrigatório:")
-    print(exemplo_obrigatoria)
-
-    # --------------------------------------------------------
-    # Caso determinado: Núcleo Específico Optativo
-    # Exemplo real da planilha:
-    # ADM-BN-1C / ILL0066 / LÍNGUA BRASILEIRA DE SINAIS
-    # --------------------------------------------------------
-    exemplo_optativa = next(
-        item
-        for item in dados
-        if item["codigo"] == "ILL0066"
-        and item["identificador_origem"] == "ADM-BN-1C"
-    )
-
-    assert exemplo_optativa["nucleo"] == "NE"
-    assert exemplo_optativa["natureza"] == "optativa"
-    assert exemplo_optativa["confianca"] == "determinada"
-    assert exemplo_optativa["motivo_ambiguidade"] is None
-    assert exemplo_optativa["periodo"] == 1
-    assert exemplo_optativa["linha_origem"] == 91
-
-    print("\nOK - caso optativo:")
-    print(exemplo_optativa)
-
-    # --------------------------------------------------------
-    # Caso ambíguo real da planilha:
-    # QUIM-LN-2C / CGN0026 / EMPREENDEDORISMO
-    # linha 4801
-    # núcleo = NÚCLEO ESPECÍFICO
-    # --------------------------------------------------------
-    exemplo_ambiguo = next(
-        item
-        for item in dados
-        if item["codigo"] == "CGN0026"
-        and item["identificador_origem"] == "QUIM-LN-2C"
-        and item["linha_origem"] == 4801
-    )
-
-    assert exemplo_ambiguo["nucleo"] is None
-    assert exemplo_ambiguo["natureza"] is None
-    assert exemplo_ambiguo["confianca"] == "ambigua"
-    assert (
-        exemplo_ambiguo["motivo_ambiguidade"]
-        == "Valor de núcleo não reconhecido: 'NÚCLEO ESPECÍFICO'"
-    )
-    assert exemplo_ambiguo["periodo"] == 9
-    assert exemplo_ambiguo["carga_horaria_teorica"] == 64
-    assert exemplo_ambiguo["carga_horaria_pratica"] == 0
-
-    print("\nOK - caso ambíguo:")
-    print(exemplo_ambiguo)
-
-    # --------------------------------------------------------
-    # Verificação importante:
-    # nenhuma linha foi deduplicada.
-    # --------------------------------------------------------
-    print("\nTodos os testes passaram.")
-

@@ -2,28 +2,83 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Novo componente — {{ matriz }}</h1>
+
+{% if erros %}
+<div class="alerta alerta-erro">
+  <ul>{% for campo, msgs in erros.items %}<li>{{ campo }}: {{ msgs|join:", " }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
 <form method="post" class="form-vinculo-matriz">
   {% csrf_token %}
-  <label>Código<input type="text" name="codigo"></label>
-  <label>Nome<input type="text" name="nome" required></label>
-  <label>Núcleo
-    <select name="nucleo">
-      <option value="NC">Núcleo Comum</option>
-      <option value="NE">Núcleo Específico</option>
-      <option value="NL">Núcleo Livre</option>
-      <option value="AC">Atividade Complementar</option>
-      <option value="ACEx">Atividade Curricular de Extensão</option>
+  <label>Código<input type="text" name="codigo" value="{{ dados.codigo|default:'' }}"></label>
+  <label>Nome<input type="text" name="nome" value="{{ dados.nome|default:'' }}" required></label>
+
+  <label>Tipo
+    <select name="tipo" id="campo-tipo">
+      <option value="disciplina" {% if not dados.tipo or dados.tipo == "disciplina" %}selected{% endif %}>Disciplina</option>
+      <option value="modulo" {% if dados.tipo == "modulo" %}selected{% endif %}>Módulo</option>
+      <option value="seminario" {% if dados.tipo == "seminario" %}selected{% endif %}>Seminário de Integração</option>
+      <option value="atividade" {% if dados.tipo == "atividade" %}selected{% endif %}>Atividade Orientada</option>
     </select>
   </label>
+
+  <label>Núcleo
+    <select name="nucleo" id="campo-nucleo">
+      <option value="NC" {% if dados.nucleo == "NC" %}selected{% endif %}>Núcleo Comum</option>
+      <option value="NE" {% if not dados.nucleo or dados.nucleo == "NE" %}selected{% endif %}>Núcleo Específico</option>
+      <option value="NL" {% if dados.nucleo == "NL" %}selected{% endif %}>Núcleo Livre</option>
+      <option value="AC" {% if dados.nucleo == "AC" %}selected{% endif %}>Atividade Complementar</option>
+      <option value="ACEx" {% if dados.nucleo == "ACEx" %}selected{% endif %}>Atividade Curricular de Extensão</option>
+    </select>
+  </label>
+
   <label>Natureza
     <select name="natureza">
       <option value="obrigatoria">Obrigatória</option>
       <option value="optativa">Optativa</option>
     </select>
   </label>
-  <label>Período<input type="number" name="periodo" value="1" min="1"></label>
-  <label>Carga horária teórica<input type="number" name="carga_horaria_teorica" value="0" min="0"></label>
-  <label>Carga horária prática<input type="number" name="carga_horaria_pratica" value="0" min="0"></label>
+  <label>Período<input type="number" name="periodo" value="{{ dados.periodo|default:1 }}" min="1"></label>
+
+  <div id="grupo-carga-padrao">
+    <label>Carga horária teórica<input type="number" name="carga_horaria_teorica" value="{{ dados.carga_horaria_teorica|default:0 }}" min="0"></label>
+    <label>Carga horária prática<input type="number" name="carga_horaria_pratica" value="{{ dados.carga_horaria_pratica|default:0 }}" min="0"></label>
+  </div>
+
+  <div id="grupo-carga-atividade" style="display:none;">
+    <label>Carga horária do estudante<input type="number" name="carga_horaria_estudante" value="{{ dados.carga_horaria_estudante|default:0 }}" min="0"></label>
+    <label>Carga horária do professor<input type="number" name="carga_horaria_professor" value="{{ dados.carga_horaria_professor|default:0 }}" min="0"></label>
+    <span class="ajuda-campo">A carga do professor não pode passar da carga do estudante — só a do estudante entra na carga horária total.</span>
+  </div>
+
+  <div id="grupo-carga-acex" style="display:none;">
+    <label>Carga horária ACEx<input type="number" name="carga_horaria_acex" value="{{ dados.carga_horaria_acex|default:0 }}" min="0"></label>
+  </div>
+
+  <label>Ementa
+    <textarea name="ementa" rows="4">{{ dados.ementa|default:'' }}</textarea>
+  </label>
+
   <button type="submit" class="btn btn-primario">Criar e adicionar</button>
 </form>
+
+<script>
+const campoTipo = document.getElementById("campo-tipo");
+const campoNucleo = document.getElementById("campo-nucleo");
+const grupoPadrao = document.getElementById("grupo-carga-padrao");
+const grupoAtividade = document.getElementById("grupo-carga-atividade");
+const grupoAcex = document.getElementById("grupo-carga-acex");
+
+function atualizarGrupos() {
+    const ehAtividade = campoTipo.value === "atividade";
+    grupoPadrao.style.display = ehAtividade ? "none" : "block";
+    grupoAtividade.style.display = ehAtividade ? "block" : "none";
+    grupoAcex.style.display = campoNucleo.value === "ACEx" ? "block" : "none";
+}
+
+campoTipo.addEventListener("change", atualizarGrupos);
+campoNucleo.addEventListener("change", atualizarGrupos);
+atualizarGrupos();
+</script>
 {% endblock %}

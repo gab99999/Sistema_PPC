@@ -53,7 +53,7 @@ def importar_linhas_normalizadas(linhas, dry_run=True):
                 identificador_origem=linha["identificador_origem"],
             )
 
-            componente, _ = ComponenteCurricular.objects.get_or_create(
+            componente, criado = ComponenteCurricular.objects.get_or_create(
                 codigo=linha["codigo"],
                 defaults={
                     "nome": linha["nome"],
@@ -62,10 +62,14 @@ def importar_linhas_normalizadas(linhas, dry_run=True):
                     "carga_horaria_teorica": linha["carga_horaria_teorica"],
                     "carga_horaria_pratica": linha["carga_horaria_pratica"],
                     "unidade_academica_componente": "",
-                    "ementa": "",
+                    "ementa": linha.get("ementa", ""),
                     "status": "aprovado",
                 },
             )
+
+            if not criado and not componente.ementa and linha.get("ementa"):
+                componente.ementa = linha["ementa"]
+                componente.save(update_fields=["ementa"])
 
             try:
                 ComponenteNaMatrizReferencia.objects.update_or_create(

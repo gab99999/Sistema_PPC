@@ -29,7 +29,7 @@ from django.db import transaction
 import tempfile
 from pathlib import Path
 logger = logging.getLogger(__name__)
-
+from django.core.exceptions import ValidationError
 import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -125,18 +125,37 @@ def criar_componente_matriz_referencia(request, matriz_id):
     matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
 
     if request.method == "POST":
-        componente = ComponenteCurricular.objects.create(
+        tipo = request.POST.get("tipo", "disciplina")
+        nucleo = request.POST.get("nucleo")
+
+        componente = ComponenteCurricular(
             codigo=request.POST.get("codigo", "").strip(),
             nome=request.POST.get("nome", "").strip(),
-            tipo=request.POST.get("tipo", "disciplina"),
-            nucleo=request.POST.get("nucleo"),
+            tipo=tipo,
+            nucleo=nucleo,
             carga_horaria_teorica=int(request.POST.get("carga_horaria_teorica") or 0),
             carga_horaria_pratica=int(request.POST.get("carga_horaria_pratica") or 0),
             unidade_academica_componente="",
-            ementa="",
+            ementa=request.POST.get("ementa", "").strip(),
             status="aprovado",
             criado_por=request.user,
         )
+
+        if tipo == "atividade":
+            componente.carga_horaria_estudante = int(request.POST.get("carga_horaria_estudante") or 0)
+            componente.carga_horaria_professor = int(request.POST.get("carga_horaria_professor") or 0)
+
+        if nucleo == "ACEx":
+            componente.carga_horaria_acex = int(request.POST.get("carga_horaria_acex") or 0)
+
+        try:
+            componente.full_clean()
+        except ValidationError as e:
+            return render(request, "ppc/matrizes_referencia/criar_componente.html", {
+                "matriz": matriz, "erros": e.message_dict, "dados": request.POST,
+            })
+
+        componente.save()
         ComponenteNaMatrizReferencia.objects.create(
             matriz=matriz, componente=componente,
             periodo=int(request.POST.get("periodo") or 1),
