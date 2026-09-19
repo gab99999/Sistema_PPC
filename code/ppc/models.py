@@ -363,7 +363,9 @@ class MatrizReferenciaCurricular(models.Model):
     identificador_origem = models.CharField(
         max_length=50,
         unique=True,
+        null=True,
         blank=True,
+        default=None,
         help_text="Identificador original da planilha (ex: 'FIS-LN-2C'), para rastreio antes/depois de vincular a um Curso.",
     )
     nome = models.CharField(max_length=200, blank=True)
