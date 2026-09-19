@@ -516,6 +516,36 @@ h3 {
     transform: scale(1.06);
 }
 
+.btn-ajuda {
+    right: 6rem;
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+}
+
+.painel-ajuda {
+    width: min(34rem, calc(100% - 2rem));
+    max-height: min(75vh, 42rem);
+    border: 1px solid var(--cor-borda);
+    border-radius: 10px;
+    padding: 0;
+    color: var(--cor-texto);
+    background: var(--cor-superficie);
+    box-shadow: 0 10px 32px rgba(28, 35, 33, 0.28);
+}
+
+.painel-ajuda::backdrop { background: rgba(28, 35, 33, 0.42); }
+.painel-ajuda-cabecalho { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--cor-borda); }
+.painel-ajuda-cabecalho h2 { margin: 0; }
+.painel-ajuda-conteudo { padding: 1.25rem; overflow-y: auto; }
+.painel-ajuda-conteudo > :first-child { margin-top: 0; }
+.painel-ajuda-conteudo > :last-child { margin-bottom: 0; }
+.btn-fechar-ajuda { border: 0; background: transparent; color: var(--cor-texto); cursor: pointer; font-size: 1.8rem; line-height: 1; }
+
+@media (max-width: 600px) {
+    .btn-ajuda { bottom: 6rem; right: 2rem; }
+}
+
 
 .lista-sugestoes-cine-brasil {
     list-style: none;

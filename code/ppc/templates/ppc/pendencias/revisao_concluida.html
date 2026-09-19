@@ -5,3 +5,4 @@
 <p>{{ resolvidas }} componente(s) resolvido(s) para a matriz {{ identificador_origem }}.</p>
 <a href="{% url 'lista_pendencias_por_matriz' %}">Voltar para lista de pendências</a>
 {% endblock %}
+{% block ajuda %}<p>A revisão das pendências foi concluída. Retorne à lista para verificar se restam outros grupos a analisar.</p>{% endblock %}

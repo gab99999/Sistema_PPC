@@ -36,9 +36,38 @@
         {% if messages %}{% for message in messages %}<div class="alerta alerta-{{ message.tags|default:'info' }}" role="status">{{ message }}</div>{% endfor %}{% endif %}
         {% block content %}{% endblock %}
     </main>
+    <button type="button" class="btn-flutuante btn-ajuda" aria-haspopup="dialog" aria-controls="painel-ajuda" title="Abrir ajuda" aria-label="Abrir ajuda contextual">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M9.7 9a2.4 2.4 0 0 1 4.65.8c0 1.6-1.7 2-2.35 3.1-.18.3-.25.62-.25 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="12" cy="16.9" r=".8" fill="currentColor"/>
+        </svg>
+    </button>
+    <dialog id="painel-ajuda" class="painel-ajuda" aria-labelledby="titulo-ajuda">
+        <div class="painel-ajuda-cabecalho">
+            <h2 id="titulo-ajuda">Ajuda desta tela</h2>
+            <button type="button" class="btn-fechar-ajuda" aria-label="Fechar ajuda">&times;</button>
+        </div>
+        <div class="painel-ajuda-conteudo">
+            {% block ajuda %}<p>Nenhuma ajuda específica disponível para esta tela.</p>{% endblock %}
+        </div>
+    </dialog>
     <footer class="rodape">
         <p>&copy; {% now "Y" %} Universidade Federal de Catalão (UFCAT) — Todos os direitos reservados.</p>
         <p>Sistema desenvolvido no âmbito do Projeto Soluções Digitais – UFCAT</p>
     </footer>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var botaoAjuda = document.querySelector('.btn-ajuda');
+        var painelAjuda = document.getElementById('painel-ajuda');
+        var fecharAjuda = document.querySelector('.btn-fechar-ajuda');
+        if (!botaoAjuda || !painelAjuda) return;
+        botaoAjuda.addEventListener('click', function () { painelAjuda.showModal(); });
+        fecharAjuda.addEventListener('click', function () { painelAjuda.close(); });
+        painelAjuda.addEventListener('click', function (event) {
+            if (event.target === painelAjuda) painelAjuda.close();
+        });
+    });
+    </script>
 </body>
 </html>
