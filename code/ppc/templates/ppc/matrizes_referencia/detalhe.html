@@ -169,25 +169,6 @@ document.querySelectorAll(".item-componente").forEach((item) => {
     item.addEventListener("dragend", () => { item.style.opacity = "1"; });
 });
 
-document.querySelectorAll(".lista-itens").forEach((lista) => {
-    lista.addEventListener("dragover", (evento) => {
-        evento.preventDefault();
-        if (!itemArrastado) return;
-        const apos = elementoApos(lista, evento.clientY);
-        if (apos == null) lista.appendChild(itemArrastado);
-        else lista.insertBefore(itemArrastado, apos);
-    });
-
-    lista.addEventListener("drop", (evento) => {
-        evento.preventDefault();
-        if (!itemArrastado) return;
-        const coluna = lista.closest(".coluna-periodo");
-        const novoPeriodo = parseInt(coluna.dataset.periodo, 10);
-        const novaOrdem = Array.from(lista.children).indexOf(itemArrastado);
-        salvarPosicao(itemArrastado.dataset.itemId, novoPeriodo, novaOrdem);
-    });
-});
-
 function elementoApos(container, y) {
     const itens = [...container.querySelectorAll(".item-componente:not([style*='opacity: 0.4'])")];
     return itens.reduce((maisProximo, item) => {
@@ -211,6 +192,29 @@ function salvarPosicao(itemId, novoPeriodo, novaOrdem) {
         .then(() => mostrarStatus("✓ Salvo", "sucesso"))
         .catch(() => mostrarStatus("⚠ Não foi possível salvar. Recarregue a página.", "erro"));
 }
+
+/* -- Um único conjunto de listeners por coluna, com placeholder já embutido -- */
+document.querySelectorAll(".lista-itens").forEach((lista) => {
+    lista.addEventListener("dragover", (evento) => {
+        evento.preventDefault();
+        if (!itemArrastado) return;
+        const placeholder = lista.querySelector(".placeholder-vazio");
+        if (placeholder) placeholder.remove();
+        const apos = elementoApos(lista, evento.clientY);
+        if (apos == null) lista.appendChild(itemArrastado);
+        else lista.insertBefore(itemArrastado, apos);
+    });
+
+    lista.addEventListener("drop", (evento) => {
+        evento.preventDefault();
+        if (!itemArrastado) return;
+        const coluna = lista.closest(".coluna-periodo");
+        const novoPeriodo = parseInt(coluna.dataset.periodo, 10);
+        const novaOrdem = Array.from(lista.children).indexOf(itemArrastado);
+        salvarPosicao(itemArrastado.dataset.itemId, novoPeriodo, novaOrdem);
+        atualizarPlaceholders();
+    });
+});
 
 document.querySelectorAll(".botao-editar").forEach((botao) => {
     botao.addEventListener("click", () => {
@@ -256,26 +260,6 @@ document.querySelectorAll(".botao-salvar-edicao").forEach((botao) => {
             })
             .catch((erro) => mostrarStatus(`⚠ ${erro.message}`, "erro"));
     });
-});
-
-lista.addEventListener("dragover", (evento) => {
-    evento.preventDefault();
-    if (!itemArrastado) return;
-    const placeholder = lista.querySelector(".placeholder-vazio");
-    if (placeholder) placeholder.remove();   // <-- novo: some assim que o item entra
-    const apos = elementoApos(lista, evento.clientY);
-    if (apos == null) lista.appendChild(itemArrastado);
-    else lista.insertBefore(itemArrastado, apos);
-});
-
-lista.addEventListener("drop", (evento) => {
-    evento.preventDefault();
-    if (!itemArrastado) return;
-    const coluna = lista.closest(".coluna-periodo");
-    const novoPeriodo = parseInt(coluna.dataset.periodo, 10);
-    const novaOrdem = Array.from(lista.children).indexOf(itemArrastado);
-    salvarPosicao(itemArrastado.dataset.itemId, novoPeriodo, novaOrdem);
-    atualizarPlaceholders();   // <-- novo: reconcilia todas as colunas (a de origem pode ter ficado vazia)
 });
 </script>
 {% endblock %}
