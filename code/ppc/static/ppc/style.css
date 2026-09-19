@@ -884,3 +884,8 @@ h3 {
     border-color: var(--cor-primaria);
     color: var(--cor-primaria);
 }
+
+.painel-completude-barra-preenchida {
+    width: var(--percentual);
+    /* resto do CSS que já tinha: height, background-color, border-radius, transition */
+}

@@ -1,20 +1,27 @@
-<section class="painel-completude" aria-labelledby="titulo-completude">
-    <h2 id="titulo-completude">Completude do PPC</h2>
-    <div class="grade-estatisticas">
-        <div class="card estatistica">
-            <span class="estatistica-numero">{{ preenchidas }} de {{ total }}</span>
-            <span class="estatistica-rotulo">seções textuais preenchidas</span>
+{# ppc/templates/ppc/includes/completude_ppc.html #}
+<section class="painel-completude" aria-label="Completude do PPC">
+    <div class="painel-completude-cabecalho">
+        <span class="painel-completude-percentual">{{ percentual }}%</span>
+        <div class="painel-completude-info">
+            <strong>Completude do PPC</strong>
+            <span class="painel-completude-legenda">{{ preenchidas }} de {{ total }} seções preenchidas</span>
+        </div>
+        <div class="painel-completude-barra">
+            <div class="painel-completude-barra-preenchida" style="--percentual: {{ percentual }}%;"></div>
         </div>
     </div>
-    <progress value="{{ percentual }}" max="100">{{ percentual }}%</progress>
-    <p class="card-corpo">{{ percentual }}% preenchido.</p>
     {% with faltantes=secoes|dictsort:"preenchida" %}
-        <ul class="lista-completude">
-            {% for secao in faltantes %}
-                {% if not secao.preenchida %}
-                    <li><a href="{% url secao.url ppc.id %}">{{ secao.nome }}</a></li>
-                {% endif %}
-            {% endfor %}
-        </ul>
+        {% if faltantes %}
+        <details class="painel-completude-detalhes">
+            <summary>Ver seções pendentes</summary>
+            <ul class="lista-completude">
+                {% for secao in faltantes %}
+                    {% if not secao.preenchida %}
+                        <li><a href="{% url secao.url ppc.id %}">{{ secao.nome }}</a></li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </details>
+        {% endif %}
     {% endwith %}
 </section>
