@@ -1,0 +1,23 @@
+{# ppc/templates/ppc/matrizes_referencia/selecionar_para_ppc.html #}
+{% extends "ppc_base.html" %}
+{% block content %}
+<h1>Aplicar Matriz de Referência</h1>
+<p>Curso: {{ ppc.curso.nome }}</p>
+
+{% if not matrizes %}
+<div class="alerta alerta-info">Nenhuma matriz de referência vinculada a este curso ainda.</div>
+{% else %}
+<table class="tabela-dados">
+  <thead><tr><th>Matriz</th><th>Componentes</th><th></th></tr></thead>
+  <tbody>
+    {% for matriz in matrizes %}
+    <tr>
+      <td>{{ matriz.nome|default:matriz.identificador_origem }}</td>
+      <td>{{ matriz.componentes.count }}</td>
+      <td><a href="{% url 'preview_aplicar_matriz_referencia' ppc.id matriz.id %}" class="btn btn-primario">Pré-visualizar aplicação</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

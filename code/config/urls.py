@@ -32,7 +32,7 @@ from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario
                         escolher_importacao_ppc, importar_ppc_modelo_novo, importar_ppc_modelo_antigo, remover_componente_da_matriz, detalhe_componente_na_matriz, historico_componente, 
                         editar_vinculo_componente, buscar_componente_existente, adicionar_componente_existente, buscar_cine_brasil_curso, fila_aprovacao_componentes, 
                         rejeitar_componente, aprovar_componente, meus_componentes_pendentes, lista_matrizes_referencia, matriz_referencia_detalhe, mover_item_matriz_referencia, vincular_curso_matriz_referencia,
-                           lista_pendencias_por_matriz, revisar_pendencias_matriz,  )
+                           lista_pendencias_por_matriz, revisar_pendencias_matriz, selecionar_matriz_referencia_para_ppc, preview_aplicar_matriz_referencia)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -101,6 +101,8 @@ urlpatterns = [
     path("matrizes-referencia/item/<int:item_id>/mover/", mover_item_matriz_referencia, name="mover_item_matriz_referencia"),
     path("pendencias-matriz/", lista_pendencias_por_matriz, name="lista_pendencias_por_matriz"),
     path("pendencias-matriz/<str:identificador_origem>/", revisar_pendencias_matriz, name="revisar_pendencias_matriz"),
+    path("ppc/<int:ppc_id>/aplicar-matriz-referencia/", selecionar_matriz_referencia_para_ppc, name="selecionar_matriz_referencia_para_ppc"),
+    path("ppc/<int:ppc_id>/aplicar-matriz-referencia/<int:matriz_id>/", preview_aplicar_matriz_referencia, name="preview_aplicar_matriz_referencia"),
 ]
 
 if settings.DEBUG:

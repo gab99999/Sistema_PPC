@@ -1,0 +1,61 @@
+{# ppc/templates/ppc/matrizes_referencia/preview_aplicacao.html #}
+{% extends "ppc_base.html" %}
+{% block content %}
+<h1>Aplicar "{{ matriz }}" ao PPC</h1>
+
+<div class="alerta alerta-info">
+  {{ preview.novos|length }} novo(s) · {{ preview.existentes_iguais|length }} já iguais (nada a fazer) · {{ preview.conflitos|length }} em conflito
+</div>
+
+<form method="post">
+  {% csrf_token %}
+
+  {% if preview.novos %}
+  <h3>Novos componentes</h3>
+  <table class="tabela-dados">
+    <thead><tr><th></th><th>Código</th><th>Nome</th><th>Período</th><th>Natureza</th></tr></thead>
+    <tbody>
+      {% for item in preview.novos %}
+      <tr>
+        <td><input type="checkbox" name="aplicar_novo_{{ item.id }}" checked></td>
+        <td class="item-codigo">{{ item.componente.codigo }}</td>
+        <td>{{ item.componente.nome }}</td>
+        <td>{{ item.periodo }}</td>
+        <td>{{ item.get_natureza_display }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if preview.conflitos %}
+  <h3>Conflitos — escolha o que manter</h3>
+  <table class="tabela-dados">
+    <thead><tr><th>Componente</th><th>Na referência</th><th>No PPC atual</th><th>Decisão</th></tr></thead>
+    <tbody>
+      {% for conflito in preview.conflitos %}
+      <tr>
+        <td>{{ conflito.referencia.componente.nome }}</td>
+        <td>Período {{ conflito.referencia.periodo }} · {{ conflito.referencia.get_natureza_display }}</td>
+        <td>Período {{ conflito.atual.periodo }} · {{ conflito.atual.get_natureza_display }}</td>
+        <td>
+          <select name="conflito_{{ conflito.referencia.id }}">
+            <option value="manter_ppc" selected>Manter o que está no PPC</option>
+            <option value="usar_referencia">Usar dado da referência</option>
+          </select>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if preview.existentes_iguais %}
+  <div class="alerta">
+    {{ preview.existentes_iguais|length }} componente(s) já estão idênticos no PPC — nada será alterado neles.
+  </div>
+  {% endif %}
+
+  <button type="submit" class="btn btn-primario">Aplicar selecionados</button>
+</form>
+{% endblock %}

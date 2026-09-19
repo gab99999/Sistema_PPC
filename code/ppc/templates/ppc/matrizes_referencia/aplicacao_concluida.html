@@ -1,0 +1,7 @@
+{# ppc/templates/ppc/matrizes_referencia/aplicacao_concluida.html #}
+{% extends "ppc_base.html" %}
+{% block content %}
+<h1>Aplicação concluída</h1>
+<p>{{ aplicados }} componente(s) atualizados no PPC a partir de "{{ matriz }}".</p>
+<a href="{% url 'editar_informacoes_gerais' ppc.id %}" class="link-voltar">← Voltar ao PPC</a>
+{% endblock %}

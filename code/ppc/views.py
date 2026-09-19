@@ -34,10 +34,78 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .models import MatrizReferenciaCurricular, ComponenteNaMatrizReferencia
-# ppc/views.py (adicionar)
 from django.db.models import Count
 from .models import ImportacaoPendencia
 from .services.resolucao_pendencias import resolver_pendencia_ambigua
+
+
+@staff_member_required
+def selecionar_matriz_referencia_para_ppc(request, ppc_id):
+    ppc = get_object_or_404(PPC, pk=ppc_id)
+    matrizes = MatrizReferenciaCurricular.objects.filter(curso=ppc.curso)
+    return render(request, "ppc/matrizes_referencia/selecionar_para_ppc.html", {
+        "ppc": ppc, "matrizes": matrizes,
+    })
+
+
+def _montar_preview_aplicacao(ppc, matriz):
+    """Categoriza cada item da matriz de referência frente ao que já existe
+    no PPC. Nunca decide sozinho — só classifica, para o humano decidir."""
+    itens_referencia = matriz.componentes.select_related("componente")
+    existentes = {
+        cm.componente_id: cm
+        for cm in ComponenteNaMatriz.objects.filter(ppc=ppc).select_related("componente")
+    }
+
+    novos, existentes_iguais, conflitos = [], [], []
+
+    for item in itens_referencia:
+        existente = existentes.get(item.componente_id)
+        if existente is None:
+            novos.append(item)
+        elif existente.periodo == item.periodo and existente.natureza == item.natureza:
+            existentes_iguais.append(item)
+        else:
+            conflitos.append({"referencia": item, "atual": existente})
+
+    return {"novos": novos, "existentes_iguais": existentes_iguais, "conflitos": conflitos}
+
+
+@staff_member_required
+def preview_aplicar_matriz_referencia(request, ppc_id, matriz_id):
+    ppc = get_object_or_404(PPC, pk=ppc_id)
+    matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    preview = _montar_preview_aplicacao(ppc, matriz)
+
+    if request.method == "POST":
+        with transaction.atomic():
+            aplicados = 0
+
+            for item in preview["novos"]:
+                if request.POST.get(f"aplicar_novo_{item.id}") == "on":
+                    ComponenteNaMatriz.objects.create(
+                        ppc=ppc, componente=item.componente,
+                        periodo=item.periodo, natureza=item.natureza,
+                    )
+                    aplicados += 1
+
+            for conflito in preview["conflitos"]:
+                decisao = request.POST.get(f"conflito_{conflito['referencia'].id}")
+                if decisao == "usar_referencia":
+                    atual = conflito["atual"]
+                    atual.periodo = conflito["referencia"].periodo
+                    atual.natureza = conflito["referencia"].natureza
+                    atual.save(update_fields=["periodo", "natureza"])
+                    aplicados += 1
+                # "manter_ppc" ou nenhuma escolha -> não mexe, PPC continua como está
+
+        return render(request, "ppc/matrizes_referencia/aplicacao_concluida.html", {
+            "ppc": ppc, "matriz": matriz, "aplicados": aplicados,
+        })
+
+    return render(request, "ppc/matrizes_referencia/preview_aplicacao.html", {
+        "ppc": ppc, "matriz": matriz, "preview": preview,
+    })
 
 
 @staff_member_required

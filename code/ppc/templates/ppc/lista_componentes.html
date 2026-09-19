@@ -39,6 +39,9 @@
     <div class="btn-group">
         <a href="{% url 'criar_componente' ppc.id %}" class="btn btn-primario">+ Novo Componente</a>
         <a href="{% url 'buscar_componente_existente' ppc.id %}" class="btn btn-secundario">+ Usar Componente Existente</a>
+        <a href="{% url 'selecionar_matriz_referencia_para_ppc' ppc.id %}" class="btn btn-secundario">
+          Aplicar Matriz de Referência
+        </a>
     </div>
 
     <table class="tabela-dados">
