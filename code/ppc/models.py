@@ -368,6 +368,11 @@ class MatrizReferenciaCurricular(models.Model):
     )
     nome = models.CharField(max_length=200, blank=True)
 
+    numero_periodos = models.PositiveSmallIntegerField(
+        default=12,
+        help_text="Quantidade de períodos exibidos na tela de edição desta matriz.",
+    )
+
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 

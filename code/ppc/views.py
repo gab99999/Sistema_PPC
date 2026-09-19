@@ -157,7 +157,7 @@ def lista_matrizes_referencia(request):
     return render(request, "ppc/matrizes_referencia/lista.html", {"matrizes": matrizes})
 
 
-@login_required
+@staff_member_required
 def matriz_referencia_detalhe(request, matriz_id):
     matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
     itens = (
@@ -166,8 +166,11 @@ def matriz_referencia_detalhe(request, matriz_id):
         .order_by("periodo", "ordem")
     )
 
-    periodos = {}
+    periodos = {n: [] for n in range(1, matriz.numero_periodos + 1)}
     for item in itens:
+        # se algum item tiver período fora do range configurado (ex: veio do
+        # import com período 9 mas numero_periodos ficou em 8), a coluna dele
+        # aparece mesmo assim — não queremos esconder dado existente
         periodos.setdefault(item.periodo, []).append(item)
 
     context = {
@@ -178,7 +181,7 @@ def matriz_referencia_detalhe(request, matriz_id):
     return render(request, "ppc/matrizes_referencia/detalhe.html", context)
 
 
-@login_required
+@staff_member_required
 @require_POST
 def vincular_curso_matriz_referencia(request, matriz_id):
     matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
@@ -186,8 +189,16 @@ def vincular_curso_matriz_referencia(request, matriz_id):
     curso_id = request.POST.get("curso_id")
     nome = request.POST.get("nome", "").strip()
 
+    try:
+        numero_periodos = int(request.POST.get("numero_periodos", matriz.numero_periodos))
+        if numero_periodos < 1:
+            raise ValueError
+    except (TypeError, ValueError):
+        numero_periodos = matriz.numero_periodos  # ignora valor inválido, mantém o que já tinha
+
     matriz.curso = get_object_or_404(Curso, pk=curso_id) if curso_id else None
     matriz.nome = nome
+    matriz.numero_periodos = numero_periodos
 
     matriz.save()
     return redirect("matriz_referencia_detalhe", matriz_id=matriz.id)
