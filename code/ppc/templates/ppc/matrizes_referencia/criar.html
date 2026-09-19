@@ -1,0 +1,21 @@
+{# ppc/templates/ppc/matrizes_referencia/criar.html #}
+{% extends "base.html" %}
+{% block content %}
+<h1>Nova Matriz de Referência</h1>
+<form method="post" class="form-vinculo-matriz">
+  {% csrf_token %}
+  <label>Nome
+    <input type="text" name="nome" required>
+  </label>
+  <label>Curso (opcional)
+    <select name="curso_id">
+      <option value="">— sem curso —</option>
+      {% for curso in cursos %}<option value="{{ curso.id }}">{{ curso.nome }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Número de períodos
+    <input type="number" name="numero_periodos" value="8" min="1" max="20">
+  </label>
+  <button type="submit" class="btn btn-primario">Criar</button>
+</form>
+{% endblock %}

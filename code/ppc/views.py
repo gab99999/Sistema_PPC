@@ -39,7 +39,142 @@ from .models import ImportacaoPendencia
 from .services.resolucao_pendencias import resolver_pendencia_ambigua
 
 
-@staff_member_required
+
+@login_required
+def criar_matriz_referencia(request):
+    if request.method == "POST":
+        nome = request.POST.get("nome", "").strip()
+        curso_id = request.POST.get("curso_id")
+        try:
+            numero_periodos = int(request.POST.get("numero_periodos", 8))
+        except (TypeError, ValueError):
+            numero_periodos = 8
+
+        matriz = MatrizReferenciaCurricular.objects.create(
+            nome=nome,
+            curso=get_object_or_404(Curso, pk=curso_id) if curso_id else None,
+            numero_periodos=numero_periodos,
+        )
+        return redirect("matriz_referencia_detalhe", matriz_id=matriz.id)
+
+    return render(request, "ppc/matrizes_referencia/criar.html", {
+        "cursos": Curso.objects.order_by("nome"),
+    })
+
+
+@login_required
+@require_POST
+def duplicar_matriz_referencia(request, matriz_id):
+    original = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+
+    with transaction.atomic():
+        copia = MatrizReferenciaCurricular.objects.create(
+            curso=original.curso,
+            nome=f"{original.nome or original.identificador_origem or 'Matriz'} (cópia)",
+            numero_periodos=original.numero_periodos,
+        )
+        ComponenteNaMatrizReferencia.objects.bulk_create([
+            ComponenteNaMatrizReferencia(
+                matriz=copia, componente=item.componente,
+                periodo=item.periodo, natureza=item.natureza, ordem=item.ordem,
+            )
+            for item in original.componentes.all()
+        ])
+
+    return redirect("matriz_referencia_detalhe", matriz_id=copia.id)
+
+
+@login_required
+def buscar_componente_existente_matriz_referencia(request, matriz_id):
+    matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    termo = request.GET.get("q", "").strip()
+    resultados = []
+    if termo:
+        ja_usados = matriz.componentes.values_list("componente_id", flat=True)
+        resultados = (
+            ComponenteCurricular.objects
+            .filter(nome__icontains=termo, status="aprovado")
+            .exclude(id__in=ja_usados)[:20]
+        )
+    return render(request, "ppc/matrizes_referencia/_resultados_busca.html", {
+        "matriz": matriz, "resultados": resultados,
+    })
+
+
+@login_required
+@require_POST
+def adicionar_componente_existente_matriz_referencia(request, matriz_id):
+    matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    componente = get_object_or_404(ComponenteCurricular, pk=request.POST.get("componente_id"))
+
+    try:
+        periodo = int(request.POST.get("periodo"))
+    except (TypeError, ValueError):
+        periodo = 1
+    natureza = request.POST.get("natureza", "obrigatoria")
+
+    ComponenteNaMatrizReferencia.objects.get_or_create(
+        matriz=matriz, componente=componente,
+        defaults={"periodo": periodo, "natureza": natureza},
+    )
+    return redirect("matriz_referencia_detalhe", matriz_id=matriz.id)
+
+
+@login_required
+def criar_componente_matriz_referencia(request, matriz_id):
+    matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+
+    if request.method == "POST":
+        componente = ComponenteCurricular.objects.create(
+            codigo=request.POST.get("codigo", "").strip(),
+            nome=request.POST.get("nome", "").strip(),
+            tipo=request.POST.get("tipo", "disciplina"),
+            nucleo=request.POST.get("nucleo"),
+            carga_horaria_teorica=int(request.POST.get("carga_horaria_teorica") or 0),
+            carga_horaria_pratica=int(request.POST.get("carga_horaria_pratica") or 0),
+            unidade_academica_componente="",
+            ementa="",
+            status="aprovado",
+            criado_por=request.user,
+        )
+        ComponenteNaMatrizReferencia.objects.create(
+            matriz=matriz, componente=componente,
+            periodo=int(request.POST.get("periodo") or 1),
+            natureza=request.POST.get("natureza", "obrigatoria"),
+        )
+        return redirect("matriz_referencia_detalhe", matriz_id=matriz.id)
+
+    return render(request, "ppc/matrizes_referencia/criar_componente.html", {"matriz": matriz})
+
+
+@login_required
+@require_POST
+def remover_componente_matriz_referencia(request, item_id):
+    item = get_object_or_404(ComponenteNaMatrizReferencia, pk=item_id)
+    matriz_id = item.matriz_id
+    item.delete()  # remove só o vínculo — o PROTECT protege o ComponenteCurricular do catálogo, não este link
+    return redirect("matriz_referencia_detalhe", matriz_id=matriz_id)
+
+
+@login_required
+def historico_matriz_referencia(request, matriz_id):
+    matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    registros = matriz.history.all().order_by("-history_date")
+    return render(request, "ppc/matrizes_referencia/historico.html", {
+        "matriz": matriz, "registros": registros,
+    })
+
+
+@login_required
+def historico_item_matriz_referencia(request, item_id):
+    item = get_object_or_404(ComponenteNaMatrizReferencia, pk=item_id)
+    registros = item.history.all().order_by("-history_date")
+    return render(request, "ppc/matrizes_referencia/historico_item.html", {
+        "item": item, "registros": registros,
+    })
+
+
+@login_required
 def selecionar_matriz_referencia_para_ppc(request, ppc_id):
     ppc = get_object_or_404(PPC, pk=ppc_id)
     matrizes = MatrizReferenciaCurricular.objects.filter(curso=ppc.curso)
@@ -71,7 +206,7 @@ def _montar_preview_aplicacao(ppc, matriz):
     return {"novos": novos, "existentes_iguais": existentes_iguais, "conflitos": conflitos}
 
 
-@staff_member_required
+@login_required
 def preview_aplicar_matriz_referencia(request, ppc_id, matriz_id):
     ppc = get_object_or_404(PPC, pk=ppc_id)
     matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
@@ -108,7 +243,7 @@ def preview_aplicar_matriz_referencia(request, ppc_id, matriz_id):
     })
 
 
-@staff_member_required
+@login_required
 def lista_pendencias_por_matriz(request):
     grupos = (
         ImportacaoPendencia.objects
@@ -120,7 +255,7 @@ def lista_pendencias_por_matriz(request):
     return render(request, "ppc/pendencias/lista_por_matriz.html", {"grupos": grupos})
 
 
-@staff_member_required
+@login_required
 def revisar_pendencias_matriz(request, identificador_origem):
     pendencias = (
         ImportacaoPendencia.objects
@@ -157,7 +292,7 @@ def lista_matrizes_referencia(request):
     return render(request, "ppc/matrizes_referencia/lista.html", {"matrizes": matrizes})
 
 
-@staff_member_required
+@login_required
 def matriz_referencia_detalhe(request, matriz_id):
     matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
     itens = (
@@ -181,7 +316,7 @@ def matriz_referencia_detalhe(request, matriz_id):
     return render(request, "ppc/matrizes_referencia/detalhe.html", context)
 
 
-@staff_member_required
+@login_required
 @require_POST
 def vincular_curso_matriz_referencia(request, matriz_id):
     matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)

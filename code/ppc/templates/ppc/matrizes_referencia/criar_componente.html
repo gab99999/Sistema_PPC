@@ -1,0 +1,29 @@
+{# ppc/templates/ppc/matrizes_referencia/criar_componente.html #}
+{% extends "base.html" %}
+{% block content %}
+<h1>Novo componente — {{ matriz }}</h1>
+<form method="post" class="form-vinculo-matriz">
+  {% csrf_token %}
+  <label>Código<input type="text" name="codigo"></label>
+  <label>Nome<input type="text" name="nome" required></label>
+  <label>Núcleo
+    <select name="nucleo">
+      <option value="NC">Núcleo Comum</option>
+      <option value="NE">Núcleo Específico</option>
+      <option value="NL">Núcleo Livre</option>
+      <option value="AC">Atividade Complementar</option>
+      <option value="ACEx">Atividade Curricular de Extensão</option>
+    </select>
+  </label>
+  <label>Natureza
+    <select name="natureza">
+      <option value="obrigatoria">Obrigatória</option>
+      <option value="optativa">Optativa</option>
+    </select>
+  </label>
+  <label>Período<input type="number" name="periodo" value="1" min="1"></label>
+  <label>Carga horária teórica<input type="number" name="carga_horaria_teorica" value="0" min="0"></label>
+  <label>Carga horária prática<input type="number" name="carga_horaria_pratica" value="0" min="0"></label>
+  <button type="submit" class="btn btn-primario">Criar e adicionar</button>
+</form>
+{% endblock %}

@@ -32,7 +32,8 @@ from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario
                         escolher_importacao_ppc, importar_ppc_modelo_novo, importar_ppc_modelo_antigo, remover_componente_da_matriz, detalhe_componente_na_matriz, historico_componente, 
                         editar_vinculo_componente, buscar_componente_existente, adicionar_componente_existente, buscar_cine_brasil_curso, fila_aprovacao_componentes, 
                         rejeitar_componente, aprovar_componente, meus_componentes_pendentes, lista_matrizes_referencia, matriz_referencia_detalhe, mover_item_matriz_referencia, vincular_curso_matriz_referencia,
-                           lista_pendencias_por_matriz, revisar_pendencias_matriz, selecionar_matriz_referencia_para_ppc, preview_aplicar_matriz_referencia)
+                           lista_pendencias_por_matriz, revisar_pendencias_matriz, selecionar_matriz_referencia_para_ppc, preview_aplicar_matriz_referencia, criar_matriz_referencia, duplicar_matriz_referencia, historico_item_matriz_referencia, 
+                           criar_componente_matriz_referencia, remover_componente_matriz_referencia, buscar_componente_existente_matriz_referencia, historico_matriz_referencia, adicionar_componente_existente_matriz_referencia)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -103,6 +104,14 @@ urlpatterns = [
     path("pendencias-matriz/<str:identificador_origem>/", revisar_pendencias_matriz, name="revisar_pendencias_matriz"),
     path("ppc/<int:ppc_id>/aplicar-matriz-referencia/", selecionar_matriz_referencia_para_ppc, name="selecionar_matriz_referencia_para_ppc"),
     path("ppc/<int:ppc_id>/aplicar-matriz-referencia/<int:matriz_id>/", preview_aplicar_matriz_referencia, name="preview_aplicar_matriz_referencia"),
+    path("matrizes-referencia/nova/", criar_matriz_referencia, name="criar_matriz_referencia"),
+    path("matrizes-referencia/<int:matriz_id>/adicionar-componente/", adicionar_componente_existente_matriz_referencia, name="adicionar_componente_existente_matriz_referencia"),
+    path("matrizes-referencia/<int:matriz_id>/duplicar/", duplicar_matriz_referencia, name="duplicar_matriz_referencia"),
+    path("matrizes-referencia/item/<int:item_id>/remover/", remover_componente_matriz_referencia, name="remover_componente_matriz_referencia"),
+    path("matrizes-referencia/<int:matriz_id>/buscar-componente/", buscar_componente_existente_matriz_referencia, name="buscar_componente_existente_matriz_referencia"),
+    path("matrizes-referencia/item/<int:item_id>/historico/", historico_item_matriz_referencia, name="historico_item_matriz_referencia"),
+    path("matrizes-referencia/<int:matriz_id>/novo-componente/", criar_componente_matriz_referencia, name="criar_componente_matriz_referencia"),
+    path("matrizes-referencia/<int:matriz_id>/historico/", historico_matriz_referencia, name="historico_matriz_referencia"),
 ]
 
 if settings.DEBUG:

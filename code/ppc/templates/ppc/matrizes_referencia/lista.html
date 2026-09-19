@@ -2,6 +2,8 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Matrizes de Referência</h1>
+
+<a href="{% url 'criar_matriz_referencia' %}" class="btn btn-primario" style="margin-bottom:1rem; display:inline-block;">+ Nova Matriz</a>
 <table class="tabela-dados">
   <thead>
     <tr><th>Identificador de origem</th><th>Nome</th><th>Curso</th><th></th></tr>

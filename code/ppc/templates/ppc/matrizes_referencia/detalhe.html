@@ -4,6 +4,22 @@
 <a href="{% url 'lista_matrizes_referencia' %}" class="link-voltar">← Voltar para matrizes</a>
 <h1>{{ matriz }}</h1>
 
+
+<div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+  <a href="{% url 'criar_componente_matriz_referencia' matriz.id %}" class="btn btn-secundario">+ Novo Componente</a>
+  <button type="button" class="btn btn-secundario" id="botao-buscar-existente">+ Usar Componente Existente</button>
+  <form method="post" action="{% url 'duplicar_matriz_referencia' matriz.id %}" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-secundario">Duplicar Matriz</button>
+  </form>
+    <a href="{% url 'historico_matriz_referencia' matriz.id %}" class="link-voltar">Ver histórico</a>
+</div>
+
+<div id="painel-busca-existente" style="display:none; margin-bottom:1rem;">
+  <input type="text" id="campo-busca-existente" placeholder="Buscar componente por nome...">
+  <div id="resultado-busca-existente"></div>
+</div>
+
 <form method="post" action="{% url 'vincular_curso_matriz_referencia' matriz.id %}" class="form-vinculo-matriz">
   {% csrf_token %}
   <label>Nome da matriz
@@ -18,6 +34,9 @@
         </option>
       {% endfor %}
     </select>
+  </label>
+  <label>Número de períodos
+    <input type="number" name="numero_periodos" value="{{ matriz.numero_periodos }}" min="1" max="20">
   </label>
   <button type="submit" class="btn btn-primario">Salvar</button>
 </form>
@@ -41,6 +60,11 @@
           {{ item.componente.carga_horaria_teorica }}h teóricas · {{ item.componente.carga_horaria_pratica }}h práticas
         </div>
         <button type="button" class="link-botao botao-editar" data-item-id="{{ item.id }}">Editar</button>
+        <a href="{% url 'historico_item_matriz_referencia' item.id %}" class="link-botao">Hist.</a>
+        <form method="post" action="{% url 'remover_componente_matriz_referencia' item.id %}" style="display:inline;" onsubmit="return confirm('Remover este componente da matriz?');">
+          {% csrf_token %}
+          <button type="submit" class="link-botao" style="color:var(--cor-perigo);">Remover</button>
+        </form>
 
         <div class="painel-edicao" id="painel-{{ item.id }}">
           <div class="alerta alerta-info">
@@ -84,6 +108,27 @@ function getCookie(nome) {
 }
 const csrftoken = getCookie("csrftoken");
 const statusEl = document.getElementById("status-salvamento-matriz");
+
+const botaoBuscar = document.getElementById("botao-buscar-existente");
+const painelBusca = document.getElementById("painel-busca-existente");
+const campoBusca = document.getElementById("campo-busca-existente");
+const resultadoBusca = document.getElementById("resultado-busca-existente");
+
+botaoBuscar.addEventListener("click", () => {
+    painelBusca.style.display = painelBusca.style.display === "none" ? "block" : "none";
+});
+
+let timeoutBusca = null;
+campoBusca.addEventListener("input", () => {
+    clearTimeout(timeoutBusca);
+    timeoutBusca = setTimeout(() => {
+        const termo = campoBusca.value.trim();
+        if (!termo) { resultadoBusca.innerHTML = ""; return; }
+        fetch(`{% url 'buscar_componente_existente_matriz_referencia' matriz.id %}?q=${encodeURIComponent(termo)}`)
+            .then((resposta) => resposta.text())
+            .then((html) => { resultadoBusca.innerHTML = html; });
+    }, 300);
+});
 
 function mostrarStatus(texto, classe) {
     statusEl.textContent = texto;

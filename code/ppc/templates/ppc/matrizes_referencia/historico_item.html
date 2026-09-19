@@ -1,0 +1,20 @@
+{# ppc/templates/ppc/matrizes_referencia/historico_item.html #}
+{% extends "base.html" %}
+{% block content %}
+<h1>Histórico — {{ item.componente.nome }} em {{ item.matriz }}</h1>
+<table class="tabela-dados">
+  <thead><tr><th>Data</th><th>Usuário</th><th>Tipo</th><th>Período</th><th>Natureza</th><th>Ordem</th></tr></thead>
+  <tbody>
+    {% for registro in registros %}
+    <tr>
+      <td>{{ registro.history_date }}</td>
+      <td>{{ registro.history_user|default:"—" }}</td>
+      <td>{{ registro.get_history_type_display }}</td>
+      <td>{{ registro.periodo }}</td>
+      <td>{{ registro.get_natureza_display }}</td>
+      <td>{{ registro.ordem }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

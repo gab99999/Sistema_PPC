@@ -586,6 +586,7 @@ h3 {
 }
 
 .form-vinculo-matriz input[type="text"],
+.form-vinculo-matriz input[type="number"],
 .form-vinculo-matriz select {
     padding: 0.5rem 0.65rem;
     border: 1px solid var(--cor-borda);

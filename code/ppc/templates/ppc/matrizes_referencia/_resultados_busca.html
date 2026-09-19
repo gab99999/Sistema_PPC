@@ -1,0 +1,18 @@
+{# ppc/templates/ppc/matrizes_referencia/_resultados_busca.html #}
+{% for componente in resultados %}
+<div class="card" style="margin-bottom:0.5rem;">
+  <strong>{{ componente.codigo }}</strong> — {{ componente.nome }}
+  <form method="post" action="{% url 'adicionar_componente_existente_matriz_referencia' matriz.id %}" style="display:flex; gap:0.5rem; margin-top:0.4rem; align-items:center;">
+    {% csrf_token %}
+    <input type="hidden" name="componente_id" value="{{ componente.id }}">
+    <label>Período <input type="number" name="periodo" value="1" min="1" style="width:60px;"></label>
+    <select name="natureza">
+      <option value="obrigatoria">Obrigatória</option>
+      <option value="optativa">Optativa</option>
+    </select>
+    <button type="submit" class="btn btn-secundario">Adicionar</button>
+  </form>
+</div>
+{% empty %}
+{% if request.GET.q %}<p>Nenhum componente encontrado.</p>{% endif %}
+{% endfor %}
