@@ -123,6 +123,7 @@ CONTRATO_BANCO = {
         "diretor": "string ou null",
         "vice_diretor": "string ou null",
         "coordenador_curso": "string ou null",
+        "vice_coordenador_curso": "string ou null",
         "numero_resolucao": "string ou null",
         "tipo_ppc": "novo | reformulacao | null",
         "publico_alvo_ead": "string ou null",
@@ -666,7 +667,7 @@ def validar_pre_save_django(dados: dict[str, Any]) -> dict[str, Any]:
         ("informacoes_gerais", InformacoesGeraisForm, [
             "modalidade", "grau_academico", "turno_funcionamento", "carga_horaria_total",
             "numero_vagas_anuais", "duracao_minima_semestres", "duracao_media_semestres",
-            "duracao_maxima_semestres", "diretor", "vice_diretor", "coordenador_curso",
+            "duracao_maxima_semestres", "diretor", "vice_diretor", "coordenador_curso", "vice_coordenador_curso",
             "tipo_ppc", "status", "numero_resolucao",
         ]),
         ("apresentacao", ApresentacaoForm, ["apresentacao_texto", "publico_alvo_ead", "ato_integracao_uab", "ato_credenciamento_mec", "polos_ead"]),

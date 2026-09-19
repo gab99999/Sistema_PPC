@@ -1,0 +1,20 @@
+<section class="painel-completude" aria-labelledby="titulo-completude">
+    <h2 id="titulo-completude">Completude do PPC</h2>
+    <div class="grade-estatisticas">
+        <div class="card estatistica">
+            <span class="estatistica-numero">{{ preenchidas }} de {{ total }}</span>
+            <span class="estatistica-rotulo">seções textuais preenchidas</span>
+        </div>
+    </div>
+    <progress value="{{ percentual }}" max="100">{{ percentual }}%</progress>
+    <p class="card-corpo">{{ percentual }}% preenchido.</p>
+    {% with faltantes=secoes|dictsort:"preenchida" %}
+        <ul class="lista-completude">
+            {% for secao in faltantes %}
+                {% if not secao.preenchida %}
+                    <li><a href="{% url secao.url ppc.id %}">{{ secao.nome }}</a></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endwith %}
+</section>

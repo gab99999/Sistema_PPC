@@ -516,6 +516,20 @@ h3 {
     transform: scale(1.06);
 }
 
+.painel-completude {
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    background-color: var(--cor-superficie);
+    box-shadow: var(--sombra);
+}
+
+.painel-completude h2 { margin-bottom: 0; }
+.painel-completude .grade-estatisticas { margin: 0.75rem 0; }
+.painel-completude progress { width: 100%; accent-color: var(--cor-primaria); }
+.lista-completude { margin: 0.75rem 0 0; padding-left: 1.25rem; }
+
 .btn-ajuda {
     right: 6rem;
     border: 0;
@@ -780,4 +794,93 @@ h3 {
     text-align: center;
     font-size: 0.78rem;
     color: var(--cor-texto-suave);
+}
+
+.painel-completude {
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+    padding: 0.7rem 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.painel-completude-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.painel-completude-percentual {
+    font-family: var(--fonte-titulo);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--cor-primaria);
+    min-width: 3.2ch;
+    flex-shrink: 0;
+}
+
+.painel-completude-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex-shrink: 0;
+}
+
+.painel-completude-info strong {
+    font-size: 0.85rem;
+}
+
+.painel-completude-legenda {
+    font-size: 0.75rem;
+    color: var(--cor-texto-suave);
+}
+
+.painel-completude-barra {
+    flex: 1;
+    height: 8px;
+    background-color: var(--cor-fundo);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.painel-completude-barra-preenchida {
+    height: 100%;
+    background-color: var(--cor-primaria);
+    transition: width 0.2s ease;
+}
+
+.painel-completude-detalhes {
+    margin-top: 0.5rem;
+}
+
+.painel-completude-detalhes summary {
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--cor-primaria);
+    width: fit-content;
+}
+
+.lista-completude {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.lista-completude li a {
+    display: inline-block;
+    font-size: 0.78rem;
+    padding: 0.2rem 0.6rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--cor-texto);
+}
+
+.lista-completude li a:hover {
+    border-color: var(--cor-primaria);
+    color: var(--cor-primaria);
 }

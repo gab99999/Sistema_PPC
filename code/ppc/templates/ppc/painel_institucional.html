@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Painel Institucional{% endblock %}
+{% block content %}
+<h1>Painel Institucional</h1>
+<div class="grade-estatisticas">
+    <div class="card estatistica"><span class="estatistica-numero">{{ total_matrizes }}</span><span class="estatistica-rotulo">Matrizes de referência</span></div>
+    <div class="card estatistica"><span class="estatistica-numero">{{ matrizes_sem_curso }}</span><span class="estatistica-rotulo">Matrizes sem curso vinculado</span></div>
+    <div class="card estatistica"><span class="estatistica-numero">{{ total_pendencias }}</span><span class="estatistica-rotulo">Pendências não resolvidas</span></div>
+    <div class="card estatistica"><span class="estatistica-numero">{{ componentes_pendentes }}</span><span class="estatistica-rotulo">Componentes aguardando aprovação</span></div>
+</div>
+
+<h2>Componentes por núcleo</h2>
+<table class="tabela-dados"><thead><tr><th>Núcleo</th><th>Quantidade</th></tr></thead><tbody>{% for nucleo in nucleos %}<tr><td>{{ nucleo.codigo }} — {{ nucleo.rotulo }}</td><td>{{ nucleo.total }}</td></tr>{% endfor %}</tbody></table>
+<br>
+<h2>Pendências não resolvidas por tipo</h2>
+<table class="tabela-dados"><thead><tr><th>Tipo</th><th>Quantidade</th></tr></thead><tbody>{% for pendencia in pendencias_por_tipo %}<tr><td>{{ pendencia.rotulo }}</td><td>{{ pendencia.total }}</td></tr>{% endfor %}</tbody></table>
+<br>
+<h2>Cursos sem faixa de carga horária</h2>
+<table class="tabela-dados"><thead><tr><th>Curso</th><th>Mínima</th><th>Máxima</th></tr></thead><tbody>{% for curso in cursos_sem_faixa %}<tr><td>{{ curso.nome }}</td><td>{{ curso.carga_horaria_minima|default:"Não definida" }}</td><td>{{ curso.carga_horaria_maxima|default:"Não definida" }}</td></tr>{% empty %}<tr><td colspan="3">Todos os cursos têm faixa de carga horária definida.</td></tr>{% endfor %}</tbody></table>
+<br>
+<h2>PPCs fora da faixa do curso</h2>
+<table class="tabela-dados"><thead><tr><th>Curso</th><th>PPC</th><th>Carga total</th><th>Faixa do curso</th></tr></thead><tbody>{% for ppc in ppcs_fora_da_faixa %}<tr><td>{{ ppc.curso.nome }}</td><td>{{ ppc.get_tipo_ppc_display }} #{{ ppc.id }}</td><td>{{ ppc.carga_horaria_total }}h</td><td>{{ ppc.curso.carga_horaria_minima }}h a {{ ppc.curso.carga_horaria_maxima }}h</td></tr>{% empty %}<tr><td colspan="4">Nenhum PPC fora da faixa definida para seu curso.</td></tr>{% endfor %}</tbody></table>
+{% endblock %}
+{% block ajuda %}<p>Este painel é somente leitura e consolida dados já registrados no sistema para acompanhamento institucional.</p>{% endblock %}

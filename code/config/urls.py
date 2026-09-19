@@ -33,7 +33,8 @@ from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario
                         editar_vinculo_componente, buscar_componente_existente, adicionar_componente_existente, buscar_cine_brasil_curso, fila_aprovacao_componentes, 
                         rejeitar_componente, aprovar_componente, meus_componentes_pendentes, lista_matrizes_referencia, matriz_referencia_detalhe, mover_item_matriz_referencia, vincular_curso_matriz_referencia,
                            lista_pendencias_por_matriz, revisar_pendencias_matriz, selecionar_matriz_referencia_para_ppc, preview_aplicar_matriz_referencia, criar_matriz_referencia, duplicar_matriz_referencia, historico_item_matriz_referencia, 
-                           criar_componente_matriz_referencia, remover_componente_matriz_referencia, buscar_componente_existente_matriz_referencia, historico_matriz_referencia, adicionar_componente_existente_matriz_referencia)
+                           criar_componente_matriz_referencia, remover_componente_matriz_referencia, buscar_componente_existente_matriz_referencia, historico_matriz_referencia, adicionar_componente_existente_matriz_referencia,
+                           painel_institucional, comparar_ppcs)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -96,6 +97,7 @@ urlpatterns = [
     path('componentes/<int:componente_id>/aprovar/', aprovar_componente, name='aprovar_componente'),
     path('componentes/<int:componente_id>/rejeitar/', rejeitar_componente, name='rejeitar_componente'),
     path('componentes/meus-pendentes/', meus_componentes_pendentes, name='meus_componentes_pendentes'),
+    path('painel-institucional/', painel_institucional, name='painel_institucional'),
     path("matrizes-referencia/", lista_matrizes_referencia, name="lista_matrizes_referencia"),
     path("matrizes-referencia/<int:matriz_id>/", matriz_referencia_detalhe, name="matriz_referencia_detalhe"),
     path("matrizes-referencia/<int:matriz_id>/vincular-curso/", vincular_curso_matriz_referencia, name="vincular_curso_matriz_referencia"),
@@ -104,6 +106,7 @@ urlpatterns = [
     path("pendencias-matriz/<str:identificador_origem>/", revisar_pendencias_matriz, name="revisar_pendencias_matriz"),
     path("ppc/<int:ppc_id>/aplicar-matriz-referencia/", selecionar_matriz_referencia_para_ppc, name="selecionar_matriz_referencia_para_ppc"),
     path("ppc/<int:ppc_id>/aplicar-matriz-referencia/<int:matriz_id>/", preview_aplicar_matriz_referencia, name="preview_aplicar_matriz_referencia"),
+    path("ppc/<int:ppc_id>/comparar-versoes/", comparar_ppcs, name="comparar_ppcs"),
     path("matrizes-referencia/nova/", criar_matriz_referencia, name="criar_matriz_referencia"),
     path("matrizes-referencia/<int:matriz_id>/adicionar-componente/", adicionar_componente_existente_matriz_referencia, name="adicionar_componente_existente_matriz_referencia"),
     path("matrizes-referencia/<int:matriz_id>/duplicar/", duplicar_matriz_referencia, name="duplicar_matriz_referencia"),

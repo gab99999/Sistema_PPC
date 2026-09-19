@@ -77,6 +77,7 @@ class PPC(models.Model):
     diretor = models.CharField(max_length=200)
     vice_diretor = models.CharField(max_length=200)
     coordenador_curso = models.CharField(max_length=200)
+    vice_coordenador_curso = models.CharField(max_length=200)
 
     # -- Datas --
     criado_em = models.DateTimeField(auto_now_add=True)

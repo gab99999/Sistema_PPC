@@ -170,6 +170,7 @@ def _extrair_capa(texto_completo):
     for rotulo, campo in [
         ('Diretor(a):', 'diretor'), ('Vice-Diretor(a):', 'vice_diretor'),
         ('Coordenador(a) do Curso:', 'coordenador_curso'),
+        ('Vice-Coordenador(a) do Curso:', 'vice_coordenador_curso'),
     ]:
         match = re.search(re.escape(rotulo) + r'\s*(.+)', texto_completo)
         if match:

@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from django.template.loader import render_to_string
-from django.db.models import Prefetch
+from django.db.models import Prefetch, F
 from django.utils.text import slugify
 from weasyprint import HTML
 from django.http import HttpResponseForbidden, Http404
@@ -211,6 +211,11 @@ def _montar_preview_aplicacao(ppc, matriz):
         for cm in ComponenteNaMatriz.objects.filter(ppc=ppc).select_related("componente")
     }
 
+    return _categorizar_componentes(itens_referencia, existentes)
+
+
+def _categorizar_componentes(itens_referencia, existentes):
+    """Aplica a categorização usada no preview a uma coleção de componentes."""
     novos, existentes_iguais, conflitos = [], [], []
 
     for item in itens_referencia:
@@ -223,6 +228,81 @@ def _montar_preview_aplicacao(ppc, matriz):
             conflitos.append({"referencia": item, "atual": existente})
 
     return {"novos": novos, "existentes_iguais": existentes_iguais, "conflitos": conflitos}
+
+
+@staff_member_required
+def painel_institucional(request):
+    distribuicao_nucleos = {
+        escolha: 0 for escolha, _ in ComponenteCurricular.NUCLEO_CHOICES
+    }
+    distribuicao_nucleos.update(
+        ComponenteCurricular.objects.values("nucleo").annotate(total=Count("id")).values_list("nucleo", "total")
+    )
+
+    pendencias_por_tipo = {
+        escolha: 0 for escolha, _ in ImportacaoPendencia.TIPO_CHOICES
+    }
+    pendencias_por_tipo.update(
+        ImportacaoPendencia.objects.filter(resolvido=False).values("tipo").annotate(total=Count("id")).values_list("tipo", "total")
+    )
+
+    cursos_sem_faixa = Curso.objects.filter(
+        Q(carga_horaria_minima__isnull=True) | Q(carga_horaria_maxima__isnull=True)
+    ).order_by("nome")
+    ppcs_fora_da_faixa = PPC.objects.select_related("curso").filter(
+        curso__carga_horaria_minima__isnull=False,
+        curso__carga_horaria_maxima__isnull=False,
+    ).filter(
+        Q(carga_horaria_total__lt=F("curso__carga_horaria_minima"))
+        | Q(carga_horaria_total__gt=F("curso__carga_horaria_maxima"))
+    ).order_by("curso__nome", "id")
+
+    return render(request, "ppc/painel_institucional.html", {
+        "total_matrizes": MatrizReferenciaCurricular.objects.count(),
+        "matrizes_sem_curso": MatrizReferenciaCurricular.objects.filter(curso__isnull=True).count(),
+        "nucleos": [
+            {"codigo": codigo, "rotulo": rotulo, "total": distribuicao_nucleos[codigo]}
+            for codigo, rotulo in ComponenteCurricular.NUCLEO_CHOICES
+        ],
+        "total_pendencias": ImportacaoPendencia.objects.filter(resolvido=False).count(),
+        "pendencias_por_tipo": [
+            {"codigo": codigo, "rotulo": rotulo, "total": pendencias_por_tipo[codigo]}
+            for codigo, rotulo in ImportacaoPendencia.TIPO_CHOICES
+        ],
+        "cursos_sem_faixa": cursos_sem_faixa,
+        "ppcs_fora_da_faixa": ppcs_fora_da_faixa,
+        "componentes_pendentes": ComponenteCurricular.objects.filter(status="pendente").count(),
+    })
+
+
+@login_required
+def comparar_ppcs(request, ppc_id):
+    ppc = get_object_or_404(PPC.objects.select_related("curso"), pk=ppc_id)
+    ppcs_do_curso = PPC.objects.filter(curso=ppc.curso).exclude(pk=ppc.pk).order_by("criado_em", "id")
+    ppc_comparado = None
+    comparacao = None
+
+    if ppc_comparado_id := request.GET.get("ppc_comparado"):
+        ppc_comparado = get_object_or_404(
+            PPC.objects.select_related("curso"), pk=ppc_comparado_id, curso=ppc.curso
+        )
+        itens_comparados = ppc_comparado.matriz_componentes.select_related("componente")
+        itens_atuais = {
+            item.componente_id: item
+            for item in ppc.matriz_componentes.select_related("componente")
+        }
+        comparacao = _categorizar_componentes(itens_comparados, itens_atuais)
+
+    return render(request, "ppc/comparar_ppcs.html", {
+        "ppc": ppc,
+        "ppcs_do_curso": ppcs_do_curso,
+        "ppc_comparado": ppc_comparado,
+        "comparacao": comparacao,
+        "diferenca_carga_horaria": (
+            ppc_comparado.carga_horaria_total - ppc.carga_horaria_total
+            if ppc_comparado else None
+        ),
+    })
 
 
 @login_required
@@ -534,7 +614,7 @@ def importar_ppc_modelo_antigo(request, curso_id):
 CAMPOS_PPC_VALIDOS = {  # supondo que já existe algo assim no Caminho 1 — reaproveite se já tiver
     'modalidade', 'grau_academico', 'turno_funcionamento', 'carga_horaria_total',
     'numero_vagas_anuais', 'duracao_minima_semestres', 'duracao_media_semestres',
-    'duracao_maxima_semestres', 'diretor', 'vice_diretor', 'coordenador_curso',
+    'duracao_maxima_semestres', 'diretor', 'vice_diretor', 'coordenador_curso', 'vice_coordenador_curso',
     'numero_resolucao', 'tipo_ppc', 'publico_alvo_ead', 'ato_integracao_uab',
     'ato_credenciamento_mec', 'polos_ead', 'apresentacao_texto', 'exposicao_motivos',
     'objetivo_geral', 'objetivo_especifico', 'principios_geral',

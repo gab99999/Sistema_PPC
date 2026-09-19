@@ -1,0 +1,25 @@
+{% extends "ppc_base.html" %}
+{% block title %}Comparar versões — {{ ppc.curso.nome }}{% endblock %}
+{% block ppc_content %}
+<h2>Comparar versões do PPC</h2>
+<form method="get" class="form-secao">
+    <label for="ppc-comparado">Comparar este PPC com</label>
+    <select id="ppc-comparado" name="ppc_comparado" required>
+        <option value="">Selecione uma versão</option>
+        {% for opcao in ppcs_do_curso %}<option value="{{ opcao.id }}" {% if ppc_comparado.id == opcao.id %}selected{% endif %}>{{ opcao.get_tipo_ppc_display }} #{{ opcao.id }} — {{ opcao.criado_em|date:"d/m/Y" }}</option>{% endfor %}
+    </select> 
+    <br><br>
+    <button class="btn btn-primario" type="submit">Comparar</button>
+</form> <br>
+
+{% if ppc_comparado %}
+    <div class="grade-estatisticas"><div class="card estatistica"><span class="estatistica-numero">{{ ppc_comparado.carga_horaria_total }}h</span><span class="estatistica-rotulo">PPC selecionado</span></div><div class="card estatistica"><span class="estatistica-numero">{{ ppc.carga_horaria_total }}h</span><span class="estatistica-rotulo">PPC atual</span></div><div class="card estatistica"><span class="estatistica-numero">{{ diferenca_carga_horaria }}h</span><span class="estatistica-rotulo">Diferença selecionado − atual</span></div></div>
+    <h3>Novos no PPC selecionado</h3>
+    <table class="tabela-dados"><thead><tr><th>Componente</th><th>Período</th><th>Natureza</th></tr></thead><tbody>{% for item in comparacao.novos %}<tr><td>{{ item.componente.nome }}</td><td>{{ item.periodo }}</td><td>{{ item.get_natureza_display }}</td></tr>{% empty %}<tr><td colspan="3">Nenhum componente novo.</td></tr>{% endfor %}</tbody></table>
+    <h3>Existentes iguais</h3>
+    <table class="tabela-dados"><thead><tr><th>Componente</th><th>Período</th><th>Natureza</th></tr></thead><tbody>{% for item in comparacao.existentes_iguais %}<tr><td>{{ item.componente.nome }}</td><td>{{ item.periodo }}</td><td>{{ item.get_natureza_display }}</td></tr>{% empty %}<tr><td colspan="3">Nenhum componente idêntico.</td></tr>{% endfor %}</tbody></table>
+    <h3>Conflitos</h3>
+    <table class="tabela-dados"><thead><tr><th>Componente</th><th>PPC selecionado</th><th>PPC atual</th></tr></thead><tbody>{% for conflito in comparacao.conflitos %}<tr><td>{{ conflito.referencia.componente.nome }}</td><td>Período {{ conflito.referencia.periodo }} · {{ conflito.referencia.get_natureza_display }}</td><td>Período {{ conflito.atual.periodo }} · {{ conflito.atual.get_natureza_display }}</td></tr>{% empty %}<tr><td colspan="3">Nenhum conflito.</td></tr>{% endfor %}</tbody></table>
+{% endif %}
+{% endblock %}
+{% block ajuda %}<p>Compare duas versões do mesmo curso. A tela é apenas para consulta: ela classifica os componentes em novos, existentes iguais e conflitos de período ou natureza.</p>{% endblock %}
