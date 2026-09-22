@@ -1,0 +1,19 @@
+{# ppc/templates/ppc/confirmar_reversao.html #}
+{% extends "ppc_base.html" %}
+{% block content %}
+<a href="{% url 'historico_ppc' ppc.id %}" class="link-voltar">← Voltar ao histórico</a>
+<h1>Confirmar reversão — {{ ppc }}</h1>
+<p>Reverter para a versão de {{ registro.history_date }} (por {{ registro.history_user|default:"—" }}).</p>
+
+{% if campos_diferentes %}
+<div class="alerta alerta-info">Campos que vão mudar: {{ campos_diferentes|join:", " }}</div>
+{% else %}
+<div class="alerta">Nenhum campo diferente — esta versão é idêntica à atual.</div>
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-primario">Confirmar reversão</button>
+  <a href="{% url 'historico_ppc' ppc.id %}" class="btn btn-secundario">Cancelar</a>
+</form>
+{% endblock %}

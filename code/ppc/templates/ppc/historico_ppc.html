@@ -1,0 +1,26 @@
+{# ppc/templates/ppc/historico_ppc.html #}
+{% extends "ppc_base.html" %}
+{% block content %}
+<a href="{% url 'editar_informacoes_gerais' ppc.id %}" class="link-voltar">← Voltar ao PPC</a>
+<h1>Histórico — {{ ppc }}</h1>
+<table class="tabela-dados">
+  <thead><tr><th>Data</th><th>Usuário</th><th>Tipo</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    {% for registro in registros %}
+    <tr>
+      <td>{{ registro.history_date }}</td>
+      <td>{{ registro.history_user|default:"—" }}</td>
+      <td>{{ registro.get_history_type_display }}</td>
+      <td>{{ registro.get_status_display }}</td>
+      <td>
+        {% if not forloop.first %}
+        <a href="{% url 'reverter_ppc' ppc.id registro.history_id %}" class="link-botao">Reverter para esta versão</a>
+        {% else %}
+        <span class="ajuda-campo">versão atual</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

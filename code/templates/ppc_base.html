@@ -3,7 +3,18 @@
 {% block content %}
 <div class="ppc-layout">
     <nav class="menu-lateral-ppc">
+    <div class="menu-acoes-ppc">
+      <details class="dropdown-acoes">
+        <summary class="btn btn-secundario">Mais ações ▾</summary>
+        <div class="dropdown-acoes-conteudo">
+          <a href="{% url 'historico_ppc' ppc.id %}">Ver histórico</a>
+          <a href="{% url 'duplicar_ppc' ppc.id %}">Duplicar este PPC</a>
+        </div>
+      </details>
+    </div> <br>
     <p><strong>{{ ppc.curso.nome }}</strong></p> 
+    
+    
     <a href="{% url 'editar_informacoes_gerais' ppc.id %}"
        class="{% if request.resolver_match.url_name == 'editar_informacoes_gerais' %}ativo{% endif %}">Informações Gerais</a>
     <a href="{% url 'editar_apresentacao' ppc.id %}"
@@ -50,6 +61,16 @@
         {% block ppc_content %}{% endblock %}
     </div>
 </div>
+
+<script>
+document.addEventListener("click", (evento) => {
+    document.querySelectorAll(".dropdown-acoes[open]").forEach((detalhe) => {
+        if (!detalhe.contains(evento.target)) {
+            detalhe.removeAttribute("open");
+        }
+    });
+});
+</script>
 <a href="{% url 'gerar_pdf_ppc' ppc.id %}" class="btn-flutuante" title="Baixar PDF do PPC" aria-label="Baixar PDF do PPC">
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>

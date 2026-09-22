@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 from django.contrib.auth.views import LoginView, LogoutView
 
 # importações do views.py
-
+from ppc import views
 from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario, alternar_acesso_usuario, detalhe_curso, criar_ppc, editar_objetivos,
                         editar_permissoes, criar_curso, editar_exposicao_motivos, editar_apresentacao, editar_informacoes_gerais, 
                         editar_principios, editar_expectativas, editar_apendices, editar_atividades_complementares, editar_avaliacao_ensino,
@@ -115,6 +115,9 @@ urlpatterns = [
     path("matrizes-referencia/item/<int:item_id>/historico/", historico_item_matriz_referencia, name="historico_item_matriz_referencia"),
     path("matrizes-referencia/<int:matriz_id>/novo-componente/", criar_componente_matriz_referencia, name="criar_componente_matriz_referencia"),
     path("matrizes-referencia/<int:matriz_id>/historico/", historico_matriz_referencia, name="historico_matriz_referencia"),
+    path("ppc/<int:ppc_id>/historico/", views.historico_ppc, name="historico_ppc"),
+    path("ppc/<int:ppc_id>/historico/<int:history_id>/reverter/", views.reverter_ppc, name="reverter_ppc"),
+    path("ppc/<int:ppc_id>/duplicar/", views.duplicar_ppc, name="duplicar_ppc"),
 ]
 
 if settings.DEBUG:

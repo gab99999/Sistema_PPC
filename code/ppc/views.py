@@ -38,7 +38,138 @@ from django.db.models import Count
 from .models import ImportacaoPendencia
 from .services.resolucao_pendencias import resolver_pendencia_ambigua
 
+CAMPOS_SECOES_PPC = {
+    "Apresentação": ["apresentacao_texto"],
+    "Exposição de Motivos": ["exposicao_motivos"],
+    "Objetivos": ["objetivo_geral", "objetivo_especifico"],
+    "Princípios Norteadores": [
+        "principios_geral", "principios_pratica_profissional",
+        "principios_formacao_tecnica", "principios_formacao_etica_social",
+        "principios_interdisciplinaridade", "principios_articulacao_teoria_pratica",
+    ],
+    "Expectativas da Formação": ["perfil_curso", "perfil_habilidades"],
+    "TCC": ["tcc"],
+    "Estágio": ["estagio"],
+    "Atividades Complementares": ["atividades_complementares"],
+    "Políticas Integradas": ["politicas_integrada"],
+    "Avaliação do Ensino/Aprendizagem": ["avaliacao_ensino_aprendizagem"],
+    "Avaliação do Projeto de Curso": ["avaliacao_projeto_curso"],
+    "Qualificação de Docentes": ["qualificacao"],
+    "Requisitos Legais": [
+        "diretrizes_curriculares_nacionais_curso",
+        "diretrizes_curriculares_nacionais_educacao_basica",
+        "diretrizes_etnico_raciais_historia_cultura_afro_indigena",
+        "diretrizes_educacao_direitos_humanos",
+        "protecao_direitos_pessoa_transtorno_espectro_autista",
+        "componente_curricular_libras",
+        "politicas_educacao_ambiental",
+        "diretrizes_formacao_professores_educacao_basica",
+        "condicoes_acesso_pessoas_deficiencia_mobilidade_reduzida",
+    ],
+    "Bibliografias do PPC": ["bibliografias_ppc"],
+    "Estrutura Curricular (descrição)": [
+        "estrutura_curricular_descricao",
+        "estrutura_curricular_informacoes_complementares",
+    ],
+}
 
+CAMPOS_INFORMACOES_GERAIS = [
+    "modalidade", "grau_academico", "turno_funcionamento", "carga_horaria_total",
+    "numero_vagas_anuais", "duracao_minima_semestres", "duracao_media_semestres",
+    "duracao_maxima_semestres", "diretor", "vice_diretor",
+    "coordenador_curso", "vice_coordenador_curso",
+]
+
+CAMPOS_EAD = ["publico_alvo_ead", "ato_integracao_uab", "ato_credenciamento_mec", "polos_ead"]
+
+
+@login_required
+def duplicar_ppc(request, ppc_id):
+    original = get_object_or_404(PPC, pk=ppc_id)
+
+    if request.method == "POST":
+        tipo_ppc = request.POST.get("tipo_ppc", "reformulacao")
+        copiar_matriz = request.POST.get("copiar_matriz") == "on"
+        secoes_marcadas = request.POST.getlist("secoes")
+
+        with transaction.atomic():
+            novo = PPC(curso=original.curso, tipo_ppc=tipo_ppc, status="rascunho")
+
+            # Informações gerais sempre vêm como ponto de partida — são campos
+            # obrigatórios do model, não dá pra criar o PPC sem eles preenchidos
+            for campo in CAMPOS_INFORMACOES_GERAIS:
+                setattr(novo, campo, getattr(original, campo))
+
+            if original.modalidade == "ead":
+                for campo in CAMPOS_EAD:
+                    setattr(novo, campo, getattr(original, campo))
+
+            for nome_secao, campos in CAMPOS_SECOES_PPC.items():
+                if nome_secao in secoes_marcadas:
+                    for campo in campos:
+                        setattr(novo, campo, getattr(original, campo))
+
+            novo.save()
+
+            if copiar_matriz:
+                for item in ComponenteNaMatriz.objects.filter(ppc=original):
+                    ComponenteNaMatriz.objects.create(
+                        ppc=novo, componente=item.componente,
+                        periodo=item.periodo, natureza=item.natureza,
+                    )
+
+            if hasattr(original, "dinamica_ead") and original.modalidade == "ead":
+                original_ead = original.dinamica_ead
+                DinamicaEAD.objects.create(
+                    ppc=novo,
+                    dinamica_atividades_presenciais_distancia=original_ead.dinamica_atividades_presenciais_distancia,
+                    recuperacao_estudos_permanencia=original_ead.recuperacao_estudos_permanencia,
+                    componente_informatica_basica=original_ead.componente_informatica_basica,
+                    atuacao_tutoria=original_ead.atuacao_tutoria,
+                    atribuicoes_profissionais=original_ead.atribuicoes_profissionais,
+                    material_didatico=original_ead.material_didatico,
+                    ferramentas_comunicacao=original_ead.ferramentas_comunicacao,
+                    carga_horaria_presencial_acompanhamento=original_ead.carga_horaria_presencial_acompanhamento,
+                    armazenamento_gerenciamento_dados=original_ead.armazenamento_gerenciamento_dados,
+                )
+
+        return redirect("editar_informacoes_gerais", ppc_id=novo.id)
+
+    return render(request, "ppc/duplicar_ppc.html", {
+        "original": original, "grupos": CAMPOS_SECOES_PPC,
+    })
+
+
+@login_required
+def historico_ppc(request, ppc_id):
+    ppc = get_object_or_404(PPC, pk=ppc_id)
+    registros = ppc.history.all().order_by("-history_date")
+    return render(request, "ppc/historico_ppc.html", {"ppc": ppc, "registros": registros})
+
+
+@login_required
+def reverter_ppc(request, ppc_id, history_id):
+    ppc = get_object_or_404(PPC, pk=ppc_id)
+    registro = get_object_or_404(ppc.history.all(), history_id=history_id)
+
+    campos_diferentes = []
+    for campo in ppc._meta.fields:
+        if campo.name == "id":
+            continue
+        if getattr(ppc, campo.name, None) != getattr(registro, campo.name, None):
+            campos_diferentes.append(str(campo.verbose_name or campo.name))
+
+    if request.method == "POST":
+        # .instance reconstrói um PPC com os valores daquele snapshot; salvar
+        # por cima do atual gera uma NOVA entrada no histórico (reversão),
+        # nunca apaga o que aconteceu depois — o "futuro" continua recuperável
+        # revertendo de novo pra frente, se precisar.
+        registro.instance.save()
+        return redirect("historico_ppc", ppc_id=ppc.id)
+
+    return render(request, "ppc/confirmar_reversao.html", {
+        "ppc": ppc, "registro": registro, "campos_diferentes": campos_diferentes,
+    })
 
 @login_required
 def criar_matriz_referencia(request):

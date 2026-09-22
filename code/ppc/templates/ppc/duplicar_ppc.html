@@ -1,0 +1,33 @@
+{# ppc/templates/ppc/duplicar_ppc.html #}
+{% extends "ppc_base.html" %}
+{% block content %}
+<h1>Duplicar PPC — {{ original.curso.nome }}</h1>
+<p>Cria um novo PPC (sempre como rascunho) usando este PPC como base. Desmarque o que não quiser copiar — o restante fica em branco, pra você preencher do zero.</p>
+
+<form method="post">
+  {% csrf_token %}
+  <label>Tipo do novo PPC
+    <select name="tipo_ppc", id='tipo_ppc'>
+      <option value="reformulacao" selected>Reformulação Curricular</option>
+      <option value="novo">Curso Novo</option>
+    </select>
+  </label>
+
+  <fieldset style="margin-top:1rem;">
+    <legend>Estrutura</legend>
+    <label><input type="checkbox" name="copiar_matriz" checked> Matriz curricular (todos os componentes, com período e natureza atuais)</label>
+  </fieldset>
+
+  <fieldset style="margin-top:1rem;">
+    <legend>Seções de texto a copiar</legend>
+    {% for nome_secao in grupos.keys %}
+    <label style="display:block;"><input type="checkbox" name="secoes" value="{{ nome_secao }}" checked> {{ nome_secao }}</label>
+    {% endfor %}
+  </fieldset>
+
+  <p class="ajuda-campo">Informações gerais (modalidade, carga horária, responsáveis etc.) são sempre copiadas como ponto de partida — edite depois se precisar mudar.</p>
+
+  <button type="submit" class="btn btn-primario" style="margin-top:1rem;">Criar PPC a partir deste</button>
+</form>
+{% endblock %}
+{% block ajuda %}<p>Utilize PPCs já existentes como base para novos PPCs, sejam eles Reformulação Curricular ou Curso Novo. Escolha somente o que deseja manter neste novo PPC duplicado.</p>{% endblock %}

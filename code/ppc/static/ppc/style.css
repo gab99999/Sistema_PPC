@@ -889,3 +889,93 @@ h3 {
     width: var(--percentual);
     /* resto do CSS que já tinha: height, background-color, border-radius, transition */
 }
+
+
+.menu-acoes-ppc {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-acoes summary {
+    cursor: pointer;
+    list-style: none;
+}
+.dropdown-acoes summary::-webkit-details-marker {
+    display: none;
+}
+
+.dropdown-acoes-conteudo {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+    padding: 0.4rem;
+    min-width: 180px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+}
+
+.dropdown-acoes-conteudo a {
+    padding: 0.5rem 0.6rem;
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--cor-texto);
+    font-size: 0.88rem;
+}
+
+.dropdown-acoes-conteudo a:hover {
+    background-color: var(--cor-fundo);
+    color: var(--cor-primaria);
+}
+
+/* -- Painel de busca de componente existente -- */
+#painel-busca-existente {
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+    padding: 1rem;
+}
+
+#campo-busca-existente {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    font-family: var(--fonte-corpo);
+    font-size: 0.95rem;
+    background-color: var(--cor-fundo);
+}
+
+#campo-busca-existente:focus {
+    outline: none;
+    border-color: var(--cor-primaria);
+}
+
+#resultado-busca-existente {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* -- Select de tipo de PPC (e selects avulsos parecidos) -- */
+#tipo_ppc {
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    font-family: var(--fonte-corpo);
+    font-size: 0.9rem;
+    background-color: var(--cor-superficie);
+    color: var(--cor-texto);
+    cursor: pointer;
+}
+
+#tipo_ppc focus {
+    outline: none;
+    border-color: var(--cor-primaria);
+}
