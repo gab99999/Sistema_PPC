@@ -487,3 +487,22 @@ class ImportacaoPendencia(models.Model):
 
     def __str__(self):
         return f"[{self.get_tipo_display()}] {self.codigo or self.identificador_origem} (linha {self.linha_origem})"
+
+class BibliografiaReferencia(models.Model):
+    """Bibliografia ao nível da matriz de referência — mesmo papel que
+    Bibliografia cumpre para ComponenteNaMatriz, mas em nível institucional."""
+    TIPO_CHOICES = [("basica", "Básica"), ("complementar", "Complementar")]
+    componente_na_matriz_referencia = models.ForeignKey(
+        ComponenteNaMatrizReferencia, on_delete=models.CASCADE, related_name="bibliografias"
+    )
+    tipo = models.CharField(max_length=15, choices=TIPO_CHOICES)
+    titulo = models.CharField(max_length=300)
+    autores = models.CharField(max_length=300)
+    editora = models.CharField(max_length=150, blank=True)
+    cidade = models.CharField(max_length=100, blank=True)
+    ano = models.PositiveIntegerField(blank=True, null=True)
+
+    def __str__(self):
+        return self.titulo
+
+

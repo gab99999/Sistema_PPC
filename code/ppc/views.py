@@ -112,11 +112,33 @@ def duplicar_ppc(request, ppc_id):
             novo.save()
 
             if copiar_matriz:
+                mapa_componentes = {}  # id do ComponenteNaMatriz original -> novo ComponenteNaMatriz
+            
                 for item in ComponenteNaMatriz.objects.filter(ppc=original):
-                    ComponenteNaMatriz.objects.create(
+                    novo_item = ComponenteNaMatriz.objects.create(
                         ppc=novo, componente=item.componente,
                         periodo=item.periodo, natureza=item.natureza,
                     )
+                    mapa_componentes[item.id] = novo_item
+            
+                    for bib in item.bibliografias.all():
+                        Bibliografia.objects.create(
+                            componente_na_matriz=novo_item,
+                            tipo=bib.tipo, titulo=bib.titulo, autores=bib.autores,
+                            editora=bib.editora, cidade=bib.cidade, ano=bib.ano,
+                        )
+            
+                # só depois que TODOS os componentes novos existem é que dá pra recriar
+                # as relações — uma relação exige as duas pontas já presentes
+                for relacao in RelacaoComponente.objects.filter(componente_na_matriz__ppc=original):
+                    origem_nova = mapa_componentes.get(relacao.componente_na_matriz_id)
+                    destino_novo = mapa_componentes.get(relacao.componente_relacionado_na_matriz_id)
+                    if origem_nova and destino_novo:
+                        RelacaoComponente.objects.create(
+                            componente_na_matriz=origem_nova,
+                            componente_relacionado_na_matriz=destino_novo,
+                            tipo=relacao.tipo,
+                        )
 
             if hasattr(original, "dinamica_ead") and original.modalidade == "ead":
                 original_ead = original.dinamica_ead
