@@ -60,6 +60,11 @@ class ComponenteCurricularForm(forms.ModelForm):
             'carga_horaria_estudante', 'carga_horaria_professor', 'carga_horaria_acex',
             'unidade_academica_componente', 'ementa',
         ]
+    def clean_carga_horaria(self):
+        valor = self.cleaned_data["carga_horaria"]
+        if valor % 8 != 0:
+            raise forms.ValidationError("A carga horária deve ser múltipla de 8.")
+        return valor
 
 
 class BibliografiaForm(forms.ModelForm):

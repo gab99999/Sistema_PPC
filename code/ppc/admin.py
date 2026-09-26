@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Curso, PPC, ComponenteCurricular, RelacaoComponente, Bibliografia, Apendice, DinamicaEAD, models
+from .models import Curso, PPC, ComponenteCurricular, RelacaoComponente, Bibliografia, Apendice, DinamicaEAD, Chamado
 from simple_history.admin import SimpleHistoryAdmin
 from django.contrib import admin
 from django.utils import timezone
@@ -13,6 +13,13 @@ from ppc.models import (
 from django.db import transaction
 from ppc.services.resolucao_pendencias import resolver_pendencia_ambigua
 
+
+@admin.register(Chamado)
+class ChamadoAdmin(admin.ModelAdmin):
+    list_display = ("usuario", "tela", "criado_em")
+    list_filter = ("tela", "criado_em")
+    search_fields = ("mensagem", "usuario__username")
+    readonly_fields = ("usuario", "tela", "mensagem", "criado_em")
 
 @admin.register(ImportacaoPendencia)
 class ImportacaoPendenciaAdmin(admin.ModelAdmin):

@@ -19,7 +19,7 @@
         {% if user.is_authenticated %}
             <a href="{% url 'meus_componentes_pendentes' %}">Meus Componentes Pendentes</a>
             <a href="{% url 'lista_matrizes_referencia' %}">Matrizes de Referência</a>
-            <a href="{% url 'lista_pendencias_por_matriz' %}">Pendências de Importação</a>
+            <a href="{% url 'lista_pendencias_por_matriz' %}">Pendências de Importação Matriz</a>
         {% endif %}
         <a href="{% url 'ajuda' %}">Ajuda</a>
 
@@ -70,5 +70,78 @@
         });
     });
     </script>
+    <button type="button" class="btn-flutuante btn-chamado" aria-haspopup="dialog" aria-controls="painel-chamado" title="Reportar problema" aria-label="Abrir formulário de chamado">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="9" y="9" width="6" height="8" rx="3" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M12 4v3M9 6l-2-2M15 6l2-2M4 12h2M18 12h2M6 16l-2 2M18 16l2 2M9 13h6M9 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+</button>
+<dialog id="painel-chamado" class="painel-chamado" aria-labelledby="titulo-chamado">
+    <div class="painel-chamado-cabecalho">
+        <h2 id="titulo-chamado">Reportar problema</h2>
+        <button type="button" class="btn-fechar-chamado" aria-label="Fechar chamado">&times;</button>
+    </div>
+    <div class="painel-chamado-conteudo">
+        <p class="painel-chamado-instrucao">Descreva o problema encontrado nesta tela. Sua mensagem será enviada para a equipe de desenvolvimento.</p>
+        <textarea id="chamado-mensagem" rows="5" placeholder="Ex: o botão de salvar não responde ao clicar..."></textarea>
+        <div class="painel-chamado-acoes">
+            <button type="button" class="btn-enviar-chamado">Enviar</button>
+        </div>
+        <p id="chamado-feedback" class="chamado-feedback" role="status"></p>
+    </div>
+</dialog>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var botaoChamado = document.querySelector('.btn-chamado');
+    var painelChamado = document.getElementById('painel-chamado');
+    var fecharChamado = document.querySelector('.btn-fechar-chamado');
+    var botaoEnviar = document.querySelector('.btn-enviar-chamado');
+    var campoMensagem = document.getElementById('chamado-mensagem');
+    var feedback = document.getElementById('chamado-feedback');
+    if (!botaoChamado || !painelChamado) return;
+
+    botaoChamado.addEventListener('click', function () { painelChamado.showModal(); });
+    fecharChamado.addEventListener('click', function () { painelChamado.close(); });
+    painelChamado.addEventListener('click', function (event) {
+        if (event.target === painelChamado) painelChamado.close();
+    });
+    painelChamado.addEventListener('close', function () {
+        campoMensagem.value = '';
+        feedback.textContent = '';
+        botaoEnviar.disabled = false;
+    });
+
+    botaoEnviar.addEventListener('click', function () {
+        var mensagem = campoMensagem.value.trim();
+        if (!mensagem) {
+            feedback.textContent = 'Escreva algo antes de enviar.';
+            return;
+        }
+        botaoEnviar.disabled = true;
+        feedback.textContent = 'Enviando...';
+
+        fetch("{% url 'abrir_chamado' %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            body: new URLSearchParams({ mensagem: mensagem, tela: window.location.pathname }),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.ok) {
+                feedback.textContent = 'Chamado enviado. Obrigado!';
+                setTimeout(function () { painelChamado.close(); }, 1200);
+            } else {
+                feedback.textContent = data.erro || 'Erro ao enviar. Tente novamente.';
+                botaoEnviar.disabled = false;
+            }
+        })
+        .catch(function () {
+            feedback.textContent = 'Erro de conexão. Tente novamente.';
+            botaoEnviar.disabled = false;
+        });
+    });
+});
+</script>
 </body>
 </html>

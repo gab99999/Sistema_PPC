@@ -118,6 +118,7 @@ urlpatterns = [
     path("ppc/<int:ppc_id>/historico/", views.historico_ppc, name="historico_ppc"),
     path("ppc/<int:ppc_id>/historico/<int:history_id>/reverter/", views.reverter_ppc, name="reverter_ppc"),
     path("ppc/<int:ppc_id>/duplicar/", views.duplicar_ppc, name="duplicar_ppc"),
+    path("chamados/abrir/", views.abrir_chamado, name="abrir_chamado"),
 ]
 
 if settings.DEBUG:

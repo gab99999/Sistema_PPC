@@ -979,3 +979,101 @@ h3 {
     outline: none;
     border-color: var(--cor-primaria);
 }
+
+/* CHAMADO*/
+
+
+.btn-chamado {
+    bottom: 88px;
+    background: #b91c1c;
+}
+
+.btn-chamado:hover {
+    background: #991b1b;
+}
+
+/* Painel (dialog) */
+.painel-chamado {
+    border: none;
+    border-radius: 12px;
+    padding: 0;
+    width: min(420px, 90vw);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+.painel-chamado::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.painel-chamado-cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.painel-chamado-cabecalho h2 {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.btn-fechar-chamado {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.painel-chamado-conteudo {
+    padding: 16px 20px 20px;
+}
+
+.painel-chamado-instrucao {
+    font-size: 0.9rem;
+    color: #4b5563;
+    margin: 0 0 12px;
+}
+
+#chamado-mensagem {
+    width: 100%;
+    resize: vertical;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.painel-chamado-acoes {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+
+.btn-enviar-chamado {
+    background: #b91c1c;
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-enviar-chamado:hover {
+    background: #991b1b;
+}
+
+.btn-enviar-chamado:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.chamado-feedback {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: #374151;
+    min-height: 1.2em;
+}

@@ -224,9 +224,23 @@ class ComponenteCurricular(models.Model):
 
     def clean(self):
         super().clean()
-        if self.tipo == 'atividade' and self.carga_horaria_professor is not None and self.carga_horaria_estudante is not None:
-            if self.carga_horaria_professor > self.carga_horaria_estudante:
-                raise ValidationError({'carga_horaria_professor': "A carga horária do professor não pode ser maior que a do estudante."})
+
+        if (
+            self.tipo == 'atividade'
+            and self.carga_horaria_professor is not None
+            and self.carga_horaria_estudante is not None
+            and self.carga_horaria_professor > self.carga_horaria_estudante
+        ):
+            raise ValidationError({
+                'carga_horaria_professor': "A carga horária do professor não pode ser maior que a do estudante."
+            })
+
+        total = self.carga_horaria_computada_total
+        if total % 8 != 0:
+            campo = 'carga_horaria_estudante' if self.tipo == 'atividade' else 'carga_horaria_teorica'
+            raise ValidationError({
+                campo: f"A carga horária total do componente ({total}h) deve ser múltipla de 8."
+            })
 
     @property
     def carga_horaria_computada_total(self):
@@ -505,4 +519,17 @@ class BibliografiaReferencia(models.Model):
     def __str__(self):
         return self.titulo
 
+class Chamado(models.Model):
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
+        related_name="chamados_abertos",
+    )
+    tela = models.CharField(max_length=255)  # request.path no momento do envio
+    mensagem = models.TextField()
+    criado_em = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ["-criado_em"]
+
+    def __str__(self):
+        return f"Chamado de {self.usuario} em {self.tela} ({self.criado_em:%d/%m/%Y %H:%M})"

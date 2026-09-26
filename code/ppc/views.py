@@ -11,7 +11,7 @@ from django.utils.text import slugify
 from weasyprint import HTML
 from django.http import HttpResponseForbidden, Http404
 from ppc.testes.analisar_pdf_uma_chamada import analisar_pdf_adaptativo, ErroOpenRouter
-from .models import Curso, CineBrasilCurso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE, ComponenteNaMatriz
+from .models import Curso, CineBrasilCurso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE, ComponenteNaMatriz, Chamado
 from .forms import ( ObjetivosForm, EditarPermissoesForm, CursoForm,
                     InformacoesGeraisForm, ApresentacaoForm, ExposicaoMotivosForm, PrincipiosForm,
                     ExpectativasForm, TccForm, EstagioForm, AtividadesComplementaresForm,
@@ -37,6 +37,35 @@ from .models import MatrizReferenciaCurricular, ComponenteNaMatrizReferencia
 from django.db.models import Count
 from .models import ImportacaoPendencia
 from .services.resolucao_pendencias import resolver_pendencia_ambigua
+from django.core.mail import send_mail
+from config import settings
+
+@login_required
+@require_POST
+def abrir_chamado(request):
+    mensagem = request.POST.get("mensagem", "").strip()
+    tela = request.POST.get("tela", "")[:255]
+
+    if not mensagem:
+        return JsonResponse({"ok": False, "erro": "Mensagem vazia."}, status=400)
+
+    chamado = Chamado.objects.create(
+        usuario=request.user, tela=tela, mensagem=mensagem
+    )
+
+    try:
+        send_mail(
+            subject=f"[PPC-UFCAT] Novo chamado de {request.user}",
+            message=f"Usuário: {request.user}\nTela: {tela}\n\nMensagem:\n{mensagem}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.EMAIL_CHAMADOS_DESTINO],
+            fail_silently=False,
+        )
+    except Exception as e:
+        # o chamado já está salvo; o e-mail é best-effort, não deve quebrar a resposta
+        print(f"[chamado] falha ao enviar e-mail: {e}")
+
+    return JsonResponse({"ok": True, "id": chamado.id})
 
 CAMPOS_SECOES_PPC = {
     "Apresentação": ["apresentacao_texto"],
