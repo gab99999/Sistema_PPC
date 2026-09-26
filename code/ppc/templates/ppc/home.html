@@ -23,6 +23,8 @@
         {% if user.is_staff %}
             <a href="{% url 'criar_curso' %}" class="btn btn-secundario">+ Novo Curso</a>
             <a href="{% url 'gestao_usuarios' %}" class="btn btn-secundario">Gerenciar Usuários</a>
+            <a href="{% url 'chamados_lista' %}" class="btn-ver-chamados">Ver chamados</a>
+
         {% endif %}
     </div>
     <br>

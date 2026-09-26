@@ -39,6 +39,27 @@ from .models import ImportacaoPendencia
 from .services.resolucao_pendencias import resolver_pendencia_ambigua
 from django.core.mail import send_mail
 from config import settings
+from django.utils import timezone
+
+@staff_member_required
+def chamados_lista(request):
+    chamados = Chamado.objects.select_related("usuario").all()
+    return render(request, "ppc/chamados_lista.html", {"chamados": chamados})
+
+
+@staff_member_required
+@require_POST
+def chamado_alternar_status(request, chamado_id):
+    chamado = get_object_or_404(Chamado, id=chamado_id)
+    if chamado.status == "pendente":
+        chamado.status = "resolvido"
+        chamado.resolvido_em = timezone.now()
+    else:
+        chamado.status = "pendente"
+        chamado.resolvido_em = None
+    chamado.save(update_fields=["status", "resolvido_em"])
+    return redirect("chamados_lista")
+
 
 @login_required
 @require_POST

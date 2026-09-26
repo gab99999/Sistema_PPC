@@ -520,6 +520,11 @@ class BibliografiaReferencia(models.Model):
         return self.titulo
 
 class Chamado(models.Model):
+    STATUS_CHOICES = [
+        ("pendente", "Pendente"),
+        ("resolvido", "Resolvido"),
+    ]
+
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
         related_name="chamados_abertos",
@@ -527,6 +532,8 @@ class Chamado(models.Model):
     tela = models.CharField(max_length=255)  # request.path no momento do envio
     mensagem = models.TextField()
     criado_em = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pendente")
+    resolvido_em = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-criado_em"]
