@@ -15,7 +15,6 @@
             <a href="{% url 'gestao_usuarios' %}">Usuários</a>
             <a href="{% url 'fila_aprovacao_componentes' %}">Aprovar Componentes</a>
             <a href="{% url 'painel_institucional' %}">Painel Institucional</a>
-            <a href="{% url 'lista_pendencias_por_matriz' %}">Pendências de Matrizes</a>
         {% endif %}
         {% if user.is_authenticated %}
             <a href="{% url 'meus_componentes_pendentes' %}">Meus Componentes Pendentes</a>
