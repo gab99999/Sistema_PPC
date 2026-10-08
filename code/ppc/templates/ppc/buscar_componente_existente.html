@@ -26,6 +26,7 @@
                         {% if componente.carga_horaria_acex %} · {{ componente.carga_horaria_acex }}h ACEx{% endif %}
                         <br>
                         {% if componente.unidade_academica_componente %}{{ componente.unidade_academica_componente }}{% endif %}
+                        <small>({{ componente.ementa }})</small>
                     </p>
                     <a href="{% url 'adicionar_componente_existente' ppc.id componente.id %}" class="btn btn-primario">Usar este componente</a>
                </li>

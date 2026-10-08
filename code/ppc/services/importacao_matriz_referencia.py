@@ -58,7 +58,7 @@ def importar_linhas_normalizadas(linhas, dry_run=True):
                 defaults={
                     "nome": linha["nome"],
                     "tipo": "disciplina",
-                    "nucleo": linha["nucleo"],
+                    
                     "carga_horaria_teorica": linha["carga_horaria_teorica"],
                     "carga_horaria_pratica": linha["carga_horaria_pratica"],
                     "unidade_academica_componente": "",
@@ -76,6 +76,7 @@ def importar_linhas_normalizadas(linhas, dry_run=True):
                     matriz=matriz,
                     componente=componente,
                     defaults={
+                        "nucleo": linha["nucleo"],
                         "periodo": linha["periodo"],
                         "natureza": linha["natureza"],
                     },

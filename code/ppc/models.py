@@ -239,7 +239,7 @@ class ComponenteCurricular(models.Model):
     def carga_horaria_computada_total(self):
         if self.tipo == 'atividade':
             return self.carga_horaria_estudante or 0
-        return self.carga_horaria_teorica + self.carga_horaria_pratica + self.carga_horaria_pcc
+        return self.carga_horaria_teorica + self.carga_horaria_pratica
 
     history = HistoricalRecords()
 
@@ -390,7 +390,7 @@ class MatrizReferenciaCurricular(models.Model):
     nome = models.CharField(max_length=200, blank=True)
 
     numero_periodos = models.PositiveSmallIntegerField(
-        default=12,
+        default=8,
         help_text="Quantidade de períodos exibidos na tela de edição desta matriz.",
     )
 

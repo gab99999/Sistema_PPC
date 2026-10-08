@@ -46,16 +46,27 @@ def _normalizar_nucleo(
     valor_nucleo: Any,
 ) -> tuple[str | None, str | None, str, str | None]:
     """
-    Normaliza o campo 'nucleo'.
+    Normaliza o núcleo do item da matriz.
+
+    Importante:
+    'nucleo' e 'natureza' são atributos do vínculo do componente
+    com a matriz, não do catálogo ComponenteCurricular.
 
     Retorna:
         (nucleo, natureza, confianca, motivo_ambiguidade)
 
     Regras:
-    - NÚCLEO ESPECÍFICO OBRIGATÓRIO -> NE / obrigatoria
-    - NÚCLEO ESPECÍFICO OPTATIVO   -> NE / optativa
-    - NÚCLEO COMUM                 -> NC / None / ambigua
-    - padrão desconhecido          -> None / None / ambigua
+    - NÚCLEO COMUM
+        -> NC / obrigatoria / determinada
+
+    - NÚCLEO ESPECÍFICO OBRIGATÓRIO
+        -> NE / obrigatoria / determinada
+
+    - NÚCLEO ESPECÍFICO OPTATIVO
+        -> NE / optativa / determinada
+
+    - Qualquer valor não reconhecido
+        -> None / None / ambigua
     """
     if pd.isna(valor_nucleo):
         return (
@@ -67,15 +78,23 @@ def _normalizar_nucleo(
 
     nucleo_original = str(valor_nucleo).strip()
 
-    # Normalização apenas para facilitar a comparação.
-    # Não usamos essa versão para armazenar o valor original.
     nucleo_normalizado = re.sub(
         r"\s+",
         " ",
         nucleo_original.upper(),
     ).strip()
 
-    # 1. Núcleo específico obrigatório
+    # Núcleo Comum:
+    # pela nova regra, NC é sempre obrigatório.
+    if nucleo_normalizado == "NÚCLEO COMUM":
+        return (
+            "NC",
+            "obrigatoria",
+            "determinada",
+            None,
+        )
+
+    # Núcleo Específico Obrigatório
     if nucleo_normalizado == "NÚCLEO ESPECÍFICO OBRIGATÓRIO":
         return (
             "NE",
@@ -84,7 +103,7 @@ def _normalizar_nucleo(
             None,
         )
 
-    # 2. Núcleo específico optativo
+    # Núcleo Específico Optativo
     if nucleo_normalizado == "NÚCLEO ESPECÍFICO OPTATIVO":
         return (
             "NE",
@@ -93,22 +112,29 @@ def _normalizar_nucleo(
             None,
         )
 
-    # 3. Núcleo comum sem natureza explícita
-    if nucleo_normalizado == "NÚCLEO COMUM":
-        return (
-            "NC",
-            None,
-            "ambigua",
-            "Núcleo comum não define natureza obrigatória/optativa por si só",
-        )
-
-    # 4. Não tentar adivinhar outros valores.
+    # Não tentar inferir outros valores.
     return (
         None,
         None,
         "ambigua",
         f"Valor de núcleo não reconhecido: {nucleo_original!r}",
     )
+
+def _valor_int_opcional(
+    valor: Any,
+    nome_campo: str,
+    linha_origem: int,
+) -> int | None:
+    if pd.isna(valor):
+        return None
+
+    try:
+        return int(valor)
+    except (TypeError, ValueError):
+        raise ValueError(
+            f"Campo '{nome_campo}' inválido na linha "
+            f"{linha_origem}: {valor!r}"
+        )
 
 
 def normalizar_planilha_matriz(caminho_arquivo: str) -> list[dict]:
@@ -153,6 +179,12 @@ def normalizar_planilha_matriz(caminho_arquivo: str) -> list[dict]:
         # Excel: linha 1 = cabeçalho.
         # DataFrame: índice 0 = primeira linha de dados.
         linha_origem = indice + 2
+
+        carga_horaria_acex = _valor_int_opcional(
+            linha["cargahorariaacex"],
+            "cargahorariaacex",
+            linha_origem,
+        )
 
         identificador_origem = _valor_str(
             linha["matriz_curricular"]
@@ -212,6 +244,7 @@ def normalizar_planilha_matriz(caminho_arquivo: str) -> list[dict]:
                 # Campos adicionais confirmados na planilha:
                 "carga_horaria_teorica": carga_horaria_teorica,
                 "carga_horaria_pratica": carga_horaria_pratica,
+                "carga_horaria_acex": carga_horaria_acex,
                 "ementa": ementa,
             }
         )

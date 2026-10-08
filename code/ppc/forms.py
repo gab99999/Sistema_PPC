@@ -56,7 +56,7 @@ class ComponenteCurricularForm(forms.ModelForm):
         model = ComponenteCurricular
         fields = [
             'codigo', 'nome', 'tipo',
-            'carga_horaria_teorica', 'carga_horaria_pratica', 'carga_horaria_pcc',
+            'carga_horaria_teorica', 'carga_horaria_pratica', 
             'carga_horaria_estudante', 'carga_horaria_professor', 'carga_horaria_acex',
             'unidade_academica_componente', 'ementa',
         ]
