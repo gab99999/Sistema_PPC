@@ -556,3 +556,42 @@ class Chamado(models.Model):
 
     def __str__(self):
         return f"Chamado de {self.usuario} em {self.tela} ({self.criado_em:%d/%m/%Y %H:%M})"
+
+class GrupoEquivalenciaComponentes(models.Model):
+    """Um conjunto de componentes (de matrizes diferentes) considerados equivalentes entre si."""
+    matriz_final = models.ForeignKey(
+        MatrizReferenciaCurricular, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="grupos_como_matriz_final",
+        help_text="Matriz a ser considerada vigente quando a resolução for publicada",
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+
+class ItemEquivalencia(models.Model):
+    grupo = models.ForeignKey(GrupoEquivalenciaComponentes, on_delete=models.CASCADE, related_name="itens")
+    item_matriz = models.ForeignKey(
+        ComponenteNaMatrizReferencia, on_delete=models.CASCADE, related_name="equivalencias"
+    )
+
+    class Meta:
+        unique_together = [("grupo", "item_matriz")]
+
+    def clean(self):
+        super().clean()
+        tem_acex = bool(self.item_matriz.componente.carga_horaria_acex)
+        outros = self.grupo.itens.exclude(pk=self.pk).select_related("item_matriz__componente")
+        for outro in outros:
+            if bool(outro.item_matriz.componente.carga_horaria_acex) != tem_acex:
+                raise ValidationError(
+                    "Componentes com carga horária de ACEx só podem ser equivalentes a "
+                    "outros componentes que também tenham ACEx."
+                )
+
+class ResumoCargaHorariaPPC(models.Model):
+    ppc = models.OneToOneField(PPC, on_delete=models.CASCADE, related_name="resumo_carga_horaria")
+    nucleo_livre_manual = models.PositiveIntegerField(default=0)
+    acex_nucleo_livre_manual = models.PositiveIntegerField(default=0)
+    acex_extensao_manual = models.PositiveIntegerField(default=0)
+    atividades_complementares_manual = models.PositiveIntegerField(default=0)
+    history = HistoricalRecords()

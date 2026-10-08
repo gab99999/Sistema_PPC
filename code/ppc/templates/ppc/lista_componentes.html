@@ -23,18 +23,39 @@
             {% endfor %}
         </table><br>
     {% endif %}
+    <h3>Valores digitados manualmente</h3>
+    <form method="post" class="form-secao">
+        {% csrf_token %}
+       {{ form_resumo_manual.as_p }}
+        <button type="submit" name="salvar_resumo_manual" class="btn btn-primario">Salvar valores manuais</button>
+    </form> <br> <br>
 
-    <div class="alerta {% if diferenca_carga_horaria != 0 %}alerta-erro{% else %}alerta-sucesso{% endif %}">
-        Carga horária total do PPC: {{ ppc.carga_horaria_total }}h —
-        Soma dos componentes: {{ soma_componentes }}h —
-        {% if diferenca_carga_horaria > 0 %}
-            Faltam {{ diferenca_carga_horaria }}h de componentes pra bater com o total declarado.
-        {% elif diferenca_carga_horaria < 0 %}
-            A soma dos componentes excede o total declarado em {{ diferenca_carga_horaria|cut:"-" }}h.
-        {% else %}
-            Carga horária bate certinho.
-        {% endif %}
-    </div>
+    <div class="alerta {% if resumo.total < ppc.curso.carga_horaria_minima or resumo.total > ppc.curso.carga_horaria_maxima %}alerta-erro{% else %}alerta-sucesso{% endif %}">
+    Carga horária total calculada: {{ resumo.total }}h —
+    Faixa exigida pelo curso: {{ ppc.curso.carga_horaria_minima }}h a {{ ppc.curso.carga_horaria_maxima }}h —
+    {% if resumo.total < ppc.curso.carga_horaria_minima %}
+        Abaixo do mínimo exigido ({{ ppc.curso.carga_horaria_minima|add:"-"|add:resumo.total|cut:"-" }}h faltando).
+    {% elif resumo.total > ppc.curso.carga_horaria_maxima %}
+        Acima do máximo permitido.
+    {% else %}
+        Dentro da faixa exigida.
+    {% endif %}
+</div>
+
+<h3>Quadro resumo de carga horária</h3>
+<table class="tabela-dados tabela-resumo-carga-horaria">
+    <tr><th>Composição curricular</th><th>Carga Horária (CH)</th><th>Percentual</th></tr>
+    <tr><td>CH de Núcleo Comum (NC)</td><td>{{ resumo.nc.ch }}h</td><td>{{ resumo.nc.pct }}%</td></tr>
+    <tr><td>CH de Núcleo Específico Obrigatório</td><td>{{ resumo.ne_obrig.ch }}h</td><td>{{ resumo.ne_obrig.pct }}%</td></tr>
+    <tr><td>CH de Núcleo Específico Optativo</td><td>{{ resumo.ne_optat.ch }}h</td><td>{{ resumo.ne_optat.pct }}%</td></tr>
+    <tr><td>CH de Núcleo Livre (NL)</td><td>{{ resumo.nl.ch }}h</td><td>{{ resumo.nl.pct }}%</td></tr>
+    <tr><td>CH Mínima de Seminário de Integração</td><td>{{ resumo.seminario.ch }}h</td><td>{{ resumo.seminario.pct }}%</td></tr>
+    <tr><td><strong>CH de ACEx em componentes obrigatórios</strong></td><td>{{ resumo.acex_obrig.ch }}h</td><td>{{ resumo.acex_obrig.pct }}%</td></tr>
+    <tr><td>CH de ACEx em componentes optativos</td><td>{{ resumo.acex_optat.ch }}h</td><td>{{ resumo.acex_optat.pct }}%</td></tr>
+    <tr><td><strong>CH de ACEx em componentes de núcleo livre</strong></td><td>{{ resumo.acex_nl.ch }}h</td><td>{{ resumo.acex_nl.pct }}%</td></tr>
+    <tr><td><strong>CH de ACEx em ação de extensão</strong></td><td>{{ resumo.acex_extensao.ch }}h</td><td>{{ resumo.acex_extensao.pct }}%</td></tr>
+    <tr><td><strong>CH Mínima de Atividades Complementares (AC)</strong></td><td>{{ resumo.ac.ch }}h</td><td>{{ resumo.ac.pct }}%</td></tr>
+</table>
 
     <div class="btn-group">
         <a href="{% url 'criar_componente' ppc.id %}" class="btn btn-primario">+ Novo Componente</a>
@@ -50,7 +71,7 @@
         <tr>
             <td>{{ componente_na_matriz.periodo }}</td>
             <td>{{ componente_na_matriz.componente.nome }}{% if componente_na_matriz.componente.codigo %} <small>({{ componente_na_matriz.componente.codigo }})</small>{% endif %}</td>
-            <td>{{ componente_na_matriz.componente.get_nucleo_display }}</td>
+            <td>{{ componente_na_matriz.get_nucleo_display }}</td>
             <td>{{ componente_na_matriz.get_natureza_display }}</td>
             <td>{{ componente_na_matriz.componente.carga_horaria_computada_total }}h</td>
             <td><a href="{% url 'detalhe_componente_na_matriz' componente_na_matriz.id %}" class="btn btn-secundario">Abrir</a></td>

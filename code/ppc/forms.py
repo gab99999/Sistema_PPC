@@ -1,10 +1,13 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoComponente, ComponenteCurricular, MembroNDE, ComponenteNaMatriz, CineBrasilCurso
+from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoComponente, ComponenteCurricular, MembroNDE, ComponenteNaMatriz, CineBrasilCurso, ResumoCargaHorariaPPC
 from django.contrib.auth.models import User, Group
 from django.forms import modelformset_factory
 
-
+class ResumoCargaHorariaPPCForm(forms.ModelForm):
+    class Meta:
+        model = ResumoCargaHorariaPPC
+        fields = ["nucleo_livre_manual", "acex_nucleo_livre_manual", "acex_extensao_manual", "atividades_complementares_manual"]
 
 
 LimitesCargaHorariaFormSet = modelformset_factory(
@@ -205,7 +208,7 @@ class InformacoesGeraisForm(forms.ModelForm):
         model = PPC
         fields = [
             'modalidade', 'grau_academico', 'turno_funcionamento',
-            'carga_horaria_total', 'numero_vagas_anuais',
+            'numero_vagas_anuais',  # carga_horaria_total removido daqui
             'duracao_minima_semestres', 'duracao_media_semestres', 'duracao_maxima_semestres',
             'diretor', 'vice_diretor', 'coordenador_curso', 'vice_coordenador_curso', 'tipo_ppc', 'status', 'numero_resolucao',
         ]
@@ -215,7 +218,6 @@ class InformacoesGeraisForm(forms.ModelForm):
         self.curso = curso or getattr(self.instance, 'curso', None)
         self.usuario = usuario
         if usuario is not None and not usuario.is_staff:
-            # Usuário comum não pode escolher 'aprovado' — remove da lista de opções
             self.fields['status'].choices = [
                 (valor, rotulo) for valor, rotulo in PPC.STATUS_CHOICES if valor != 'aprovado'
             ]
@@ -225,21 +227,7 @@ class InformacoesGeraisForm(forms.ModelForm):
         if status == 'aprovado' and self.usuario is not None and not self.usuario.is_staff:
             raise forms.ValidationError("Somente um administrador pode marcar um PPC como aprovado.")
         return status
-
-    def clean_carga_horaria_total(self):
-        total = self.cleaned_data.get('carga_horaria_total')
-        if self.curso is not None and total is not None:
-            minima = self.curso.carga_horaria_minima
-            maxima = self.curso.carga_horaria_maxima
-            if minima is not None and total < minima:
-                raise forms.ValidationError(
-                    f"A carga horária total não pode ser menor que o mínimo do curso ({minima}h)."
-                )
-            if maxima is not None and total > maxima:
-                raise forms.ValidationError(
-                    f"A carga horária total não pode ser maior que o máximo do curso ({maxima}h)."
-                )
-        return total
+    # clean_carga_horaria_total removido inteiro — não existe mais campo pra validar aqui
 
 
 class ApresentacaoForm(forms.ModelForm):

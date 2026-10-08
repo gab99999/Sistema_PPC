@@ -11,7 +11,7 @@ from django.utils.text import slugify
 from weasyprint import HTML
 from django.http import HttpResponseForbidden, Http404
 from ppc.testes.analisar_pdf_uma_chamada import analisar_pdf_adaptativo, ErroOpenRouter
-from .models import Curso, CineBrasilCurso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE, ComponenteNaMatriz, Chamado
+from .models import Curso, CineBrasilCurso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE, ComponenteNaMatriz, Chamado, ResumoCargaHorariaPPC
 from .forms import ( ObjetivosForm, EditarPermissoesForm, CursoForm,
                     InformacoesGeraisForm, ApresentacaoForm, ExposicaoMotivosForm, PrincipiosForm,
                     ExpectativasForm, TccForm, EstagioForm, AtividadesComplementaresForm,
@@ -19,7 +19,7 @@ from .forms import ( ObjetivosForm, EditarPermissoesForm, CursoForm,
                     QualificacaoForm, RequisitosLegaisForm, ApendiceForm, DinamicaEADForm, 
                     EstruturaCurricularForm, ComponenteCurricularForm, BibliografiaForm, RelacaoComponenteForm,
                     ReferenciasForm, MembroNDEForm, ImportarPDFForm, ImportarPPCModeloAntigoForm, LimitesCargaHorariaFormSet,
-                    ComponenteNaMatrizForm,  )
+                    ComponenteNaMatrizForm, ResumoCargaHorariaPPCForm )
 from django.db.models import Q
 from .importacao import extrair_dados_pdf
 from .importacao_modelos_antigos import ErroImportacaoPPC, preparar_importacao_modelo_antigo
@@ -40,6 +40,9 @@ from .services.resolucao_pendencias import resolver_pendencia_ambigua
 from django.core.mail import send_mail
 from config import settings
 from django.utils import timezone
+from .services.carga_horaria import calcular_resumo_carga_horaria, sincronizar_carga_horaria_total
+
+
 
 @login_required
 def detalhe_componente_existente_matriz_referencia(request, matriz_id, componente_id):
@@ -1265,17 +1268,33 @@ def lista_componentes(request, ppc_id):
     else:
         form = EstruturaCurricularForm(instance=ppc)
 
+    resumo_manual, _ = ResumoCargaHorariaPPC.objects.get_or_create(ppc=ppc)
+
+    if request.method == 'POST' and 'salvar_resumo_manual' in request.POST:
+        form_resumo_manual = ResumoCargaHorariaPPCForm(request.POST, instance=resumo_manual)
+        if form_resumo_manual.is_valid():
+            form_resumo_manual.save()
+            return redirect('lista_componentes', ppc_id=ppc.id)
+    else:
+        form_resumo_manual = ResumoCargaHorariaPPCForm(instance=resumo_manual)
+
     componentes_na_matriz = ppc.matriz_componentes.select_related('componente').filter(
         componente__status='aprovado'
     ).order_by('periodo', 'componente__nome')
+
     soma_componentes = sum(cm.componente.carga_horaria_computada_total for cm in componentes_na_matriz)
     diferenca_carga_horaria = ppc.carga_horaria_total - soma_componentes
+
+    resumo = sincronizar_carga_horaria_total(ppc)
+
     return render(request, 'ppc/lista_componentes.html', {
         'ppc': ppc,
         'componentes_na_matriz': componentes_na_matriz,
         'form': form,
+        'form_resumo_manual': form_resumo_manual,
         'soma_componentes': soma_componentes,
         'diferenca_carga_horaria': diferenca_carga_horaria,
+        'resumo': resumo,
     })
 
 
