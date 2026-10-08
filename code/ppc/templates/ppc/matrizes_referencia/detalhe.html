@@ -56,6 +56,7 @@
         <div class="item-codigo">{{ item.componente.codigo }}</div>
         <div class="item-nome">{{ item.componente.nome }}</div>
         <span class="badge-natureza badge-{{ item.natureza }}">{{ item.get_natureza_display }}</span>
+        <span class="badge-nucleo">{{ item.get_nucleo_display }}</span>
         <div class="item-carga-horaria">
           {{ item.componente.carga_horaria_teorica }}h teóricas · {{ item.componente.carga_horaria_pratica }}h práticas
         </div>
@@ -80,6 +81,13 @@
               <option value="obrigatoria" {% if item.natureza == "obrigatoria" %}selected{% endif %}>Obrigatória</option>
               <option value="optativa" {% if item.natureza == "optativa" %}selected{% endif %}>Optativa</option>
             </select>
+          <div class="painel-edicao-campo">
+            <label>Núcleo</label>
+            <select class="campo-nucleo">
+                <option value="NC" {% if item.nucleo == "NC" %}selected{% endif %}>Núcleo Comum</option>
+                <option value="NE" {% if item.nucleo == "NE" %}selected{% endif %}>Núcleo Específico</option>
+            </select>
+          </div>
           </div>
           <div class="painel-edicao-campo">
             <label>Carga horária teórica</label>
@@ -131,6 +139,28 @@ campoBusca.addEventListener("input", () => {
             .then((html) => { resultadoBusca.innerHTML = html; });
     }, 300);
 });
+
+(() => {
+    const camposPadrao = ['carga_horaria_teorica', 'carga_horaria_pratica', 'carga_horaria_pcc'];
+    const camposAtividade = ['carga_horaria_estudante', 'carga_horaria_professor'];
+
+    function linhaDoCampo(nomeCampo) {
+        const campo = document.getElementById(`id_${nomeCampo}`);
+        return campo ? campo.closest('p') : null;
+    }
+
+    const tipoSelect = document.getElementById('id_tipo');
+
+    function alternar() {
+        const ehAtividade = tipoSelect.value === 'atividade';
+        camposPadrao.forEach(nome => { const p = linhaDoCampo(nome); if (p) p.hidden = ehAtividade; });
+        camposAtividade.forEach(nome => { const p = linhaDoCampo(nome); if (p) p.hidden = !ehAtividade; });
+        // carga_horaria_acex não é mais escondida por ninguém — some do toggle, sempre visível
+    }
+
+    tipoSelect.addEventListener('change', alternar);
+    alternar();
+})();
 
 function mostrarStatus(texto, classe) {
     statusEl.textContent = texto;

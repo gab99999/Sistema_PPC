@@ -41,6 +41,15 @@ from django.core.mail import send_mail
 from config import settings
 from django.utils import timezone
 
+@login_required
+def detalhe_componente_existente_matriz_referencia(request, matriz_id, componente_id):
+    matriz = get_object_or_404(MatrizReferenciaCurricular, id=matriz_id)
+    componente = get_object_or_404(ComponenteCurricular, id=componente_id)
+    return render(request, "ppc/matrizes_referencia/detalhe_componente_existente.html", {
+        "matriz": matriz,
+        "componente": componente,
+    })
+
 @staff_member_required
 def chamados_lista(request):
     chamados = Chamado.objects.select_related("usuario").all()

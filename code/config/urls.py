@@ -121,6 +121,9 @@ urlpatterns = [
     path("chamados/abrir/", views.abrir_chamado, name="abrir_chamado"),
     path("chamados_lista/", views.chamados_lista, name="chamados_lista"),
     path("chamados/<int:chamado_id>/alternar/", views.chamado_alternar_status, name="chamado_alternar_status"),
+    path("matrizes-referencia/<int:matriz_id>/componente/<int:componente_id>/detalhe/",
+     views.detalhe_componente_existente_matriz_referencia,
+     name="detalhe_componente_existente_matriz_referencia"),
 ]
 
 if settings.DEBUG:

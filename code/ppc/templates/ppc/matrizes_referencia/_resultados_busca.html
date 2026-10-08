@@ -1,17 +1,15 @@
-{# ppc/templates/ppc/matrizes_referencia/_resultados_busca.html #}
 {% for componente in resultados %}
 <div class="card" style="margin-bottom:0.5rem;">
-  <strong>{{ componente.codigo }}</strong> — {{ componente.nome }}
-  <form method="post" action="{% url 'adicionar_componente_existente_matriz_referencia' matriz.id %}" style="display:flex; gap:0.5rem; margin-top:0.4rem; align-items:center;">
-    {% csrf_token %}
-    <input type="hidden" name="componente_id" value="{{ componente.id }}">
-    <label>Período <input type="number" name="periodo" value="1" min="1" style="width:60px;"></label>
-    <select name="natureza">
-      <option value="obrigatoria">Obrigatória</option>
-      <option value="optativa">Optativa</option>
-    </select>
-    <button type="submit" class="btn btn-secundario">Adicionar</button>
-  </form>
+  <strong>{{ componente.codigo }}</strong> — {{ componente.nome }}<br>
+  {{ componente.get_tipo_display }} ·
+  {% if componente.tipo == 'atividade' %}
+    {{ componente.carga_horaria_estudante }}h estudante
+  {% else %}
+    {{ componente.carga_horaria_computada_total }}h totais
+  {% endif %}
+  {% if componente.carga_horaria_acex %} · {{ componente.carga_horaria_acex }}h ACEx{% endif %}
+  <br>
+  <a href="{% url 'detalhe_componente_existente_matriz_referencia' matriz.id componente.id %}" class="btn btn-secundario">Usar este componente</a>
 </div>
 {% empty %}
 {% if request.GET.q %}<p>Nenhum componente encontrado.</p>{% endif %}

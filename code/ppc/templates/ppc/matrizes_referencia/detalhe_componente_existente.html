@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<a href="{% url 'detalhe_matriz_referencia' matriz.id %}" class="link-voltar">← Voltar para a matriz</a>
+<h2>Adicionar componente à matriz</h2>
+<div class="card">
+    <p class="card-corpo">
+        <strong>{{ componente.nome }}</strong>{% if componente.codigo %} ({{ componente.codigo }}){% endif %}<br>
+        {{ componente.get_tipo_display }}<br>
+        {% if componente.tipo == 'atividade' %}
+            {{ componente.carga_horaria_estudante }}h estudante
+            {% if componente.carga_horaria_professor %} · {{ componente.carga_horaria_professor }}h professor{% endif %}
+        {% else %}
+            {{ componente.carga_horaria_computada_total }}h totais
+            ({{ componente.carga_horaria_teorica }}h teórica · {{ componente.carga_horaria_pratica }}h prática{% if componente.carga_horaria_pcc %} · {{ componente.carga_horaria_pcc }}h PCC{% endif %})
+        {% endif %}
+        {% if componente.carga_horaria_acex %} · {{ componente.carga_horaria_acex }}h ACEx{% endif %}<br>
+        {% if componente.unidade_academica_componente %}{{ componente.unidade_academica_componente }}<br>{% endif %}
+        {{ componente.ementa }}
+    </p>
+</div>
+<form method="post" action="{% url 'adicionar_componente_existente_matriz_referencia' matriz.id %}" class="form-secao">
+    {% csrf_token %}
+    <input type="hidden" name="componente_id" value="{{ componente.id }}">
+    <label>Período <input type="number" name="periodo" value="1" min="1"></label>
+    <label>Núcleo
+        <select name="nucleo">
+            <option value="NC">Núcleo Comum</option>
+            <option value="NE">Núcleo Específico</option>
+        </select>
+    </label>
+    <label>Natureza
+        <select name="natureza">
+            <option value="obrigatoria">Obrigatória</option>
+            <option value="optativa">Optativa</option>
+        </select>
+    </label>
+    <button type="submit" class="btn btn-primario">Adicionar</button>
+</form>
+{% endblock %}

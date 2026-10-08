@@ -186,14 +186,7 @@ class ComponenteCurricular(models.Model):
         ("seminario", "Seminário de Integração"),
         ("atividade", "Atividade Orientada"),
     ]
-    NUCLEO_CHOICES = [
-        ("NC", "Núcleo Comum"),
-        ("NE", "Núcleo Específico"),
-        ("NL", "Núcleo Livre"),
-        ("AC", "Atividade Complementar"),
-        ("ACEx", "Atividade Curricular de Extensão"),
-    ]
-
+    
     STATUS_CHOICES = [
         ("pendente", "Pendente de aprovação"),
         ("aprovado", "Aprovado"),
@@ -211,7 +204,7 @@ class ComponenteCurricular(models.Model):
     codigo = models.CharField(max_length=20, blank=True)
     nome = models.CharField(max_length=200)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
-    nucleo = models.CharField(max_length=4, choices=NUCLEO_CHOICES)
+    
     carga_horaria_teorica = models.PositiveIntegerField()
     carga_horaria_pratica = models.PositiveIntegerField()
     carga_horaria_pcc = models.PositiveIntegerField(default=0, help_text="Horas de Prática como Componente Curricular (só licenciaturas)")
@@ -260,6 +253,18 @@ class ComponenteNaMatriz(models.Model):
         ("obrigatoria", "Obrigatória"),
         ("optativa", "Optativa"),
     ]
+    NUCLEO_CHOICES = [
+        ("NC", "Núcleo Comum"),
+        ("NE", "Núcleo Específico"),
+    ]
+    nucleo = models.CharField(max_length=4, choices=NUCLEO_CHOICES, default='NE')
+
+    def clean(self):
+            super().clean()
+            if self.nucleo == "NC" and self.natureza != "obrigatoria":
+                raise ValidationError({
+                    "natureza": "Componentes do Núcleo Comum são sempre de natureza obrigatória."
+                })
     ppc = models.ForeignKey(PPC, on_delete=models.CASCADE, related_name="matriz_componentes")
     componente = models.ForeignKey(ComponenteCurricular, on_delete=models.PROTECT, related_name="uso_em_ppcs")
     periodo = models.PositiveSmallIntegerField()
@@ -292,7 +297,6 @@ class RelacaoComponente(models.Model):
     TIPO_CHOICES = [
         ("pre_requisito", "Pré-requisito"),
         ("co_requisito", "Co-requisito"),
-        ("equivalente", "Equivalente"),
     ]
     componente_na_matriz = models.ForeignKey(ComponenteNaMatriz, on_delete=models.CASCADE, related_name="relacoes")
     componente_relacionado_na_matriz = models.ForeignKey(ComponenteNaMatriz, on_delete=models.CASCADE, related_name="relacionado_em")
@@ -408,6 +412,18 @@ class ComponenteNaMatrizReferencia(models.Model):
         ("obrigatoria", "Obrigatória"),
         ("optativa", "Optativa"),
     ]
+    NUCLEO_CHOICES = [
+        ("NC", "Núcleo Comum"),
+        ("NE", "Núcleo Específico"),
+    ]
+    nucleo = models.CharField(max_length=4, choices=NUCLEO_CHOICES, default='NE')
+
+    def clean(self):
+        super().clean()
+        if self.nucleo == "NC" and self.natureza != "obrigatoria":
+            raise ValidationError({
+                "natureza": "Componentes do Núcleo Comum são sempre de natureza obrigatória."
+            })
 
     matriz = models.ForeignKey(
         MatrizReferenciaCurricular,

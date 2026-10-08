@@ -15,10 +15,20 @@
                 <li class="card">
                     <p class="card-corpo">
                         <strong>{{ componente.nome }}</strong>{% if componente.codigo %} <small>({{ componente.codigo }})</small>{% endif %}<br>
-                        {{ componente.ementa|truncatechars:150 }}
+                        {{ componente.get_tipo_display }}<br>
+                        {% if componente.tipo == 'atividade' %}
+                            {{ componente.carga_horaria_estudante }}h estudante
+                            {% if componente.carga_horaria_professor %} · {{ componente.carga_horaria_professor }}h professor{% endif %}
+                        {% else %}
+                            {{ componente.carga_horaria_computada_total }}h totais
+                            ({{ componente.carga_horaria_teorica }}h teórica · {{ componente.carga_horaria_pratica }}h prática{% if componente.carga_horaria_pcc %} · {{ componente.carga_horaria_pcc }}h PCC{% endif %})
+                        {% endif %}
+                        {% if componente.carga_horaria_acex %} · {{ componente.carga_horaria_acex }}h ACEx{% endif %}
+                        <br>
+                        {% if componente.unidade_academica_componente %}{{ componente.unidade_academica_componente }}{% endif %}
                     </p>
                     <a href="{% url 'adicionar_componente_existente' ppc.id componente.id %}" class="btn btn-primario">Usar este componente</a>
-                </li>
+               </li>
             {% empty %}
                 <li>Nenhum componente encontrado com esse nome.</li>
             {% endfor %}

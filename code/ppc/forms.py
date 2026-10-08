@@ -16,7 +16,7 @@ LimitesCargaHorariaFormSet = modelformset_factory(
 class ComponenteNaMatrizForm(forms.ModelForm):
     class Meta:
         model = ComponenteNaMatriz
-        fields = ['periodo', 'natureza']
+        fields = ['periodo', 'natureza', 'nucleo']
 
 class ImportarPDFForm(forms.Form):
     arquivo = forms.FileField(label="Arquivo PDF do PPC", widget=forms.ClearableFileInput(attrs={"accept": "application/pdf,.pdf"}))
@@ -55,7 +55,7 @@ class ComponenteCurricularForm(forms.ModelForm):
     class Meta:
         model = ComponenteCurricular
         fields = [
-            'codigo', 'nome', 'tipo', 'nucleo',
+            'codigo', 'nome', 'tipo',
             'carga_horaria_teorica', 'carga_horaria_pratica', 'carga_horaria_pcc',
             'carga_horaria_estudante', 'carga_horaria_professor', 'carga_horaria_acex',
             'unidade_academica_componente', 'ementa',
