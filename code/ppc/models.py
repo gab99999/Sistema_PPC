@@ -254,9 +254,10 @@ class ComponenteCurricular(models.Model):
 
     @property
     def carga_horaria_computada_total(self):
+        acex = self.carga_horaria_acex if self.carga_horaria_acex != None else 0
         if self.tipo == 'atividade':
-            return self.carga_horaria_estudante or 0
-        return self.carga_horaria_teorica + self.carga_horaria_pratica
+            return (self.carga_horaria_estudante + acex) or 0
+        return self.carga_horaria_teorica + self.carga_horaria_pratica + acex
 
     history = HistoricalRecords()
 
