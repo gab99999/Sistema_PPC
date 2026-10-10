@@ -1109,3 +1109,72 @@ h3 {
     padding: 8px 16px; border-radius: 6px;
     text-decoration: none; font-weight: 600;
 }
+
+.tabela-equivalencias {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 0.92rem;
+}
+
+.tabela-equivalencias th,
+.tabela-equivalencias td {
+    border: 1px solid #d1d5db;
+    padding: 10px 14px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.tabela-equivalencias thead th {
+    background: #1f2937;
+    color: #fff;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.tabela-equivalencias thead th:last-of-type {
+    background: #1f6feb;
+}
+
+.tabela-equivalencias tbody tr:nth-child(even) {
+    background: #f9fafb;
+}
+
+.tabela-equivalencias tbody tr:hover {
+    background: #eef2ff;
+}
+
+.tabela-equivalencias td:empty::after,
+.tabela-equivalencias td:has(> :only-child:empty)::after {
+    content: "—";
+    color: #9ca3af;
+}
+
+.tabela-equivalencias .celula-codigo {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.tabela-equivalencias .celula-acao {
+    border: none;
+    background: transparent;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.btn-novo-grupo-equivalencia {
+    display: inline-block;
+    margin-bottom: 1rem;
+    background: #1f6feb;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-novo-grupo-equivalencia:hover {
+    background: #1a5fd0;
+}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<a href="{% url 'lista_equivalencias' %}" class="link-voltar">← Voltar</a>
+<h2>Grupo de equivalência</h2>
+
+{% if messages %}
+    {% for mensagem in messages %}<div class="alerta alerta-erro">{{ mensagem }}</div>{% endfor %}
+{% endif %}
+
+<h3>Componentes no grupo</h3>
+<table class="tabela-dados">
+    <tr><th>Ordem</th><th>Matriz</th><th>Componente (código)</th><th>ACEx</th><th></th></tr>
+    {% for item in itens %}
+    <tr>
+        <td>{{ item.ordem }}</td>
+        <td>{{ item.item_matriz.matriz.nome }}</td>
+        <td>{{ item.item_matriz.componente.codigo }}</td>
+        <td>{% if item.item_matriz.componente.carga_horaria_acex %}{{ item.item_matriz.componente.carga_horaria_acex }}h{% else %}—{% endif %}</td>
+        <td>
+            <form method="post" action="{% url 'remover_item_equivalencia' item.id %}" onsubmit="return confirm('Remover?');">
+                {% csrf_token %}
+                <button type="submit" class="link-botao" style="color:var(--cor-perigo);">Remover</button>
+            </form>
+        </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">Nenhum componente adicionado ainda.</td></tr>
+    {% endfor %}
+</table>
+
+<h3>Adicionar componente ao grupo</h3>
+<form method="post" action="{% url 'adicionar_item_equivalencia' grupo.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="item_matriz_id" value="{{ resultado.id }}">
+    <label>Ordem <input type="number" name="ordem" min="1" value="{{ itens.count|add:1 }}" style="width:60px;"></label>
+    <button type="submit" class="btn btn-primario">Adicionar ao grupo</button>
+</form>
+
+{% if termo %}
+<ul class="lista-cursos">
+    {% for resultado in resultados %}
+    <li class="card">
+        <p class="card-corpo">
+            <strong>{{ resultado.matriz.nome }}</strong> — {{ resultado.componente.codigo }} · {{ resultado.componente.nome }}
+            {% if resultado.componente.carga_horaria_acex %} · {{ resultado.componente.carga_horaria_acex }}h ACEx{% endif %}
+        </p>
+        <form method="post" action="{% url 'adicionar_item_equivalencia' grupo.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="item_matriz_id" value="{{ resultado.id }}">
+            <button type="submit" class="btn btn-primario">Adicionar ao grupo</button>
+        </form>
+    </li>
+    {% empty %}
+    <li>Nenhum componente encontrado.</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

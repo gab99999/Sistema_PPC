@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Quadro de equivalência entre matrizes curriculares</h2>
+
+<form method="post" action="{% url 'criar_grupo_equivalencia' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primario">+ Novo grupo de equivalência</button>
+</form>
+
+<table class="tabela-equivalencias">
+    <tr>
+        {% for n in colunas_cabecalho %}
+            <th>
+                Componentes Curriculares da Matriz – citar código
+                {% if forloop.last %}– considerar essa como a matriz a ser cadastrada com a publicação da Resolução{% endif %}
+            </th>
+        {% endfor %}
+        <th></th>
+    </tr>
+    {% for grupo in grupos %}
+    <tr>
+        {% for item in grupo.itens_ordenados %}
+            <td class="celula-codigo">{{ item.item_matriz.componente.codigo|default:"—" }}</td>
+        {% endfor %}
+        {% for vazio in grupo.celulas_vazias %}
+            <td>—</td>
+        {% endfor %}
+        <td class="celula-acao"><a href="{% url 'detalhe_grupo_equivalencia' grupo.id %}" class="btn btn-secundario">Editar</a></td>
+    </tr>
+    {% empty %}
+    <tr><td>Nenhum grupo de equivalência cadastrado.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

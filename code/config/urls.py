@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 from django.contrib.auth.views import LoginView, LogoutView
 
 # importações do views.py
-from ppc import views
+from ppc import views, exportar
 from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario, alternar_acesso_usuario, detalhe_curso, criar_ppc, editar_objetivos,
                         editar_permissoes, criar_curso, editar_exposicao_motivos, editar_apresentacao, editar_informacoes_gerais, 
                         editar_principios, editar_expectativas, editar_apendices, editar_atividades_complementares, editar_avaliacao_ensino,
@@ -77,7 +77,7 @@ urlpatterns = [
     path('relacoes/<int:relacao_id>/editar/', editar_relacao, name='editar_relacao'),
     path('relacoes/<int:relacao_id>/excluir/', excluir_relacao, name='excluir_relacao'),
     path('ppc/<int:ppc_id>/referencias/', editar_referencias, name='editar_referencias'),
-    path('ppc/<int:ppc_id>/pdf/', gerar_pdf_ppc, name='gerar_pdf_ppc'),
+    path('ppc/<int:ppc_id>/pdf/', exportar.gerar_pdf_ppc, name='gerar_pdf_ppc'),
     path('apendice/<int:apendice_id>/excluir/', excluir_apendice, name='excluir_apendice'),
     path('login/', LoginView.as_view(template_name='ppc/login.html'), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
@@ -124,6 +124,12 @@ urlpatterns = [
     path("matrizes-referencia/<int:matriz_id>/componente/<int:componente_id>/detalhe/",
      views.detalhe_componente_existente_matriz_referencia,
      name="detalhe_componente_existente_matriz_referencia"),
+    path('equivalencias/', views.lista_equivalencias, name='lista_equivalencias'),
+    path('equivalencias/criar/', views.criar_grupo_equivalencia, name='criar_grupo_equivalencia'),
+    path('equivalencias/<int:grupo_id>/', views.detalhe_grupo_equivalencia, name='detalhe_grupo_equivalencia'),
+    path('equivalencias/<int:grupo_id>/adicionar/', views.adicionar_item_equivalencia, name='adicionar_item_equivalencia'),
+    path('equivalencias/item/<int:item_id>/remover/', views.remover_item_equivalencia, name='remover_item_equivalencia'),
+    path('equivalencias/<int:grupo_id>/matriz-final/', views.definir_matriz_final, name='definir_matriz_final'),
 ]
 
 if settings.DEBUG:

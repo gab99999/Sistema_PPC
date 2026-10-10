@@ -62,6 +62,10 @@ class PPC(models.Model):
         ('em_revisao', 'Em Revisão'),
         ('aprovado', 'Aprovado'),
     ]
+    SEMESTRE_CHOICES = [
+        (1, '1'),
+        (2, '2'),
+    ]
 
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='ppcs')
 
@@ -78,12 +82,24 @@ class PPC(models.Model):
     vice_diretor = models.CharField(max_length=200)
     coordenador_curso = models.CharField(max_length=200)
     vice_coordenador_curso = models.CharField(max_length=200)
+    reitor = models.CharField(max_length=200, blank=True)
+    vice_reitor = models.CharField(max_length=200, blank=True)
+    coordenador_administrativo = models.CharField(max_length=200, blank=True)
 
     # -- Datas --
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='rascunho')
     numero_resolucao = models.CharField(max_length=100, blank=True, verbose_name="Número da Resolução de Aprovação")
+    numero_processo_eletronico = models.CharField(max_length=100, blank=True, verbose_name="Número do processo eletrônico")
+    data_aprovacao = models.DateField(null=True, blank=True)
+    data_resolucao = models.DateField(null=True, blank=True)
+    ano_vigencia = models.PositiveIntegerField(null=True, blank=True)
+    semestre_vigencia = models.PositiveSmallIntegerField(choices=SEMESTRE_CHOICES, default=1)
+
+    @property
+    def periodo_vigencia(self):
+        return f"{self.ano_vigencia}/{self.semestre_vigencia}"
 
     # -- Campos condicionais (só para EAD) --
     publico_alvo_ead = CKEditor5Field(blank=True, config_name='default')
@@ -204,6 +220,7 @@ class ComponenteCurricular(models.Model):
     codigo = models.CharField(max_length=20, blank=True)
     nome = models.CharField(max_length=200)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    ccu = models.BooleanField(null=True, blank=True)
     
     carga_horaria_teorica = models.PositiveIntegerField()
     carga_horaria_pratica = models.PositiveIntegerField()
@@ -559,28 +576,35 @@ class Chamado(models.Model):
 
 class GrupoEquivalenciaComponentes(models.Model):
     """Um conjunto de componentes (de matrizes diferentes) considerados equivalentes entre si."""
-    matriz_final = models.ForeignKey(
-        MatrizReferenciaCurricular, null=True, blank=True,
-        on_delete=models.SET_NULL, related_name="grupos_como_matriz_final",
-        help_text="Matriz a ser considerada vigente quando a resolução for publicada",
-    )
+    
     criado_em = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords()
 
 
 class ItemEquivalencia(models.Model):
-    grupo = models.ForeignKey(GrupoEquivalenciaComponentes, on_delete=models.CASCADE, related_name="itens")
+    grupo = models.ForeignKey(GrupoEquivalenciaComponentes, on_delete=models.CASCADE, related_name='itens')
     item_matriz = models.ForeignKey(
-        ComponenteNaMatrizReferencia, on_delete=models.CASCADE, related_name="equivalencias"
+        'ComponenteNaMatrizReferencia', on_delete=models.CASCADE, related_name='equivalencias'
     )
+    ordem = models.PositiveIntegerField(default=1, help_text="Posição da matriz na sequência (a de maior ordem é a que será cadastrada na Resolução)")
 
     class Meta:
-        unique_together = [("grupo", "item_matriz")]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['grupo', 'item_matriz'],
+                name='uniq_item_equivalencia_grupo_item_matriz',
+            ),
+            models.UniqueConstraint(
+                fields=['grupo', 'ordem'],
+                name='uniq_item_equivalencia_grupo_ordem',
+            ),
+        ]
+        ordering = ['ordem']
 
     def clean(self):
         super().clean()
         tem_acex = bool(self.item_matriz.componente.carga_horaria_acex)
-        outros = self.grupo.itens.exclude(pk=self.pk).select_related("item_matriz__componente")
+        outros = self.grupo.itens.exclude(pk=self.pk).select_related('item_matriz__componente')
         for outro in outros:
             if bool(outro.item_matriz.componente.carga_horaria_acex) != tem_acex:
                 raise ValidationError(

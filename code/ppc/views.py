@@ -11,7 +11,7 @@ from django.utils.text import slugify
 from weasyprint import HTML
 from django.http import HttpResponseForbidden, Http404
 from ppc.testes.analisar_pdf_uma_chamada import analisar_pdf_adaptativo, ErroOpenRouter
-from .models import Curso, CineBrasilCurso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE, ComponenteNaMatriz, Chamado, ResumoCargaHorariaPPC
+from .models import Curso, CineBrasilCurso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE, ComponenteNaMatriz, Chamado, ResumoCargaHorariaPPC, GrupoEquivalenciaComponentes, ItemEquivalencia
 from .forms import ( ObjetivosForm, EditarPermissoesForm, CursoForm,
                     InformacoesGeraisForm, ApresentacaoForm, ExposicaoMotivosForm, PrincipiosForm,
                     ExpectativasForm, TccForm, EstagioForm, AtividadesComplementaresForm,
@@ -42,7 +42,89 @@ from config import settings
 from django.utils import timezone
 from .services.carga_horaria import calcular_resumo_carga_horaria, sincronizar_carga_horaria_total
 
+@login_required
+def lista_equivalencias(request):
+    grupos = list(
+        GrupoEquivalenciaComponentes.objects.prefetch_related(
+            'itens__item_matriz__componente', 'itens__item_matriz__matriz'
+        ).order_by('-criado_em')
+    )
 
+    maior_grupo = max((g.itens.count() for g in grupos), default=1)
+    colunas_cabecalho = range(1, max(maior_grupo, 1) + 1)
+
+    for grupo in grupos:
+        grupo.itens_ordenados = list(grupo.itens.all())  # já vem ordenado por 'ordem' via Meta.ordering
+        grupo.celulas_vazias = range(maior_grupo - len(grupo.itens_ordenados))
+
+    return render(request, 'ppc/equivalencias/lista.html', {
+        'grupos': grupos, 'colunas_cabecalho': colunas_cabecalho,
+    })
+
+
+@login_required
+def criar_grupo_equivalencia(request):
+    if request.method == 'POST':
+        grupo = GrupoEquivalenciaComponentes.objects.create()
+        return redirect('detalhe_grupo_equivalencia', grupo.id)
+    return redirect('lista_equivalencias')
+
+
+@login_required
+def detalhe_grupo_equivalencia(request, grupo_id):
+    grupo = get_object_or_404(GrupoEquivalenciaComponentes, id=grupo_id)
+    itens = grupo.itens.select_related('item_matriz__componente', 'item_matriz__matriz')
+
+    termo = request.GET.get('q', '').strip()
+    resultados = []
+    if termo:
+        resultados = ComponenteNaMatrizReferencia.objects.select_related(
+            'componente', 'matriz'
+        ).filter(
+            componente__nome__icontains=termo, componente__status='aprovado'
+        ).exclude(
+            id__in=itens.values_list('item_matriz_id', flat=True)
+        )[:20]
+
+    return render(request, 'ppc/equivalencias/detalhe.html', {
+        'grupo': grupo, 'itens': itens, 'termo': termo, 'resultados': resultados,
+    })
+
+
+@login_required
+@require_POST
+def adicionar_item_equivalencia(request, grupo_id):
+    grupo = get_object_or_404(GrupoEquivalenciaComponentes, id=grupo_id)
+    item_matriz_id = request.POST.get('item_matriz_id')
+    ordem = request.POST.get('ordem')
+    item_matriz = get_object_or_404(ComponenteNaMatrizReferencia, id=item_matriz_id)
+
+    item = ItemEquivalencia(grupo=grupo, item_matriz=item_matriz, ordem=ordem)
+    try:
+        item.full_clean()
+    except ValidationError as erro:
+        messages.error(request, " ".join(erro.messages))
+    else:
+        item.save()
+    return redirect('detalhe_grupo_equivalencia', grupo.id)
+
+@login_required
+@require_POST
+def remover_item_equivalencia(request, item_id):
+    item = get_object_or_404(ItemEquivalencia, id=item_id)
+    grupo_id = item.grupo_id
+    item.delete()
+    return redirect('detalhe_grupo_equivalencia', grupo_id)
+
+
+@login_required
+@require_POST
+def definir_matriz_final(request, grupo_id):
+    grupo = get_object_or_404(GrupoEquivalenciaComponentes, id=grupo_id)
+    matriz_id = request.POST.get('matriz_id')
+    grupo.matriz_final_id = matriz_id or None
+    grupo.save(update_fields=['matriz_final'])
+    return redirect('detalhe_grupo_equivalencia', grupo.id)
 
 @login_required
 def detalhe_componente_existente_matriz_referencia(request, matriz_id, componente_id):

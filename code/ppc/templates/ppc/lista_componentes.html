@@ -40,7 +40,7 @@
     {% else %}
         Dentro da faixa exigida.
     {% endif %}
-</div>
+</div> <br>
 
 <h3>Quadro resumo de carga horária</h3>
 <table class="tabela-dados tabela-resumo-carga-horaria">
@@ -55,7 +55,7 @@
     <tr><td><strong>CH de ACEx em componentes de núcleo livre</strong></td><td>{{ resumo.acex_nl.ch }}h</td><td>{{ resumo.acex_nl.pct }}%</td></tr>
     <tr><td><strong>CH de ACEx em ação de extensão</strong></td><td>{{ resumo.acex_extensao.ch }}h</td><td>{{ resumo.acex_extensao.pct }}%</td></tr>
     <tr><td><strong>CH Mínima de Atividades Complementares (AC)</strong></td><td>{{ resumo.ac.ch }}h</td><td>{{ resumo.ac.pct }}%</td></tr>
-</table>
+</table> <br>
 
     <div class="btn-group">
         <a href="{% url 'criar_componente' ppc.id %}" class="btn btn-primario">+ Novo Componente</a>
@@ -63,7 +63,10 @@
         <a href="{% url 'selecionar_matriz_referencia_para_ppc' ppc.id %}" class="btn btn-secundario">
           Aplicar Matriz de Referência
         </a>
+        <a href="{% url 'lista_equivalencias' %}" class="btn btn-primario">Equivalências entre Matrizes</a>
+        
     </div>
+    <br>
 
     <table class="tabela-dados">
         <tr><th>Período</th><th>Nome</th><th>Núcleo</th><th>Natureza</th><th>CH Total</th><th>Ação</th></tr>
