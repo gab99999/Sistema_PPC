@@ -7,7 +7,12 @@
   {% else %}
     {{ componente.carga_horaria_computada_total }}h totais
   {% endif %}
-  {% if componente.carga_horaria_acex %} · {{ componente.carga_horaria_acex }}h ACEx{% endif %}
+  {% if componente.carga_horaria_acex == None%}
+     0h ACEx
+  {% else %}
+    {{ componente.carga_horaria_acex }}h ACEx
+  {% endif %}<br>
+  {{ componente.ementa }}
   <br>
   <a href="{% url 'detalhe_componente_existente_matriz_referencia' matriz.id componente.id %}" class="btn btn-secundario">Usar este componente</a>
 </div>
