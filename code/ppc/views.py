@@ -13,9 +13,9 @@ from django.http import HttpResponseForbidden, Http404
 from ppc.testes.analisar_pdf_uma_chamada import analisar_pdf_adaptativo, ErroOpenRouter
 from .models import Curso, CineBrasilCurso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE, ComponenteNaMatriz, Chamado, ResumoCargaHorariaPPC, GrupoEquivalenciaComponentes, ItemEquivalencia
 from .forms import ( ObjetivosForm, EditarPermissoesForm, CursoForm,
-                    InformacoesGeraisForm, ApresentacaoForm, ExposicaoMotivosForm, PrincipiosForm,
+                    ApresentacaoForm, ExposicaoMotivosForm, PrincipiosForm,
                     ExpectativasForm, TccForm, EstagioForm, AtividadesComplementaresForm,
-                     PoliticasIntegradaForm, AvaliacaoEnsinoForm, AvalicaoProjetoCursoForm,
+                    PoliticasIntegradaForm, AvaliacaoEnsinoForm, AvalicaoProjetoCursoForm,
                     QualificacaoForm, RequisitosLegaisForm, ApendiceForm, DinamicaEADForm, 
                     EstruturaCurricularForm, ComponenteCurricularForm, BibliografiaForm, RelacaoComponenteForm,
                     ReferenciasForm, MembroNDEForm, ImportarPDFForm, ImportarPPCModeloAntigoForm, LimitesCargaHorariaFormSet,
@@ -299,7 +299,7 @@ def duplicar_ppc(request, ppc_id):
                     armazenamento_gerenciamento_dados=original_ead.armazenamento_gerenciamento_dados,
                 )
 
-        return redirect("editar_informacoes_gerais", ppc_id=novo.id)
+        return redirect("editar_apresentacao", ppc_id=novo.id)
 
     return render(request, "ppc/duplicar_ppc.html", {
         "original": original, "grupos": CAMPOS_SECOES_PPC,
@@ -849,7 +849,7 @@ def importar_ppc_modelo_novo(request, curso_id):
             dados_ppc.setdefault('duracao_maxima_semestres', 0)
             dados_ppc['status'] = 'rascunho'
             ppc = PPC.objects.create(curso=curso, **dados_ppc)
-            return redirect('editar_informacoes_gerais', ppc_id=ppc.id)
+            return redirect('editar_apresentacao', ppc_id=ppc.id)
     else:
         form = ImportarPDFForm()
     return render(request, 'ppc/importar_ppc_modelo_novo.html', {'form': form, 'curso': curso})
@@ -903,7 +903,7 @@ def importar_ppc_modelo_antigo(request, curso_id):
             request.session.pop(chave, None)
             request.session.modified = True
 
-        destino = redirect('editar_informacoes_gerais', ppc_id=ppc.id).url
+        destino = redirect('editar_apresentacao', ppc_id=ppc.id).url
         if _requisicao_ajax(request):
             return JsonResponse({"ok": True, "redirect_url": destino})
         messages.success(request, "PPC importado como rascunho. Revise todos os campos antes de finalizar.")
@@ -1529,18 +1529,6 @@ def editar_principios(request, ppc_id):
         form = PrincipiosForm(instance=ppc, initial=_initial_rascunho(request, ppc, PrincipiosForm))
     return render(request, 'ppc/editar_principios.html', {'form': form, 'ppc': ppc})
 
-@login_required
-def editar_informacoes_gerais(request, ppc_id):
-    ppc = get_object_or_404(PPC, id=ppc_id)
-    if request.method == 'POST':
-        form = InformacoesGeraisForm(request.POST, instance=ppc, curso=ppc.curso, usuario=request.user)
-        if form.is_valid():
-            form.save()
-            _consumir_campos_rascunho(request, ppc, InformacoesGeraisForm)
-            return redirect('editar_informacoes_gerais', ppc_id=ppc.id)
-    else:
-        form = InformacoesGeraisForm(instance=ppc, curso=ppc.curso, usuario=request.user, initial=_initial_rascunho(request, ppc, InformacoesGeraisForm))
-    return render(request, 'ppc/editar_informacoes_gerais.html', {'form': form, 'ppc': ppc})
 
 
 @login_required
@@ -1647,14 +1635,14 @@ def detalhe_curso(request, curso_id):
 def criar_ppc(request, curso_id):
     curso = get_object_or_404(Curso, id=curso_id)
     if request.method == 'POST':
-        form = InformacoesGeraisForm(request.POST, curso=curso, usuario=request.user)
+        form = ApresentacaoForm(request.POST, curso=curso, usuario=request.user)
         if form.is_valid():
             ppc = form.save(commit=False)
             ppc.curso = curso
             ppc.save()
             return redirect('editar_apresentacao', ppc_id=ppc.id)
     else:
-        form = InformacoesGeraisForm(curso=curso, usuario=request.user)
+        form = ApresentacaoForm(curso=curso, usuario=request.user)
     return render(request, 'ppc/criar_ppc.html', {'form': form, 'curso': curso})
 
 

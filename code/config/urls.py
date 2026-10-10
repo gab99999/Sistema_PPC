@@ -23,7 +23,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 # importações do views.py
 from ppc import views, exportar
 from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario, alternar_acesso_usuario, detalhe_curso, criar_ppc, editar_objetivos,
-                        editar_permissoes, criar_curso, editar_exposicao_motivos, editar_apresentacao, editar_informacoes_gerais, 
+                        editar_permissoes, criar_curso, editar_exposicao_motivos, editar_apresentacao,
                         editar_principios, editar_expectativas, editar_apendices, editar_atividades_complementares, editar_avaliacao_ensino,
                         editar_avaliacao_projeto_curso, editar_dinamicas_ead, editar_estagio, editar_politicas_integrada, editar_qualificacao, editar_requisitos_legais,
                         editar_tcc, lista_componentes, criar_componente, editar_componente,
@@ -50,7 +50,6 @@ urlpatterns = [
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     path('gestao_usuarios/<int:user_id>/permissoes/', editar_permissoes, name='editar_permissoes'),
     path('cursos/novo/', criar_curso, name='criar_curso'),
-    path('ppc/<int:ppc_id>/informacoes-gerais/', editar_informacoes_gerais, name='editar_informacoes_gerais'),
     path('ppc/<int:ppc_id>/apresentacao/', editar_apresentacao, name='editar_apresentacao'),
     path('ppc/<int:ppc_id>/exposicao-motivos/', editar_exposicao_motivos, name='editar_exposicao_motivos'),
     path('ppc/<int:ppc_id>/principios/', editar_principios, name='editar_principios'),

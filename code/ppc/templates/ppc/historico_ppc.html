@@ -1,7 +1,7 @@
 {# ppc/templates/ppc/historico_ppc.html #}
 {% extends "ppc_base.html" %}
 {% block content %}
-<a href="{% url 'editar_informacoes_gerais' ppc.id %}" class="link-voltar">← Voltar ao PPC</a>
+<a href="{% url 'editar_apresentacao' ppc.id %}" class="link-voltar">← Voltar ao PPC</a>
 <h1>Histórico — {{ ppc }}</h1>
 <table class="tabela-dados">
   <thead><tr><th>Data</th><th>Usuário</th><th>Tipo</th><th>Status</th><th></th></tr></thead>

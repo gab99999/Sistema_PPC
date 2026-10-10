@@ -35,7 +35,7 @@
             <li class="card">
                 <h3 class="card-titulo">{{ ppc.curso.nome }}</h3>
                 <p class="card-corpo">{{ ppc.get_tipo_ppc_display }} · {{ ppc.get_status_display }} · Atualizado em {{ ppc.atualizado_em|date:"d/m/Y" }}</p>
-                <a href="{% url 'editar_informacoes_gerais' ppc.id %}" class="btn btn-secundario">Abrir</a>
+                <a href="{% url 'editar_apresentacao' ppc.id %}" class="btn btn-secundario">Abrir</a>
             </li>
         {% empty %}
             <li>Nenhum PPC cadastrado ainda.</li>

@@ -203,37 +203,31 @@ class ObjetivosForm(forms.ModelForm):
         model = PPC
         fields = ['objetivo_geral', 'objetivo_especifico']
 
-class InformacoesGeraisForm(forms.ModelForm):
+
+class ApresentacaoForm(forms.ModelForm):
     class Meta:
         model = PPC
-        fields = [
+        fields = ['apresentacao_texto', 'publico_alvo_ead', 'ato_integracao_uab', 'ato_credenciamento_mec', 'polos_ead'] + [
             'modalidade', 'grau_academico', 'turno_funcionamento',
             'numero_vagas_anuais',  # carga_horaria_total removido daqui
             'duracao_minima_semestres', 'duracao_media_semestres', 'duracao_maxima_semestres',
             'diretor', 'vice_diretor', 'coordenador_curso', 'vice_coordenador_curso', 'tipo_ppc', 'status', 'numero_resolucao',
         ]
-
     def __init__(self, *args, curso=None, usuario=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.curso = curso or getattr(self.instance, 'curso', None)
-        self.usuario = usuario
-        if usuario is not None and not usuario.is_staff:
-            self.fields['status'].choices = [
-                (valor, rotulo) for valor, rotulo in PPC.STATUS_CHOICES if valor != 'aprovado'
-            ]
-
+            super().__init__(*args, **kwargs)
+            self.curso = curso or getattr(self.instance, 'curso', None)
+            self.usuario = usuario
+            if usuario is not None and not usuario.is_staff:
+                self.fields['status'].choices = [
+                    (valor, rotulo) for valor, rotulo in PPC.STATUS_CHOICES if valor != 'aprovado'
+                ]
+    
     def clean_status(self):
         status = self.cleaned_data.get('status')
         if status == 'aprovado' and self.usuario is not None and not self.usuario.is_staff:
             raise forms.ValidationError("Somente um administrador pode marcar um PPC como aprovado.")
         return status
-    # clean_carga_horaria_total removido inteiro — não existe mais campo pra validar aqui
-
-
-class ApresentacaoForm(forms.ModelForm):
-    class Meta:
-        model = PPC
-        fields = ['apresentacao_texto', 'publico_alvo_ead', 'ato_integracao_uab', 'ato_credenciamento_mec', 'polos_ead']
+        # clean_carga_horaria_total removido inteiro — não existe mais campo pra validar aqui
 
 
 class ExposicaoMotivosForm(forms.ModelForm):

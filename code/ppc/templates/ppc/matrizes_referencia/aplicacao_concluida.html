@@ -3,6 +3,6 @@
 {% block content %}
 <h1>Aplicação concluída</h1>
 <p>{{ aplicados }} componente(s) atualizados no PPC a partir de "{{ matriz }}".</p>
-<a href="{% url 'editar_informacoes_gerais' ppc.id %}" class="link-voltar">← Voltar ao PPC</a>
+<a href="{% url 'editar_apresentacao' ppc.id %}" class="link-voltar">← Voltar ao PPC</a>
 {% endblock %}
 {% block ajuda %}<p>A aplicação da matriz de referência foi concluída. Abra o PPC e confira os componentes, períodos e naturezas antes de seguir com a revisão.</p>{% endblock %}

@@ -18,7 +18,7 @@
                     <span class="status-{{ ppc.status }}">{{ ppc.get_status_display }}</span>
                     · Código interno: {{ ppc.id }} · Criado em {{ ppc.criado_em|date:"d/m/Y" }} · Atualizado em {{ ppc.atualizado_em|date:"d/m/Y" }}
                 </p>
-                <a href="{% url 'editar_objetivos' ppc.id %}" class="btn btn-secundario">Abrir</a>
+                <a href="{% url 'editar_apresentacao' ppc.id %}" class="btn btn-secundario">Abrir</a>
             </li>
         {% empty %}
             <li>Nenhum PPC cadastrado ainda para este curso.</li>

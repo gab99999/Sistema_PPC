@@ -2,7 +2,9 @@
 {% block title %}Cursos{% endblock %}
 {% block content %}
     <h1>Cursos</h1>
-    <a href="{% url 'criar_curso' %}" class="btn btn-primario">+ Novo Curso</a>
+    {%if user.is_staff %}
+        <a href="{% url 'criar_curso' %}" class="btn btn-primario">+ Novo Curso</a>
+    {% endif %}
 
     <form method="get" class="form-busca">
         <input type="text" name="q" value="{{ query }}" placeholder="Buscar por nome, unidade ou área...">
