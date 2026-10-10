@@ -82,6 +82,18 @@
         {% empty %}
         <tr><td colspan="6">Nenhum componente curricular cadastrado ainda.</td></tr>
         {% endfor %}
+    </table> <br><br>
+    <table class="tabela-dados">
+        <tr><th>Nome</th><th>Ementa</th><th>Ação</th></tr>
+        {% for componente_na_matriz in componentes_na_matriz %}
+        <tr>
+            <td>{{ componente_na_matriz.componente.nome }}{% if componente_na_matriz.componente.codigo %} <small>({{ componente_na_matriz.componente.codigo }})</small>{% endif %}</td>
+            <td>{{ componente_na_matriz.componente.ementa }}</td>
+            <td><a href="{% url 'detalhe_componente_na_matriz' componente_na_matriz.id %}" class="btn btn-secundario">Abrir</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">Nenhum componente curricular cadastrado ainda.</td></tr>
+        {% endfor %}
     </table>
 {% endblock %}
 {% block ajuda %}<p>Gerencie a estrutura curricular deste PPC. O RGCG exige que a matriz informe cargas, pré/co-requisitos, natureza, núcleo, unidade responsável e o resumo de cargas por núcleo (art. 20, II). Confira se a soma dos componentes corresponde à carga total declarada.</p>{% endblock %}
