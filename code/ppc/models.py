@@ -336,6 +336,9 @@ class Apendice(models.Model):
     TIPO_CHOICES = [
         ("corpo_docente","Relação do corpo docente e titulação"),
         ("quadro_oferta","Quadro semestral de oferta de componentes curriculares"),
+        ("estagio","Estágio"),
+        ("tcc","Trabalho de Conclusão de Curso"),
+        ("ac","Atividade Complementar"),
     ]
 
     ppc = models.ForeignKey(PPC,on_delete=models.CASCADE,related_name="apendices")
