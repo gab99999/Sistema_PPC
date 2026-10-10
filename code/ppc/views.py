@@ -419,49 +419,51 @@ def adicionar_componente_existente_matriz_referencia(request, matriz_id):
 
 @login_required
 def criar_componente_matriz_referencia(request, matriz_id):
-    matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    matriz = get_object_or_404(MatrizReferenciaCurricular, id=matriz_id)
 
-    if request.method == "POST":
-        tipo = request.POST.get("tipo", "disciplina")
-        nucleo = request.POST.get("nucleo")
-
-        componente = ComponenteCurricular(
-            codigo=request.POST.get("codigo", "").strip(),
-            nome=request.POST.get("nome", "").strip(),
-            tipo=tipo,
-            nucleo=nucleo,
-            carga_horaria_teorica=int(request.POST.get("carga_horaria_teorica") or 0),
-            carga_horaria_pratica=int(request.POST.get("carga_horaria_pratica") or 0),
-            unidade_academica_componente="",
-            ementa=request.POST.get("ementa", "").strip(),
-            status="aprovado",
-            criado_por=request.user,
-        )
-
-        if tipo == "atividade":
-            componente.carga_horaria_estudante = int(request.POST.get("carga_horaria_estudante") or 0)
-            componente.carga_horaria_professor = int(request.POST.get("carga_horaria_professor") or 0)
-
-        if nucleo == "ACEx":
-            componente.carga_horaria_acex = int(request.POST.get("carga_horaria_acex") or 0)
-
+    if request.method == 'POST':
+        dados = request.POST
         try:
+            componente = ComponenteCurricular(
+                codigo=dados.get('codigo', ''),
+                nome=dados['nome'],
+                tipo=dados['tipo'],
+                carga_horaria_teorica=dados.get('carga_horaria_teorica') or 0,
+                carga_horaria_pratica=dados.get('carga_horaria_pratica') or 0,
+                carga_horaria_estudante=dados.get('carga_horaria_estudante') or None,
+                carga_horaria_professor=dados.get('carga_horaria_professor') or None,
+                carga_horaria_acex=dados.get('carga_horaria_acex') or None,
+                ementa=dados.get('ementa', ''),
+                criado_por=request.user,
+            )
             componente.full_clean()
-        except ValidationError as e:
-            return render(request, "ppc/matrizes_referencia/criar_componente.html", {
-                "matriz": matriz, "erros": e.message_dict, "dados": request.POST,
+            componente.save()
+
+            nucleo = dados['nucleo']
+            natureza = dados.get('natureza') or ('obrigatoria' if nucleo == 'NC' else None)
+            
+            if not natureza:
+                # nucleo é NE mas por algum motivo natureza não veio — erro real, não inferível
+                raise ValidationError({'natureza': 'Informe a natureza do componente.'})
+            
+            item = ComponenteNaMatrizReferencia(
+                matriz=matriz,
+                componente=componente,
+                nucleo=nucleo,
+                natureza=natureza,
+                periodo=dados.get('periodo') or 1,
+            )
+            item.full_clean()
+            item.save()
+
+            return redirect("matriz_referencia_detalhe", matriz.id)
+        except ValidationError as erro:
+            erros = erro.message_dict if hasattr(erro, 'message_dict') else {'__all__': erro.messages}
+            return render(request, 'ppc/matrizes_referencia/criar_componente.html', {
+                'matriz': matriz, 'dados': dados, 'erros': erros,
             })
 
-        componente.save()
-        ComponenteNaMatrizReferencia.objects.create(
-            matriz=matriz, componente=componente,
-            periodo=int(request.POST.get("periodo") or 1),
-            natureza=request.POST.get("natureza", "obrigatoria"),
-        )
-        return redirect("matriz_referencia_detalhe", matriz_id=matriz.id)
-
-    return render(request, "ppc/matrizes_referencia/criar_componente.html", {"matriz": matriz})
-
+    return render(request, 'ppc/matrizes_referencia/criar_componente.html', {'matriz': matriz, 'dados': {}})
 
 @login_required
 @require_POST
