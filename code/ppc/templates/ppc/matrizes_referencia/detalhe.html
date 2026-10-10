@@ -76,18 +76,18 @@
             <input type="text" class="campo-nome" value="{{ item.componente.nome }}">
           </div>
           <div class="painel-edicao-campo">
-            <label>Natureza</label>
-            <select class="campo-natureza">
-              <option value="obrigatoria" {% if item.natureza == "obrigatoria" %}selected{% endif %}>Obrigatória</option>
-              <option value="optativa" {% if item.natureza == "optativa" %}selected{% endif %}>Optativa</option>
-            </select>
-          <div class="painel-edicao-campo">
             <label>Núcleo</label>
             <select class="campo-nucleo">
                 <option value="NC" {% if item.nucleo == "NC" %}selected{% endif %}>Núcleo Comum</option>
                 <option value="NE" {% if item.nucleo == "NE" %}selected{% endif %}>Núcleo Específico</option>
             </select>
           </div>
+          <div class="painel-edicao-campo">
+            <label>Natureza</label>
+            <select class="campo-natureza">
+              <option value="obrigatoria" {% if item.natureza == "obrigatoria" %}selected{% endif %}>Obrigatória</option>
+              <option value="optativa" {% if item.natureza == "optativa" %}selected{% endif %}>Optativa</option>
+            </select>
           </div>
           <div class="painel-edicao-campo">
             <label>Carga horária teórica</label>
@@ -140,27 +140,7 @@ campoBusca.addEventListener("input", () => {
     }, 300);
 });
 
-(() => {
-    const camposPadrao = ['carga_horaria_teorica', 'carga_horaria_pratica', 'carga_horaria_pcc'];
-    const camposAtividade = ['carga_horaria_estudante', 'carga_horaria_professor'];
 
-    function linhaDoCampo(nomeCampo) {
-        const campo = document.getElementById(`id_${nomeCampo}`);
-        return campo ? campo.closest('p') : null;
-    }
-
-    const tipoSelect = document.getElementById('id_tipo');
-
-    function alternar() {
-        const ehAtividade = tipoSelect.value === 'atividade';
-        camposPadrao.forEach(nome => { const p = linhaDoCampo(nome); if (p) p.hidden = ehAtividade; });
-        camposAtividade.forEach(nome => { const p = linhaDoCampo(nome); if (p) p.hidden = !ehAtividade; });
-        // carga_horaria_acex não é mais escondida por ninguém — some do toggle, sempre visível
-    }
-
-    tipoSelect.addEventListener('change', alternar);
-    alternar();
-})();
 
 function mostrarStatus(texto, classe) {
     statusEl.textContent = texto;
@@ -261,6 +241,7 @@ document.querySelectorAll(".botao-salvar-edicao").forEach((botao) => {
         const itemId = botao.dataset.itemId;
         const painel = document.getElementById(`painel-${itemId}`);
         const nome = painel.querySelector(".campo-nome").value.trim();
+        const nucleo = painel.querySelector(".campo-nucleo").value;
         const natureza = painel.querySelector(".campo-natureza").value;
         const cargaTeorica = painel.querySelector(".campo-carga-teorica").value;
         const cargaPratica = painel.querySelector(".campo-carga-pratica").value;
@@ -270,7 +251,7 @@ document.querySelectorAll(".botao-salvar-edicao").forEach((botao) => {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken },
             body: JSON.stringify({
-                nome, natureza,
+                nome, nucleo, natureza,
                 carga_horaria_teorica: cargaTeorica,
                 carga_horaria_pratica: cargaPratica,
             }),
@@ -280,9 +261,10 @@ document.querySelectorAll(".botao-salvar-edicao").forEach((botao) => {
                 if (!ok) throw new Error(dados.erro || "Erro ao salvar.");
                 const card = document.querySelector(`.item-componente[data-item-id="${itemId}"]`);
                 card.querySelector(".item-nome").textContent = dados.nome;
-                const badge = card.querySelector(".badge-natureza");
-                badge.textContent = dados.natureza === "obrigatoria" ? "Obrigatória" : "Optativa";
-                badge.className = `badge-natureza badge-${dados.natureza}`;
+                const badgeNatureza = card.querySelector(".badge-natureza");
+                badgeNatureza.textContent = dados.natureza === "obrigatoria" ? "Obrigatória" : "Optativa";
+                badgeNatureza.className = `badge-natureza badge-${dados.natureza}`;
+                card.querySelector(".badge-nucleo").textContent = dados.nucleo === "NC" ? "Núcleo Comum" : "Núcleo Específico";
                 card.querySelector(".item-carga-horaria").textContent =
                     `${cargaTeorica}h teóricas · ${cargaPratica}h práticas`;
                 painel.classList.remove("aberto");
