@@ -202,6 +202,11 @@ class ComponenteCurricular(models.Model):
         ("seminario", "Seminário de Integração"),
         ("atividade", "Atividade Orientada"),
     ]
+    CCU_CHOICES = [
+        (True, 'Sim'),
+        (None, 'Não sei'),
+        (False, 'Não'),
+    ]
     
     STATUS_CHOICES = [
         ("pendente", "Pendente de aprovação"),
@@ -220,7 +225,7 @@ class ComponenteCurricular(models.Model):
     codigo = models.CharField(max_length=20, blank=True)
     nome = models.CharField(max_length=200)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
-    ccu = models.BooleanField(null=True, blank=True)
+    ccu = models.BooleanField(null=True, blank=True, choices=CCU_CHOICES, verbose_name='Esse componente é uma CCU?')
     
     carga_horaria_teorica = models.PositiveIntegerField()
     carga_horaria_pratica = models.PositiveIntegerField()

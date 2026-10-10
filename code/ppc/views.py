@@ -42,6 +42,12 @@ from config import settings
 from django.utils import timezone
 from .services.carga_horaria import calcular_resumo_carga_horaria, sincronizar_carga_horaria_total
 
+
+@login_required
+def detalhe_componente_pendente(request, componente_id):
+    componente = get_object_or_404(ComponenteCurricular, id=componente_id)
+    return render(request, 'ppc/detalhe_pendente.html', {'componente': componente})
+
 @login_required
 def lista_equivalencias(request):
     grupos = list(

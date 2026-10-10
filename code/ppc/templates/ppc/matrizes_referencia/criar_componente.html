@@ -12,7 +12,7 @@
 <form method="post" class="form-vinculo-matriz">
   {% csrf_token %}
   <label>Código<input type="text" name="codigo" value="{{ dados.codigo|default:'' }}"></label>
-  <label>Nome<input type="text" name="nome" value="{{ dados.nome|default:'' }}" required></label>
+  <label>Nome<input type="text" name="nome" value="{{ dados.nome|default:'' }}" required></label> <br><br>
 
   <label>Tipo
     <select name="tipo" id="campo-tipo">
@@ -21,14 +21,14 @@
       <option value="seminario" {% if dados.tipo == "seminario" %}selected{% endif %}>Seminário de Integração</option>
       <option value="atividade" {% if dados.tipo == "atividade" %}selected{% endif %}>Atividade Orientada</option>
     </select>
-  </label>
+  </label> <br><br>
 
   <label>Núcleo
     <select name="nucleo" id="campo-nucleo">
       <option value="NC" {% if dados.nucleo == "NC" %}selected{% endif %}>Núcleo Comum</option>
       <option value="NE" {% if not dados.nucleo or dados.nucleo == "NE" %}selected{% endif %}>Núcleo Específico</option>
     </select>
-  </label>
+  </label> <br><br> 
 
   <label>Natureza
     <select name="natureza" id="campo-natureza">
@@ -36,8 +36,16 @@
       <option value="optativa" {% if dados.natureza == "optativa" %}selected{% endif %}>Optativa</option>
     </select>
     <span class="ajuda-campo" id="ajuda-natureza-nc" style="display:none;">Núcleo Comum é sempre de natureza obrigatória.</span>
-  </label>
-  <label>Período<input type="number" name="periodo" value="{{ dados.periodo|default:1 }}" min="1"></label>
+  </label><br> 
+  <label>Período<input type="number" name="periodo" value="{{ dados.periodo|default:1 }}" min="1"></label> <br>
+
+  <label>É uma CCU?
+    <select name="ccu" id="campo-ccu">
+      <option value=True {% if dados.ccu == True or not dados.ccu %}selected{% endif %}>Sim</option>
+      <option value=None {% if dados.ccu == None %}selected{% endif %}>Não sei</option>
+      <option value=False {% if dados.ccu == False %}selected{% endif %}>Não</option>
+    </select>
+  </label> <br><br>
 
   <div id="grupo-carga-padrao">
     <label>Carga horária teórica<input type="number" name="carga_horaria_teorica" value="{{ dados.carga_horaria_teorica|default:0 }}" min="0"></label>
@@ -50,12 +58,12 @@
     <span class="ajuda-campo">A carga do professor não pode passar da carga do estudante — só a do estudante entra na carga horária total.</span>
   </div>
 
-  <label>Carga horária ACEx<input type="number" name="carga_horaria_acex" value="{{ dados.carga_horaria_acex|default:0 }}" min="0"></label>
+  <label>Carga horária ACEx<input type="number" name="carga_horaria_acex" value="{{ dados.carga_horaria_acex|default:0 }}" min="0"></label> 
   <span class="ajuda-campo"></span>
 
   <label>Ementa
     <textarea name="ementa" rows="4">{{ dados.ementa|default:'' }}</textarea>
-  </label>
+  </label> <br> <br>
 
   <button type="submit" class="btn btn-primario">Criar e adicionar</button>
 </form>

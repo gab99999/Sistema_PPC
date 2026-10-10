@@ -58,7 +58,7 @@ class ComponenteCurricularForm(forms.ModelForm):
     class Meta:
         model = ComponenteCurricular
         fields = [
-            'codigo', 'nome', 'tipo',
+            'codigo', 'nome', 'tipo', 'ccu',
             'carga_horaria_teorica', 'carga_horaria_pratica', 
             'carga_horaria_estudante', 'carga_horaria_professor', 'carga_horaria_acex',
             'unidade_academica_componente', 'ementa',

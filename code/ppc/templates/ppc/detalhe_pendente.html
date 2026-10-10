@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ componente.nome }} — Detalhes{% endblock %}
+{% block content %}
+<a href="{% url 'fila_aprovacao_componentes' %}" class="link-voltar">← Voltar para aprovação</a>
+<h1>{{ componente.nome }}{% if componente.codigo %} <small>({{ componente.codigo }})</small>{% endif %}</h1>
+
+<div class="card">
+    <p class="card-corpo">
+        <strong>Tipo:</strong> {{ componente.get_tipo_display }}<br>
+        {% if componente.tipo == 'atividade' %}
+            <strong>Carga horária do estudante:</strong> {{ componente.carga_horaria_estudante }}h<br>
+            {% if componente.carga_horaria_professor %}<strong>Carga horária do professor:</strong> {{ componente.carga_horaria_professor }}h<br>{% endif %}
+        {% else %}
+            <strong>Carga horária teórica:</strong> {{ componente.carga_horaria_teorica }}h<br>
+            <strong>Carga horária prática:</strong> {{ componente.carga_horaria_pratica }}h<br>
+            <strong>Carga horária total:</strong> {{ componente.carga_horaria_computada_total }}h<br>
+        {% endif %}
+        {% if componente.carga_horaria_acex %}<strong>Carga horária ACEx:</strong> {{ componente.carga_horaria_acex }}h<br>{% endif %}
+        {% if componente.unidade_academica_componente %}<strong>Unidade acadêmica:</strong> {{ componente.unidade_academica_componente }}<br>{% endif %}
+        <strong>Status:</strong> {{ componente.get_status_display }}<br>
+        {% if componente.criado_por %}<strong>Criado por:</strong> {{ componente.criado_por }}<br>{% endif %}
+    </p>
+    <p class="card-corpo"><strong>Ementa</strong><br>{{ componente.ementa }}</p>
+</div>
+
+<div class="btn-group">
+    <form method="post" action="{% url 'aprovar_componente' componente.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primario">Aprovar</button>
+    </form>
+    <form method="post" action="{% url 'rejeitar_componente' componente.id %}" onsubmit="return confirm('Rejeitar e remover este componente?');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-perigo">Rejeitar</button>
+    </form>
+</div>
+{% endblock %}

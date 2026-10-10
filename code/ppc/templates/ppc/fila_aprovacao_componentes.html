@@ -7,10 +7,19 @@
             <li class="card">
                 <p class="card-corpo">
                     <strong>{{ componente.nome }}</strong>{% if componente.codigo %} ({{ componente.codigo }}){% endif %}<br>
-                    {{ componente.get_tipo_display }} · {{ componente.get_nucleo_display }}<br>
+                    {{ componente.get_tipo_display }}<br>
+                    {% if componente.tipo == 'atividade' %}
+                        {{ componente.carga_horaria_estudante }}h estudante
+                        {% if componente.carga_horaria_professor %} · {{ componente.carga_horaria_professor }}h professor{% endif %}
+                    {% else %}
+                        {{ componente.carga_horaria_computada_total }}h totais
+                    {% endif %}
+                    {% if componente.carga_horaria_acex %} · {{ componente.carga_horaria_acex }}h ACEx{% endif %}
+                    <br>
                     {{ componente.ementa|truncatechars:200 }}
                 </p>
                 <div class="btn-group">
+                    <a href="{% url 'detalhe_componente_pendente' componente.id %}" class="btn btn-secundario">Ver detalhes</a>
                     <form method="post" action="{% url 'aprovar_componente' componente.id %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-primario">Aprovar</button>
@@ -26,4 +35,4 @@
         {% endfor %}
     </ul>
 {% endblock %}
-{% block ajuda %}<p>Revise os componentes pendentes antes de aprovar ou rejeitar. Confira especialmente ementa, cargas horárias, núcleo e classificação para evitar propagar dados incorretos ao catálogo.</p>{% endblock %}
+{% block ajuda %}<p>Revise os componentes pendentes antes de aprovar ou rejeitar. Confira especialmente ementa, cargas horárias e classificação para evitar propagar dados incorretos ao catálogo.</p>{% endblock %}
