@@ -291,7 +291,7 @@ select:focus-visible {
 
 .menu-lateral-ppc a::before {
     counter-increment: secao;
-    content: counter(secao);
+    content: counter(secao, upper-roman);
     display: inline-flex;
     align-items: center;
     justify-content: center;
