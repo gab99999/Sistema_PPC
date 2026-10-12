@@ -15,7 +15,8 @@
                 <li class="card">
                     <p class="card-corpo">
                         <strong>{{ componente.nome }}</strong>{% if componente.codigo %} <small>({{ componente.codigo }})</small>{% endif %}<br>
-                        {{ componente.get_tipo_display }}<br>
+                        {{ componente.get_tipo_display }}
+                        {% if componente.ccu %}<span class="badge-ccu">CCU</span>{% endif %}  <br>
                         {% if componente.tipo == 'atividade' %}
                             {{ componente.carga_horaria_estudante }}h estudante
                             {% if componente.carga_horaria_professor %} · {{ componente.carga_horaria_professor }}h professor{% endif %}
@@ -28,12 +29,28 @@
                         {% if componente.unidade_academica_componente %}{{ componente.unidade_academica_componente }}{% endif %}
                         <small>({{ componente.ementa }})</small>
                     </p>
-                    <a href="{% url 'adicionar_componente_existente' ppc.id componente.id %}" class="btn btn-primario">Usar este componente</a>
+                    <a href="{% url 'adicionar_componente_existente' ppc.id componente.id %}" class="btn btn-primario link-usar-componente"
+                        data-ccu="{{ componente.ccu|yesno:'true,false,desconhecido' }}">Usar este componente</a>
                </li>
             {% empty %}
                 <li>Nenhum componente encontrado com esse nome.</li>
             {% endfor %}
         </ul>
     {% endif %}
+<script>
+document.querySelectorAll('.link-usar-componente').forEach(function (link) {
+    link.addEventListener('click', function (evento) {
+        if (link.dataset.ccu !== 'true') {
+            const confirmou = confirm(
+                'Este componente NÃO é um CCU. Tem certeza que quer usar este componente mesmo assim?'
+            );
+            if (!confirmou) {
+                evento.preventDefault();
+            }
+        }
+    });
+});
+</script>
 {% endblock %}
 {% block ajuda %}<p>Pesquise componentes já existentes no catálogo antes de criar um novo. Ao vinculá-los, confira período e natureza para que a matriz deste PPC fique correta.</p>{% endblock %}
+

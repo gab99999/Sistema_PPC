@@ -41,7 +41,7 @@ from django.core.mail import send_mail
 from config import settings
 from django.utils import timezone
 from .services.carga_horaria import calcular_resumo_carga_horaria, sincronizar_carga_horaria_total
-
+from django.db.models import Case, When, Value, IntegerField
 
 @login_required
 def detalhe_componente_pendente(request, componente_id):
@@ -397,7 +397,16 @@ def buscar_componente_existente_matriz_referencia(request, matriz_id):
         resultados = (
             ComponenteCurricular.objects
             .filter(nome__icontains=termo, status="aprovado")
-            .exclude(id__in=ja_usados)[:20]
+            .exclude(id__in=ja_usados)
+            .annotate(
+                prioridade_ccu=Case(
+                    When(ccu=True, then=Value(0)),
+                    When(ccu=None, then=Value(1)),
+                    When(ccu=False, then=Value(2)),
+                    output_field=IntegerField(),
+                )
+            )
+            .order_by('prioridade_ccu', 'nome')[:20]
         )
     return render(request, "ppc/matrizes_referencia/_resultados_busca.html", {
         "matriz": matriz, "resultados": resultados,
@@ -1319,7 +1328,15 @@ def buscar_componente_existente(request, ppc_id):
     ja_usados_ids = set(ppc.matriz_componentes.values_list('componente_id', flat=True))
     resultados = []
     if termo:
-        resultados = ComponenteCurricular.objects.filter(nome__icontains=termo, status='aprovado').exclude(id__in=ja_usados_ids)
+        resultados = (ComponenteCurricular.objects.filter(nome__icontains=termo, status='aprovado').exclude(id__in=ja_usados_ids).annotate(
+                        prioridade_ccu=Case(
+                            When(ccu=True, then=Value(0)),
+                            When(ccu=None, then=Value(1)),
+                            When(ccu=False, then=Value(2)),
+                            output_field=IntegerField(),
+                        )
+                    ).order_by('prioridade_ccu', 'nome')
+                    )
     return render(request, 'ppc/buscar_componente_existente.html', {
         'ppc': ppc, 'termo': termo, 'resultados': resultados,
     })

@@ -1,7 +1,7 @@
 {% for componente in resultados %}
 <div class="card" style="margin-bottom:0.5rem;">
   <strong>{{ componente.codigo }}</strong> — {{ componente.nome }}<br>
-  {{ componente.get_tipo_display }} ·
+  {{ componente.get_tipo_display }} ·{% if componente.ccu %}<span class="badge-ccu">CCU</span>{% endif %} <br>
   {% if componente.tipo == 'atividade' %}
     {{ componente.carga_horaria_estudante }}h estudante
   {% else %}
@@ -14,8 +14,23 @@
   {% endif %}<br>
   {{ componente.ementa }}
   <br>
-  <a href="{% url 'detalhe_componente_existente_matriz_referencia' matriz.id componente.id %}" class="btn btn-secundario">Usar este componente</a>
+  <a href="{% url 'detalhe_componente_existente_matriz_referencia' matriz.id componente.id %}" class="btn btn-secundario link-usar-componente" data-ccu="{{ componente.ccu|yesno:'true,false,desconhecido' }}">Usar este componente</a>
 </div>
 {% empty %}
 {% if request.GET.q %}<p>Nenhum componente encontrado.</p>{% endif %}
 {% endfor %}
+
+<script>
+document.querySelectorAll('.link-usar-componente').forEach(function (link) {
+    link.addEventListener('click', function (evento) {
+        if (link.dataset.ccu !== 'true') {
+            const confirmou = confirm(
+                'Este componente NÃO é um CCU. Tem certeza que quer usar este componente mesmo assim?'
+            );
+            if (!confirmou) {
+                evento.preventDefault();
+            }
+        }
+    });
+});
+</script>

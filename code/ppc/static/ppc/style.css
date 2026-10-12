@@ -1189,3 +1189,16 @@ h3 {
 .btn-novo-grupo-equivalencia:hover {
     background: #1a5fd0;
 }
+
+
+.badge-ccu {
+    display: inline-block;
+    background: #059669;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 0.4rem;
+    vertical-align: middle;
+}
