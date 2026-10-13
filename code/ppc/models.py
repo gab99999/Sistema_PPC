@@ -316,6 +316,20 @@ class Bibliografia(models.Model):
         return self.titulo
 
 
+class ReferenciaBibliografica(models.Model):
+    """Catálogo institucional de referências bibliográficas da UFCAT — existe
+    independente de estar vinculada a qualquer componente curricular ou PPC."""
+    titulo = models.CharField(max_length=300)
+    autores = models.CharField(max_length=300, blank=True)
+    editora = models.CharField(max_length=150, blank=True)
+    cidade = models.CharField(max_length=100, blank=True)
+    ano = models.PositiveIntegerField(blank=True, null=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return self.titulo
+
 class RelacaoComponente(models.Model):
     TIPO_CHOICES = [
         ("pre_requisito", "Pré-requisito"),
