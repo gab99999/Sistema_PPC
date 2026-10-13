@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}Biblioteca Virtual{% endblock %}
+{% block content %}
+
+<div class="card cabecalho-curso">
+    <h1>Biblioteca Virtual — UFCAT</h1>
+    <p class="card-corpo">
+        Pesquise as referências bibliográficas disponíveis
+        no catálogo da Biblioteca da UFCAT.
+    </p>
+</div>
+
+<div class="grade-estatisticas">
+    <div class="card estatistica">
+        <span class="estatistica-numero">
+            {{ total_referenciabibliografica }}
+        </span>
+        <span class="estatistica-rotulo">
+            Referências cadastradas
+        </span>
+    </div>
+</div>
+
+
+<br>
+
+<h2>Pesquisar referências bibliográficas</h2>
+
+<form method="get" class="form-secao">
+    <input type="hidden" name="buscar" value="1">
+
+    <label for="id_q">
+        <strong>Termo de pesquisa</strong>
+    </label>
+
+    <input
+        type="text"
+        id="id_q"
+        name="q"
+        value="{{ termo }}"
+        placeholder="Digite título, autor, editora, cidade ou ano..."
+    >
+
+    <p>
+        <strong>Pesquisar em quais campos?</strong>
+    </p>
+
+    <div class="campos-pesquisa">
+        {% for campo in campos_busca %}
+            <label>
+                <input
+                    type="checkbox"
+                    name="campos"
+                    value="{{ campo.id }}"
+                    {% if campo.id in campos_selecionados %}checked{% endif %}
+                >
+                {{ campo.rotulo }}
+            </label>
+        {% endfor %}
+    </div>
+
+    <br>
+
+    <button type="submit" class="btn btn-primario">
+        Buscar referências
+    </button>
+
+    <a
+        href="{% url 'biblioteca' %}"
+        class="btn btn-secundario"
+    >
+        Limpar pesquisa
+    </a>
+</form> <br>
+
+{% if erro_busca %}
+    <div class="card">
+        <p class="card-corpo">{{ erro_busca }}</p>
+    </div>
+{% endif %}
+
+{% if busca_enviada and not erro_busca %}
+
+    <h2>Resultados da pesquisa</h2>
+
+    <p>
+        {% if resultados.paginator.count == 1 %}
+            Foi encontrada 1 referência.
+        {% else %}
+            Foram encontradas
+            {{ resultados.paginator.count }} referências.
+        {% endif %}
+    </p>
+
+    <ul class="lista-cursos">
+        {% for referencia in resultados %}
+            <li class="card">
+                <div class="card-corpo">
+
+                    <h3>{{ referencia.titulo }}</h3>
+
+                    {% if referencia.autores %}
+                        <p>
+                            <strong>Autores:</strong>
+                            {{ referencia.autores }}
+                        </p>
+                    {% endif %}
+
+                    {% if referencia.editora %}
+                        <p>
+                            <strong>Editora:</strong>
+                            {{ referencia.editora }}
+                        </p>
+                    {% endif %}
+
+                    {% if referencia.cidade %}
+                        <p>
+                            <strong>Cidade:</strong>
+                            {{ referencia.cidade }}
+                        </p>
+                    {% endif %}
+
+                    <p>
+                        <strong>Ano:</strong>
+                        {% if referencia.ano %}
+                            {{ referencia.ano }}
+                        {% else %}
+                            Não informado
+                        {% endif %}
+                    </p>
+
+                </div>
+            </li>
+
+        {% empty %}
+            <li class="card">
+                <p class="card-corpo">
+                    Nenhuma referência encontrada com os critérios
+                    informados.
+                </p>
+            </li>
+        {% endfor %}
+    </ul>
+
+
+    {% if resultados.has_other_pages %}
+        <div class="btn-group paginacao">
+
+            {% if resultados.has_previous %}
+                <a
+                    class="btn btn-secundario"
+                    href="?q={{ termo|urlencode }}&buscar=1{% for campo in campos_selecionados %}&campos={{ campo|urlencode }}{% endfor %}&page={{ resultados.previous_page_number }}"
+                >
+                    ← Anterior
+                </a><br>
+            {% endif %}
+
+            <span>
+                Página {{ resultados.number }}
+                de {{ resultados.paginator.num_pages }}
+            </span><br>
+
+            {% if resultados.has_next %}
+                <a
+                    class="btn btn-secundario"
+                    href="?q={{ termo|urlencode }}&buscar=1{% for campo in campos_selecionados %}&campos={{ campo|urlencode }}{% endfor %}&page={{ resultados.next_page_number }}"
+                >
+                    Próxima →
+                </a>
+            {% endif %}
+
+        </div>
+    {% endif %}
+
+{% endif %}
+
+{% endblock %}
+
+{% block ajuda %}
+    <p>
+        Pesquise referências bibliográficas pelo título, autores,
+        editora, cidade ou ano. Você pode selecionar vários campos
+        simultaneamente para ampliar a pesquisa.
+    </p>
+{% endblock %}

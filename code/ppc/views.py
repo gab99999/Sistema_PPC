@@ -11,7 +11,7 @@ from django.utils.text import slugify
 from weasyprint import HTML
 from django.http import HttpResponseForbidden, Http404
 from ppc.testes.analisar_pdf_uma_chamada import analisar_pdf_adaptativo, ErroOpenRouter
-from .models import Curso, CineBrasilCurso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE, ComponenteNaMatriz, Chamado, ResumoCargaHorariaPPC, GrupoEquivalenciaComponentes, ItemEquivalencia
+from .models import Curso, CineBrasilCurso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE, ComponenteNaMatriz, Chamado, ResumoCargaHorariaPPC, GrupoEquivalenciaComponentes, ItemEquivalencia, ReferenciaBibliografica
 from .forms import ( ObjetivosForm, EditarPermissoesForm, CursoForm,
                     ApresentacaoForm, ExposicaoMotivosForm, PrincipiosForm,
                     ExpectativasForm, TccForm, EstagioForm, AtividadesComplementaresForm,
@@ -40,8 +40,97 @@ from .services.resolucao_pendencias import resolver_pendencia_ambigua
 from django.core.mail import send_mail
 from config import settings
 from django.utils import timezone
-from .services.carga_horaria import calcular_resumo_carga_horaria, sincronizar_carga_horaria_total
+from .services.carga_horaria import sincronizar_carga_horaria_total
 from django.db.models import Case, When, Value, IntegerField
+from django.db.models import Q
+from django.core.paginator import Paginator
+from .models import ReferenciaBibliografica
+
+
+def biblioteca(request):
+    campos_busca = [
+        {"id": "titulo", "rotulo": "Título"},
+        {"id": "autores", "rotulo": "Autores"},
+        {"id": "editora", "rotulo": "Editora"},
+        {"id": "cidade", "rotulo": "Cidade"},
+        {"id": "ano", "rotulo": "Ano"},
+    ]
+
+    campos_validos = {campo["id"] for campo in campos_busca}
+
+    termo = request.GET.get("q", "").strip()
+    busca_enviada = request.GET.get("buscar") == "1"
+
+    if busca_enviada:
+        campos_selecionados = [
+            campo
+            for campo in request.GET.getlist("campos")
+            if campo in campos_validos
+        ]
+    else:
+        # Na primeira abertura, todos os campos ficam selecionados.
+        campos_selecionados = list(campos_validos)
+
+    resultados = None
+    erro_busca = None
+
+    if busca_enviada:
+        if not termo:
+            erro_busca = "Digite um termo para pesquisar."
+
+        elif not campos_selecionados:
+            erro_busca = "Selecione pelo menos um campo para pesquisar."
+
+        else:
+            condicoes = []
+
+            for campo in campos_selecionados:
+                if campo == "ano":
+                    # Para o ano, a pesquisa é exata.
+                    if termo.isdecimal():
+                        condicoes.append(Q(ano=int(termo)))
+                else:
+                    # Para textos, procura o termo em qualquer posição.
+                    condicoes.append(
+                        Q(**{f"{campo}__icontains": termo})
+                    )
+
+            if not condicoes:
+                erro_busca = (
+                    "Para pesquisar pelo campo Ano, "
+                    "digite um ano numérico."
+                )
+            else:
+                # Combina os campos selecionados usando OU.
+                consulta = condicoes[0]
+
+                for condicao in condicoes[1:]:
+                    consulta |= condicao
+
+                queryset = (
+                    ReferenciaBibliografica.objects
+                    .filter(consulta)
+                    .order_by("titulo", "ano")
+                )
+
+                # Evita exibir milhares de referências de uma vez.
+                paginador = Paginator(queryset, 25)
+                resultados = paginador.get_page(
+                    request.GET.get("page")
+                )
+
+    contexto = {
+        "total_referenciabibliografica": (
+            ReferenciaBibliografica.objects.count()
+        ),
+        "campos_busca": campos_busca,
+        "campos_selecionados": campos_selecionados,
+        "termo": termo,
+        "busca_enviada": busca_enviada,
+        "erro_busca": erro_busca,
+        "resultados": resultados,
+    }
+    return render(request, "ppc/biblioteca.html", contexto)
 
 @login_required
 def detalhe_componente_pendente(request, componente_id):
@@ -1603,6 +1692,8 @@ def editar_permissoes(request, user_id):
     else:
         form = EditarPermissoesForm(instance=usuario)
     return render(request, 'ppc/editar_permissoes.html', {'form': form, 'usuario': usuario})
+
+
 
 
 def home(request):

@@ -39,6 +39,7 @@ from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home, name='home'),
+    path('biblioteca/', views.biblioteca, name='biblioteca'),
     path('ajuda/', ajuda, name='ajuda'),
     path('lista_cursos/', lista_cursos, name='lista_cursos'),
     path('gestao_usuarios/', gestao_usuarios, name='gestao_usuarios'),
