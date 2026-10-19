@@ -1,8 +1,23 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoComponente, ComponenteCurricular, MembroNDE, ComponenteNaMatriz, CineBrasilCurso, ResumoCargaHorariaPPC
+from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoComponente, ComponenteCurricular, MembroNDE, ComponenteNaMatriz, CineBrasilCurso, ResumoCargaHorariaPPC, VinculoUsuarioCurso
 from django.contrib.auth.models import User, Group
 from django.forms import modelformset_factory
+from django.contrib.auth import get_user_model
+
+class VinculoUsuarioCursoForm(forms.ModelForm):
+    class Meta:
+        model = VinculoUsuarioCurso
+        fields = ['usuario', 'curso']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        User = get_user_model()
+        # staff já vê tudo; só faz sentido vincular usuários comuns
+        self.fields['usuario'].queryset = User.objects.filter(
+            is_staff=False, is_active=True
+        ).order_by('username')
+        self.fields['curso'].queryset = Curso.objects.order_by('nome')
 
 class ResumoCargaHorariaPPCForm(forms.ModelForm):
     class Meta:

@@ -684,6 +684,7 @@ class VinculoUsuarioCurso(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['usuario', 'curso'], name='uniq_vinculo_usuario_curso'),
         ]
+        ordering = ['usuario__username', 'curso__nome']
 
     def __str__(self):
         return f"{self.usuario} → {self.curso.nome}"

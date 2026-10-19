@@ -131,6 +131,8 @@ urlpatterns = [
     path('equivalencias/item/<int:item_id>/remover/', views.remover_item_equivalencia, name='remover_item_equivalencia'),
     path('equivalencias/<int:grupo_id>/matriz-final/', views.definir_matriz_final, name='definir_matriz_final'),
     path('ppc/<int:componente_id>/pendente/', views.detalhe_componente_pendente, name='detalhe_componente_pendente'),
+    path('acessos/', views.gerenciar_acessos, name='gerenciar_acessos'),
+    path('acessos/<int:vinculo_id>/remover/', views.remover_acesso, name='remover_acesso'),
 ]
 
 if settings.DEBUG:

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Gerenciar Acessos aos Cursos{% endblock %}
+{% block content %}
+<h2>Acessos por curso</h2>
+
+{% if messages %}
+  {% for message in messages %}<p>{{ message }}</p>{% endfor %}
+{% endif %}
+
+<h3>Conceder acesso</h3>
+<form method="post" class="form-secao">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primario">Conceder</button>
+</form>
+<br>
+
+<h3>Acessos concedidos</h3>
+<table class="tabela-dados">
+    <tr><th>Usuário</th><th>Curso</th><th>Ação</th></tr>
+    {% for v in vinculos %}
+    <tr>
+        <td>{{ v.usuario.get_full_name|default:v.usuario.username }}</td>
+        <td>{{ v.curso.nome }}</td>
+        <td>
+            <form method="post" action="{% url 'remover_acesso' v.id %}"
+                  onsubmit="return confirm('Remover este acesso?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secundario">Remover</button>
+            </form>
+        </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="3">Nenhum acesso cadastrado ainda.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}
+{% block ajuda %}<p>Gerencie o Acesso de usuários editores à cursos.</p>{% endblock %}

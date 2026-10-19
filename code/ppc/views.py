@@ -11,8 +11,9 @@ from django.utils.text import slugify
 from .permissions import exigir_acesso_ao_curso 
 from weasyprint import HTML
 from django.http import HttpResponseForbidden, Http404
+from .permissions import cursos_do_usuario
 from ppc.testes.analisar_pdf_uma_chamada import analisar_pdf_adaptativo, ErroOpenRouter
-from .models import Curso, CineBrasilCurso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, RelacaoComponente, MembroNDE, ComponenteNaMatriz, Chamado, ResumoCargaHorariaPPC, GrupoEquivalenciaComponentes, ItemEquivalencia, ReferenciaBibliografica
+from .models import Curso, CineBrasilCurso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, VinculoUsuarioCurso , RelacaoComponente, MembroNDE, ComponenteNaMatriz, Chamado, ResumoCargaHorariaPPC, GrupoEquivalenciaComponentes, ItemEquivalencia, ReferenciaBibliografica
 from .forms import ( ObjetivosForm, EditarPermissoesForm, CursoForm,
                     ApresentacaoForm, ExposicaoMotivosForm, PrincipiosForm,
                     ExpectativasForm, TccForm, EstagioForm, AtividadesComplementaresForm,
@@ -20,7 +21,7 @@ from .forms import ( ObjetivosForm, EditarPermissoesForm, CursoForm,
                     QualificacaoForm, RequisitosLegaisForm, ApendiceForm, DinamicaEADForm, 
                     EstruturaCurricularForm, ComponenteCurricularForm, BibliografiaForm, RelacaoComponenteForm,
                     ReferenciasForm, MembroNDEForm, ImportarPDFForm, ImportarPPCModeloAntigoForm, LimitesCargaHorariaFormSet,
-                    ComponenteNaMatrizForm, ResumoCargaHorariaPPCForm )
+                    ComponenteNaMatrizForm, ResumoCargaHorariaPPCForm, VinculoUsuarioCursoForm )
 from django.db.models import Q
 from .importacao import extrair_dados_pdf
 from .importacao_modelos_antigos import ErroImportacaoPPC, preparar_importacao_modelo_antigo
@@ -47,6 +48,31 @@ from django.db.models import Q
 from django.core.paginator import Paginator
 from .models import ReferenciaBibliografica
 
+@staff_member_required
+def gerenciar_acessos(request):
+    if request.method == 'POST':
+        form = VinculoUsuarioCursoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Acesso concedido.")
+            return redirect('gerenciar_acessos')
+    else:
+        form = VinculoUsuarioCursoForm()
+
+    vinculos = VinculoUsuarioCurso.objects.select_related('usuario', 'curso')
+    return render(request, 'ppc/gerenciar_acessos.html', {
+        'form': form,
+        'vinculos': vinculos,
+    })
+
+
+@staff_member_required
+@require_POST
+def remover_acesso(request, vinculo_id):
+    vinculo = get_object_or_404(VinculoUsuarioCurso, id=vinculo_id)
+    vinculo.delete()
+    messages.success(request, "Acesso removido.")
+    return redirect('gerenciar_acessos')
 
 def biblioteca(request):
     campos_busca = [
@@ -1189,13 +1215,13 @@ def excluir_membro_nde(request, membro_id):
 
 def lista_cursos(request):
     query = request.GET.get('q', '')
-    cursos = Curso.objects.all()
+    cursos = cursos_do_usuario(request.user)
     if query:
         cursos = cursos.filter(
             Q(nome__icontains=query) |
             Q(unidade_academica__icontains=query) |
             Q(area_conhecimento__icontains=query)
-        )
+        ) 
     return render(request, 'ppc/lista_cursos.html', {'cursos': cursos, 'query': query})
 
 @login_required

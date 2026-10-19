@@ -4,6 +4,7 @@
     <h1>Cursos</h1>
     {%if user.is_staff %}
         <a href="{% url 'criar_curso' %}" class="btn btn-primario">+ Novo Curso</a>
+        <a href="{% url 'gerenciar_acessos' %}" class="btn btn-secundario">Acessos por curso</a>
     {% endif %}
 
     <form method="get" class="form-busca">
