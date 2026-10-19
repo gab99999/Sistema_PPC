@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.template.loader import render_to_string
 from django.db.models import Prefetch, F
 from django.utils.text import slugify
+from .permissions import exigir_acesso_ao_curso 
 from weasyprint import HTML
 from django.http import HttpResponseForbidden, Http404
 from ppc.testes.analisar_pdf_uma_chamada import analisar_pdf_adaptativo, ErroOpenRouter
@@ -635,12 +636,6 @@ def _categorizar_componentes(itens_referencia, existentes):
 
 @staff_member_required
 def painel_institucional(request):
-    distribuicao_nucleos = {
-        escolha: 0 for escolha, _ in ComponenteCurricular.NUCLEO_CHOICES
-    }
-    distribuicao_nucleos.update(
-        ComponenteCurricular.objects.values("nucleo").annotate(total=Count("id")).values_list("nucleo", "total")
-    )
 
     pendencias_por_tipo = {
         escolha: 0 for escolha, _ in ImportacaoPendencia.TIPO_CHOICES
@@ -663,10 +658,6 @@ def painel_institucional(request):
     return render(request, "ppc/painel_institucional.html", {
         "total_matrizes": MatrizReferenciaCurricular.objects.count(),
         "matrizes_sem_curso": MatrizReferenciaCurricular.objects.filter(curso__isnull=True).count(),
-        "nucleos": [
-            {"codigo": codigo, "rotulo": rotulo, "total": distribuicao_nucleos[codigo]}
-            for codigo, rotulo in ComponenteCurricular.NUCLEO_CHOICES
-        ],
         "total_pendencias": ImportacaoPendencia.objects.filter(resolvido=False).count(),
         "pendencias_por_tipo": [
             {"codigo": codigo, "rotulo": rotulo, "total": pendencias_por_tipo[codigo]}
@@ -1161,6 +1152,7 @@ def lista_nde(request, curso_id):
 @login_required
 def criar_membro_nde(request, curso_id):
     curso = get_object_or_404(Curso, id=curso_id)
+    exigir_acesso_ao_curso(request.user, curso) 
     if request.method == 'POST':
         form = MembroNDEForm(request.POST)
         if form.is_valid():
@@ -1298,7 +1290,7 @@ def criar_componente(request, ppc_id):
     ppc = get_object_or_404(PPC, id=ppc_id)
     if request.method == 'POST':
         form_componente = ComponenteCurricularForm(request.POST)
-        form_vinculo = ComponenteNaMatrizForm(request.POST)
+        form_vinculo = ComponenteNaMatrizForm(request.POST, ppc=ppc)
         if form_componente.is_valid() and form_vinculo.is_valid():
             componente = form_componente.save(commit=False)
             componente.status = 'aprovado' if request.user.is_staff else 'pendente'
@@ -1314,7 +1306,7 @@ def criar_componente(request, ppc_id):
             return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=vinculo.id)
     else:
         form_componente = ComponenteCurricularForm()
-        form_vinculo = ComponenteNaMatrizForm()
+        form_vinculo = ComponenteNaMatrizForm(ppc=ppc)
     return render(request, 'ppc/criar_componente.html', {
         'form_componente': form_componente, 'form_vinculo': form_vinculo, 'ppc': ppc,
     })
@@ -1439,7 +1431,7 @@ def adicionar_componente_existente(request, ppc_id, componente_id):
         return redirect('lista_componentes', ppc_id=ppc.id)
 
     if request.method == 'POST':
-        form = ComponenteNaMatrizForm(request.POST)
+        form = ComponenteNaMatrizForm(request.POST, ppc=ppc)
         if form.is_valid():
             vinculo = form.save(commit=False)
             vinculo.ppc = ppc
@@ -1447,7 +1439,7 @@ def adicionar_componente_existente(request, ppc_id, componente_id):
             vinculo.save()
             return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=vinculo.id)
     else:
-        form = ComponenteNaMatrizForm()
+        form = ComponenteNaMatrizForm(ppc=ppc)
     return render(request, 'ppc/adicionar_componente_existente.html', {
         'ppc': ppc, 'componente': componente, 'form': form,
     })

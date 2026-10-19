@@ -57,6 +57,25 @@
     <tr><td><strong>CH Mínima de Atividades Complementares (AC)</strong></td><td>{{ resumo.ac.ch }}h</td><td>{{ resumo.ac.pct }}%</td></tr>
 </table> <br>
 
+{% if resumo.grupos_licenciatura %}
+<h3>Grupos da licenciatura</h3>
+<table class="tabela-dados">
+    <tr><th>Grupo</th><th>Carga Horária</th><th>Mínimo</th><th>Situação</th></tr>
+    {% for g in resumo.grupos_licenciatura.grupos %}
+    <tr>
+        <td>{{ g.nome }}</td>
+        <td>{{ g.horas }}h</td>
+        <td>{{ g.minimo }}h</td>
+        <td>{% if g.atende %}Atende{% else %}Faltam {{ g.falta }}h{% endif %}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% if resumo.grupos_licenciatura.sem_grupo %}
+<p><small>{{ resumo.grupos_licenciatura.sem_grupo }} componente(s) ainda sem grupo definido.</small></p>
+{% endif %}
+<br>
+{% endif %}
+
     <div class="btn-group">
         <a href="{% url 'criar_componente' ppc.id %}" class="btn btn-primario">+ Novo Componente</a>
         <a href="{% url 'buscar_componente_existente' ppc.id %}" class="btn btn-secundario">+ Usar Componente Existente</a>
@@ -69,13 +88,14 @@
     <br>
 
     <table class="tabela-dados">
-        <tr><th>Período</th><th>Nome</th><th>Núcleo</th><th>Natureza</th><th>CH Total</th><th>Ação</th></tr>
+        <tr><th>Período</th><th>Nome</th><th>Núcleo</th><th>Natureza</th>{% if ppc.grau_academico == 'licenciatura' %}<th>Grupo</th>{% endif %}<th>CH Total</th><th>Ação</th></tr>
         {% for componente_na_matriz in componentes_na_matriz %}
         <tr>
             <td>{{ componente_na_matriz.periodo }}</td>
             <td>{{ componente_na_matriz.componente.nome }}{% if componente_na_matriz.componente.codigo %} <small>({{ componente_na_matriz.componente.codigo }})</small>{% endif %}</td>
             <td>{{ componente_na_matriz.get_nucleo_display }}</td>
             <td>{{ componente_na_matriz.get_natureza_display }}</td>
+            {% if ppc.grau_academico == 'licenciatura' %}<td>{{ componente_na_matriz.get_grupo_licenciatura_display|default:"—" }}</td>{% endif %}
             <td>{{ componente_na_matriz.componente.carga_horaria_computada_total }}h</td>
             <td><a href="{% url 'detalhe_componente_na_matriz' componente_na_matriz.id %}" class="btn btn-secundario">Abrir</a></td>
         </tr>

@@ -19,7 +19,15 @@ LimitesCargaHorariaFormSet = modelformset_factory(
 class ComponenteNaMatrizForm(forms.ModelForm):
     class Meta:
         model = ComponenteNaMatriz
-        fields = ['periodo', 'natureza', 'nucleo']
+        fields = ['periodo', 'natureza', 'nucleo', 'grupo_licenciatura']
+
+    def __init__(self, *args, **kwargs):
+        ppc = kwargs.pop('ppc', None)
+        super().__init__(*args, **kwargs)
+        if ppc is None and self.instance.ppc_id:
+            ppc = self.instance.ppc          # edição: pega do próprio vínculo
+        if ppc is not None and ppc.grau_academico != 'licenciatura':
+            self.fields.pop('grupo_licenciatura')
 
 class ImportarPDFForm(forms.Form):
     arquivo = forms.FileField(label="Arquivo PDF do PPC", widget=forms.ClearableFileInput(attrs={"accept": "application/pdf,.pdf"}))

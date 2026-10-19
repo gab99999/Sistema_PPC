@@ -73,7 +73,7 @@ class PPC(models.Model):
     modalidade = models.CharField(max_length=20, choices=MODALIDADE_CHOICES)
     grau_academico = models.CharField(max_length=20, choices=GRAU_CHOICES)
     turno_funcionamento = models.CharField(max_length=50)
-    carga_horaria_total = models.PositiveIntegerField(help_text="em horas")
+    carga_horaria_total = models.PositiveIntegerField(help_text="em horas", blank=True, null=True, default=0)
     numero_vagas_anuais = models.PositiveIntegerField()
     duracao_minima_semestres = models.PositiveIntegerField()
     duracao_media_semestres = models.PositiveIntegerField()
@@ -282,6 +282,17 @@ class ComponenteNaMatriz(models.Model):
     ]
     nucleo = models.CharField(max_length=4, choices=NUCLEO_CHOICES, default='NE')
 
+    GRUPO_LICENCIATURA_CHOICES = [
+        (1, "Grupo 1"),
+        (2, "Grupo 2"),
+        (4, "Grupo 4 (Estágio)"),
+    ]
+    grupo_licenciatura = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        choices=GRUPO_LICENCIATURA_CHOICES,
+        verbose_name="Grupo (licenciatura)",
+    )
+
     def clean(self):
             super().clean()
             if self.nucleo == "NC" and self.natureza != "obrigatoria":
@@ -295,6 +306,13 @@ class ComponenteNaMatriz(models.Model):
 
     class Meta:
         unique_together = ('ppc', 'componente')
+    
+    def save(self, *args, **kwargs):
+        # Regra no servidor: fora de licenciatura o grupo nunca é gravado,
+        # independentemente de qual view, import ou script criou o vínculo.
+        if self.ppc_id and self.ppc.grau_academico != 'licenciatura':
+            self.grupo_licenciatura = None
+        super().save(*args, **kwargs)
 
     history = HistoricalRecords()
 
@@ -457,6 +475,17 @@ class ComponenteNaMatrizReferencia(models.Model):
         ("NE", "Núcleo Específico"),
     ]
     nucleo = models.CharField(max_length=4, choices=NUCLEO_CHOICES, default='NE')
+
+    GRUPO_LICENCIATURA_CHOICES = [
+            (1, "Grupo 1"),
+            (2, "Grupo 2"),
+            (4, "Grupo 4 (Estágio)"),
+        ]
+    grupo_licenciatura = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        choices=GRUPO_LICENCIATURA_CHOICES,
+        verbose_name="Grupo (licenciatura)",
+    )
 
     def clean(self):
         super().clean()
@@ -642,3 +671,19 @@ class ResumoCargaHorariaPPC(models.Model):
     acex_extensao_manual = models.PositiveIntegerField(default=0)
     atividades_complementares_manual = models.PositiveIntegerField(default=0)
     history = HistoricalRecords()
+
+class VinculoUsuarioCurso(models.Model):
+    """Quais cursos cada usuário (NDE) pode acessar. Staff (DAA) não precisa de vínculo."""
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='vinculos_curso'
+    )
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='vinculos_usuarios')
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['usuario', 'curso'], name='uniq_vinculo_usuario_curso'),
+        ]
+
+    def __str__(self):
+        return f"{self.usuario} → {self.curso.nome}"
