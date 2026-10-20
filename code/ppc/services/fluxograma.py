@@ -75,7 +75,7 @@ def calcular_layout(nos, arestas):
     altura = TOPO + MARGEM * 2 + max_linhas * ALTURA + (max_linhas - 1) * GAP_Y
 
     colunas = [
-        {'rotulo': f"{p}º período", 'cx': MARGEM + i * (LARGURA + GAP_X) + LARGURA / 2}
+        {'rotulo': f"{p}º período", 'x': MARGEM + i * (LARGURA + GAP_X)}
         for i, p in enumerate(periodos)
     ]
 

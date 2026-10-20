@@ -1,10 +1,10 @@
 {% if fluxograma %}
 <svg xmlns="http://www.w3.org/2000/svg"
      viewBox="0 0 {{ fluxograma.largura }} {{ fluxograma.altura }}"
-     {% if tamanho_fixo %}width="{{ fluxograma.largura }}" height="{{ fluxograma.altura }}"{% endif %}
+     {% if tamanho_fixo %}width="{{ fluxograma.largura }}" height="{{ fluxograma.altura }}"{% else %}width="100%"{% endif %}
      font-family="Arial, Helvetica, sans-serif">
   {% for c in fluxograma.colunas %}
-    <text x="{{ c.cx }}" y="18" text-anchor="middle" font-size="11" font-weight="bold">{{ c.rotulo }}</text>
+    <text x="{{ c.x|add:6 }}" y="18" font-size="11" font-weight="bold">{{ c.rotulo }}</text>
   {% endfor %}
 
   {% for e in fluxograma.arestas %}
