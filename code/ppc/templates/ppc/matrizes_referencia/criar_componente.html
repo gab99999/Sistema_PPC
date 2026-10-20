@@ -2,12 +2,12 @@
 {% block content %}
 <h1>Novo componente — {{ matriz }}</h1>
 
-<form method="post" class="form-vinculo-matriz">
+<form method="post" class="form-empilhado">
   {% csrf_token %}
   {{ form.non_field_errors }}
 
-  {{ form.codigo.as_field_group }}
-  {{ form.nome.as_field_group }}
+  
+  {{ form.nome.as_field_group }} 
   {{ form.tipo.as_field_group }}
   {{ form.nucleo.as_field_group }}
   {{ form.natureza.as_field_group }}
@@ -15,12 +15,12 @@
   {{ form.periodo.as_field_group }}
   {{ form.ccu.as_field_group }}
 
-  <div id="grupo-carga-padrao">
+  <div id="grupo-carga-padrao" class="grupo-campos">
     {{ form.carga_horaria_teorica.as_field_group }}
     {{ form.carga_horaria_pratica.as_field_group }}
   </div>
 
-  <div id="grupo-carga-atividade" style="display:none;">
+  <div id="grupo-carga-atividade" class="grupo-campos" style="display:none;">
     {{ form.carga_horaria_estudante.as_field_group }}
     {{ form.carga_horaria_professor.as_field_group }}
     <span class="ajuda-campo">A carga do professor não pode passar da carga do estudante — só a do estudante entra na carga horária total.</span>
@@ -42,8 +42,8 @@ const grupoAtividade = document.getElementById("grupo-carga-atividade");
 
 function atualizarGrupos() {
     const ehAtividade = campoTipo.value === "atividade";
-    grupoPadrao.style.display = ehAtividade ? "none" : "block";
-    grupoAtividade.style.display = ehAtividade ? "block" : "none";
+    grupoPadrao.style.display = ehAtividade ? "none" : "";
+    grupoAtividade.style.display = ehAtividade ? "" : "none";
 }
 
 function atualizarNatureza() {
