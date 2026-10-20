@@ -47,6 +47,56 @@ from django.db.models import Case, When, Value, IntegerField
 from django.db.models import Q
 from django.core.paginator import Paginator
 from .models import ReferenciaBibliografica
+from .services.fluxograma import montar_fluxograma_ppc, montar_fluxograma_referencia
+from .forms import RelacaoComponenteReferenciaForm
+from .models import MatrizReferenciaCurricular, RelacaoComponenteReferencia
+from django.urls import reverse
+
+@login_required
+def fluxograma_ppc(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    return render(request, 'ppc/fluxograma.html', {
+        'titulo': f"Fluxograma — {ppc.curso.nome}",
+        'voltar_url': reverse('lista_componentes', args=[ppc.id]),
+        'fluxograma': montar_fluxograma_ppc(ppc),
+    })
+
+
+@login_required
+def fluxograma_matriz_referencia(request, matriz_id):
+    matriz = get_object_or_404(MatrizReferenciaCurricular, id=matriz_id)
+    return render(request, 'ppc/fluxograma.html', {
+        'titulo': f"Fluxograma — {matriz}",
+        'voltar_url': reverse('matriz_referencia_detalhe', args=[matriz.id]),
+        'relacoes_url': reverse('relacoes_matriz_referencia', args=[matriz.id]),
+        'fluxograma': montar_fluxograma_referencia(matriz),
+    })
+
+
+@login_required
+def relacoes_matriz_referencia(request, matriz_id):
+    matriz = get_object_or_404(MatrizReferenciaCurricular, id=matriz_id)
+    form = RelacaoComponenteReferenciaForm(request.POST or None, matriz=matriz)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, "Relação adicionada.")
+        return redirect('relacoes_matriz_referencia', matriz_id=matriz.id)
+    relacoes = RelacaoComponenteReferencia.objects.filter(
+        item__matriz=matriz
+    ).select_related('item__componente', 'item_relacionado__componente')
+    return render(request, 'ppc/relacoes_matriz_referencia.html', {
+        'matriz': matriz, 'form': form, 'relacoes': relacoes,
+    })
+
+
+@login_required
+@require_POST
+def remover_relacao_referencia(request, relacao_id):
+    relacao = get_object_or_404(RelacaoComponenteReferencia, id=relacao_id)
+    matriz_id = relacao.item.matriz_id
+    relacao.delete()
+    messages.success(request, "Relação removida.")
+    return redirect('relacoes_matriz_referencia', matriz_id=matriz_id)
 
 @staff_member_required
 def gerenciar_acessos(request):

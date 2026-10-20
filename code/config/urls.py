@@ -133,6 +133,10 @@ urlpatterns = [
     path('ppc/<int:componente_id>/pendente/', views.detalhe_componente_pendente, name='detalhe_componente_pendente'),
     path('acessos/', views.gerenciar_acessos, name='gerenciar_acessos'),
     path('acessos/<int:vinculo_id>/remover/', views.remover_acesso, name='remover_acesso'),
+    path('ppc/<int:ppc_id>/fluxograma/', views.fluxograma_ppc, name='fluxograma_ppc'),
+    path('matrizes-referencia/<int:matriz_id>/fluxograma/', views.fluxograma_matriz_referencia, name='fluxograma_matriz_referencia'),
+    path('matrizes-referencia/<int:matriz_id>/relacoes/', views.relacoes_matriz_referencia, name='relacoes_matriz_referencia'),
+    path('matrizes-referencia/relacao/<int:relacao_id>/remover/', views.remover_relacao_referencia, name='remover_relacao_referencia'),
 ]
 
 if settings.DEBUG:

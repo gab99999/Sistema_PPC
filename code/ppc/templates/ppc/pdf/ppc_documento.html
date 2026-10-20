@@ -17,6 +17,10 @@
             font: 9pt "Times New Roman", serif;
         }
     }
+    /* FLUXOGRAMAAAA*/
+    @page fluxograma { size: A4 landscape; margin: 1.5cm; }
+    .pagina-fluxograma { page: fluxograma; page-break-before: always; page-break-after: always; }
+    .pagina-fluxograma svg { width: 100%; height: auto; }
 
     /* Capa + página de identificação */
     @page cover {
@@ -853,6 +857,14 @@
     </table>
 
 </section>
+
+{% if fluxograma %}
+<div class="pagina-fluxograma">
+  <h2>Fluxograma do curso</h2>
+  {% include 'ppc/fluxograma/_svg.html' %}
+  {% include 'ppc/fluxograma/_legenda.html' %}
+</div>
+{% endif %}
 
 <section class="equivalence">
 

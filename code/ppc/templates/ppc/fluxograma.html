@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{{ titulo }}</h2>
+<p>
+  <a href="{{ voltar_url }}" class="btn btn-secundario">← Voltar</a>
+  {% if relacoes_url %}<a href="{{ relacoes_url }}" class="btn btn-primario">Editar pré/co-requisitos</a>{% endif %}
+</p>
+
+{% if fluxograma %}
+  {% if fluxograma.erros %}
+    <p style="color:#dc2626;">⚠ {{ fluxograma.erros }} pré-requisito(s) em período igual ou posterior ao do componente (linhas vermelhas).</p>
+  {% endif %}
+  <div style="overflow-x:auto;">
+      <div style="overflow-x:auto;">
+        {% include 'ppc/fluxograma/_svg.html' with tamanho_fixo=True %}
+      </div>
+  </div>
+  {% include 'ppc/fluxograma/_legenda.html' %}
+{% else %}
+  <p>Nenhum componente na matriz ainda.</p>
+{% endif %}
+{% endblock %}

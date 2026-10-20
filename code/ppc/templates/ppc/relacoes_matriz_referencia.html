@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Pré e co-requisitos — {{ matriz }}</h2>
+<p>
+  <a href="{% url 'fluxograma_matriz_referencia' matriz.id %}" class="btn btn-primario">Ver fluxograma</a>
+  <a href="{% url 'matriz_referencia_detalhe' matriz.id %}" class="btn btn-secundario">← Voltar</a>
+</p>
+
+{% if messages %}{% for message in messages %}<p>{{ message }}</p>{% endfor %}{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn btn-primario">Adicionar</button>
+</form>
+<br>
+<table class="tabela-dados">
+  <tr><th>Componente</th><th>Tipo</th><th>Relacionado</th><th>Ação</th></tr>
+  {% for r in relacoes %}
+  <tr>
+    <td>{{ r.item.componente.nome }} <small>({{ r.item.periodo }}º)</small></td>
+    <td>{{ r.get_tipo_display }}</td>
+    <td>{{ r.item_relacionado.componente.nome }} <small>({{ r.item_relacionado.periodo }}º)</small></td>
+    <td>
+      <form method="post" action="{% url 'remover_relacao_referencia' r.id %}"
+            onsubmit="return confirm('Remover esta relação?');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-secundario">Remover</button>
+      </form>
+    </td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="4">Nenhuma relação cadastrada.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

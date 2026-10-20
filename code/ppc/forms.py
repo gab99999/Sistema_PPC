@@ -1,6 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from ppc.models import PPC, Curso, DinamicaEAD, Apendice, Bibliografia, RelacaoComponente, ComponenteCurricular, MembroNDE, ComponenteNaMatriz, CineBrasilCurso, ResumoCargaHorariaPPC, VinculoUsuarioCurso
+from ppc.models import PPC, Curso, DinamicaEAD, Apendice, ComponenteNaMatrizReferencia, Bibliografia, RelacaoComponente, ComponenteCurricular, MembroNDE, ComponenteNaMatriz, CineBrasilCurso, ResumoCargaHorariaPPC, VinculoUsuarioCurso, RelacaoComponenteReferencia
 from django.contrib.auth.models import User, Group
 from django.forms import modelformset_factory
 from django.contrib.auth import get_user_model
@@ -257,3 +257,22 @@ class ExposicaoMotivosForm(forms.ModelForm):
     class Meta:
         model = PPC
         fields = ['tipo_ppc', 'exposicao_motivos']
+
+
+class RelacaoComponenteReferenciaForm(forms.ModelForm):
+    class Meta:
+        model = RelacaoComponenteReferencia
+        fields = ['item', 'tipo', 'item_relacionado']
+        labels = {
+            'item': 'Componente',
+            'tipo': 'Tipo',
+            'item_relacionado': 'Tem como pré/co-requisito',
+        }
+
+    def __init__(self, *args, matriz=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        itens = ComponenteNaMatrizReferencia.objects.filter(matriz=matriz).select_related(
+            'componente'
+        ).order_by('periodo', 'componente__nome')
+        self.fields['item'].queryset = itens
+        self.fields['item_relacionado'].queryset = itens

@@ -8,6 +8,8 @@
 <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
   <a href="{% url 'criar_componente_matriz_referencia' matriz.id %}" class="btn btn-secundario">+ Novo Componente</a>
   <button type="button" class="btn btn-secundario" id="botao-buscar-existente">+ Usar Componente Existente</button>
+  <a href="{% url 'fluxograma_matriz_referencia' matriz.id %}" class="btn btn-secundario">Fluxograma</a>
+  <a href="{% url 'relacoes_matriz_referencia' matriz.id %}" class="btn btn-secundario">Pré/co-requisitos</a>
   <form method="post" action="{% url 'duplicar_matriz_referencia' matriz.id %}" style="display:inline;">
     {% csrf_token %}
     <button type="submit" class="btn btn-secundario">Duplicar Matriz</button>

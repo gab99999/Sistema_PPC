@@ -370,6 +370,10 @@ class RelacaoComponente(models.Model):
 
     def __str__(self):
         return f"{self.componente_na_matriz.componente.nome} → {self.get_tipo_display()} → {self.componente_relacionado_na_matriz.componente.nome}"
+
+
+
+
 class Apendice(models.Model):
     TIPO_CHOICES = [
         ("corpo_docente","Relação do corpo docente e titulação"),
@@ -525,6 +529,42 @@ class ComponenteNaMatrizReferencia(models.Model):
     def __str__(self):
         return f"{self.componente.nome} — {self.matriz} (período {self.periodo})"
 
+
+class RelacaoComponenteReferencia(models.Model):
+    """Pré/co-requisito entre componentes de uma mesma matriz de referência.
+    Mesmo papel de RelacaoComponente, em nível institucional."""
+    TIPO_CHOICES = [
+        ("pre_requisito", "Pré-requisito"),
+        ("co_requisito", "Co-requisito"),
+    ]
+    item = models.ForeignKey(
+        ComponenteNaMatrizReferencia, on_delete=models.CASCADE, related_name="relacoes"
+    )
+    item_relacionado = models.ForeignKey(
+        ComponenteNaMatrizReferencia, on_delete=models.CASCADE, related_name="relacionado_em"
+    )
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['item', 'item_relacionado', 'tipo'],
+                name='uniq_relacao_referencia',
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.item_id and self.item_relacionado_id:
+            if self.item_id == self.item_relacionado_id:
+                raise ValidationError("Um componente não pode se relacionar consigo mesmo.")
+            if self.item.matriz_id != self.item_relacionado.matriz_id:
+                raise ValidationError("Os dois componentes precisam estar na mesma matriz de referência.")
+
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return f"{self.item.componente.nome} → {self.get_tipo_display()} → {self.item_relacionado.componente.nome}"
 class MapeamentoImportacaoMatriz(models.Model):
     """De-para entre o identificador de matriz na planilha da UFCAT e o Curso/matriz
     de referência do sistema. Preenchido manualmente antes de importar."""

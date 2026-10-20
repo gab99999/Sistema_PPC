@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.db.models import Prefetch
+from .services.fluxograma import montar_fluxograma_ppc
 
 from weasyprint import HTML
 
@@ -359,7 +360,6 @@ def gerar_pdf_ppc(request, ppc_id):
     # =========================================================
     # CONTEXTO
     # =========================================================
-
     context = {
         "ppc": ppc,
 
@@ -380,6 +380,9 @@ def gerar_pdf_ppc(request, ppc_id):
         "equivalencia_colunas": equivalencia_max_ordem,
         "equivalencia_colunas_lista": equivalencia_colunas_lista,
         "equivalencia_linhas": equivalencia_linhas,
+
+        # Fluxograma
+        "fluxograma": montar_fluxograma_ppc(ppc),
     }
 
     # =========================================================
