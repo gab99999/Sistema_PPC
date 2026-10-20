@@ -19,7 +19,7 @@
                     {{ componente.ementa|truncatechars:200 }}
                 </p>
                 <div class="btn-group">
-                    <a href="{% url 'detalhe_componente_pendente' componente.id %}" class="btn btn-secundario">Ver detalhes</a>
+                    <a href="{% url 'detalhe_componente_pendente' componente.id %}" class="btn btn-secundario">Ver</a>
                     <form method="post" action="{% url 'aprovar_componente' componente.id %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-primario">Aprovar</button>
