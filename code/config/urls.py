@@ -137,6 +137,7 @@ urlpatterns = [
     path('matrizes-referencia/<int:matriz_id>/fluxograma/', views.fluxograma_matriz_referencia, name='fluxograma_matriz_referencia'),
     path('matrizes-referencia/<int:matriz_id>/relacoes/', views.relacoes_matriz_referencia, name='relacoes_matriz_referencia'),
     path('matrizes-referencia/relacao/<int:relacao_id>/remover/', views.remover_relacao_referencia, name='remover_relacao_referencia'),
+    path('componentes/codigos/', views.preencher_codigos_componentes, name='preencher_codigos_componentes'),
 ]
 
 if settings.DEBUG:

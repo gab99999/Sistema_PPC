@@ -51,6 +51,57 @@ from .services.fluxograma import montar_fluxograma_ppc, montar_fluxograma_refere
 from .forms import RelacaoComponenteReferenciaForm
 from .models import MatrizReferenciaCurricular, RelacaoComponenteReferencia
 from django.urls import reverse
+from django.core.paginator import Paginator
+from django.db.models import Count
+from django.forms import formset_factory
+from .forms import CodigoComponenteForm, CodigoComponenteFormSet
+
+@staff_member_required
+def preencher_codigos_componentes(request):
+    busca = request.GET.get('q', '').strip()
+    base = ComponenteCurricular.objects.filter(codigo='')
+    if busca:
+        base = base.filter(nome__icontains=busca)
+    base = base.annotate(
+        n_ppcs=Count('uso_em_ppcs', distinct=True),
+        n_matrizes=Count('uso_em_matrizes_referencia', distinct=True),
+    ).order_by('nome', 'id')
+
+    pagina = Paginator(base, 30).get_page(request.GET.get('page'))
+    FormSet = formset_factory(CodigoComponenteForm, formset=CodigoComponenteFormSet, extra=0)
+
+    if request.method == 'POST':
+        formset = FormSet(request.POST)
+        ids = [int(v) for k, v in request.POST.items()
+               if k.endswith('-componente_id') and v.isdigit()]
+        por_id = {c.id: c for c in base.filter(pk__in=ids)}
+        if formset.is_valid():
+            salvos = 0
+            for form in formset:
+                codigo = form.cleaned_data['codigo']
+                componente = por_id.get(form.cleaned_data['componente_id'])
+                if not codigo or componente is None:
+                    continue
+                componente.codigo = codigo
+                componente.save(update_fields=['codigo'])
+                salvos += 1
+            messages.success(request, f"{salvos} código(s) salvo(s).")
+            return redirect(request.get_full_path())
+    else:
+        componentes = list(pagina.object_list)
+        por_id = {c.id: c for c in componentes}
+        formset = FormSet(initial=[{'componente_id': c.id} for c in componentes])
+
+    for form in formset:
+        valor = form['componente_id'].value()
+        form.obj = por_id.get(int(valor)) if valor not in (None, '') else None
+
+    return render(request, 'ppc/preencher_codigos_componentes.html', {
+        'formset': formset,
+        'pagina': pagina,
+        'busca': busca,
+        'total_sem_codigo': pagina.paginator.count,
+    })
 
 @login_required
 def fluxograma_ppc(request, ppc_id):

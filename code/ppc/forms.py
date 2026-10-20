@@ -5,6 +5,39 @@ from django.contrib.auth.models import User, Group
 from django.forms import modelformset_factory
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.forms import BaseFormSet
+
+
+class CodigoComponenteForm(forms.Form):
+    componente_id = forms.IntegerField(widget=forms.HiddenInput)
+    codigo = forms.CharField(
+        required=False, max_length=20,
+        widget=forms.TextInput(attrs={'class': 'input-codigo', 'autocomplete': 'off'}),
+    )
+
+    def clean_codigo(self):
+        codigo = (self.cleaned_data.get('codigo') or '').strip().upper()
+        if not codigo:
+            return ''
+        pk = self.cleaned_data.get('componente_id')
+        existente = ComponenteCurricular.objects.filter(codigo__iexact=codigo).exclude(pk=pk).first()
+        if existente:
+            raise ValidationError(f"Já usado por: {existente.nome}")
+        return codigo
+
+
+class CodigoComponenteFormSet(BaseFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
+        vistos = set()
+        for form in self.forms:
+            codigo = form.cleaned_data.get('codigo')
+            if not codigo:
+                continue
+            if codigo in vistos:
+                form.add_error('codigo', "Código repetido nesta página.")
+            vistos.add(codigo)
 
 class ComponenteMatrizReferenciaForm(forms.ModelForm):
     """Cria o ComponenteCurricular e o vínculo na matriz de referência de uma vez."""

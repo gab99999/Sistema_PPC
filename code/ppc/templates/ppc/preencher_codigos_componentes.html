@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Códigos de componentes</h1>
+<p>{{ total_sem_codigo }} componente(s) sem código{% if busca %} para "{{ busca }}"{% endif %}.</p>
+
+{% if messages %}{% for message in messages %}<p>{{ message }}</p>{% endfor %}{% endif %}
+
+<form method="get" class="form-empilhado">
+  <div>
+    <label for="busca-codigos">Buscar por nome</label>
+    <input type="text" id="busca-codigos" name="q" value="{{ busca }}">
+  </div>
+  <button type="submit" class="btn btn-secundario">Buscar</button>
+</form>
+
+{% if formset.forms %}
+<form method="post">
+  {% csrf_token %}
+  {{ formset.management_form }}
+  {{ formset.non_form_errors }}
+
+  <table class="tabela-dados">
+    <tr>
+      <th>Componente</th><th>Tipo</th><th>CH total</th><th>Status</th><th>Usado em</th><th>Código</th>
+    </tr>
+    {% for form in formset %}
+    <tr>
+      <td>{{ form.obj.nome }}</td>
+      <td>{{ form.obj.get_tipo_display }}</td>
+      <td>{{ form.obj.carga_horaria_computada_total }}h</td>
+      <td>{{ form.obj.get_status_display }}</td>
+      <td>{{ form.obj.n_ppcs }} PPC(s) · {{ form.obj.n_matrizes }} matriz(es)</td>
+      <td>
+        {{ form.componente_id }}
+        {{ form.codigo }}
+        {{ form.codigo.errors }}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  <br>
+  <button type="submit" class="btn btn-primario">Salvar códigos</button>
+</form>
+
+<p>
+  {% if pagina.has_previous %}
+    <a href="?q={{ busca|urlencode }}&page={{ pagina.previous_page_number }}">← Anterior</a>
+  {% endif %}
+  Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}
+  {% if pagina.has_next %}
+    <a href="?q={{ busca|urlencode }}&page={{ pagina.next_page_number }}">Próxima →</a>
+  {% endif %}
+</p>
+{% else %}
+<p>Nenhum componente sem código{% if busca %} para essa busca{% endif %}.</p>
+{% endif %}
+{% endblock %}

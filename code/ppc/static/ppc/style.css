@@ -717,6 +717,17 @@ h3 {
     align-self: flex-start;
 }
 
+
+.input-codigo {
+    width: 9rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    font-family: var(--fonte-corpo);
+    font-size: 0.9rem;
+}
+
+
 #status-salvamento-matriz {
     display: inline-block;
     font-size: 0.85rem;
