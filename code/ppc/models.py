@@ -728,3 +728,24 @@ class VinculoUsuarioCurso(models.Model):
 
     def __str__(self):
         return f"{self.usuario} → {self.curso.nome}"
+
+
+class RevisaoSecaoPPC(models.Model):
+    """Confirmação de que o NDE revisou uma seção do PPC. Independe de a seção estar preenchida."""
+    ppc = models.ForeignKey(PPC, on_delete=models.CASCADE, related_name="revisoes_secao")
+    secao = models.CharField(max_length=50)
+    conteudo_hash = models.CharField(max_length=64)
+    revisado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="+"
+    )
+    revisado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['ppc', 'secao'], name='uniq_revisao_secao_ppc'),
+        ]
+
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return f"{self.ppc} — {self.secao}"

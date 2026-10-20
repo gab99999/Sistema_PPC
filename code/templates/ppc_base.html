@@ -9,6 +9,8 @@
         <div class="dropdown-acoes-conteudo">
           <a href="{% url 'historico_ppc' ppc.id %}">Ver histórico</a>
           <a href="{% url 'duplicar_ppc' ppc.id %}">Duplicar este PPC</a>
+          <a href="{% url 'comparar_ppcs' ppc.id %}"
+            class="{% if request.resolver_match.url_name == 'comparar_ppcs' %}ativo{% endif %}">Comparar Versões</a>
         </div>
       </details>
     </div> <br>
@@ -48,13 +50,12 @@
        class="{% if request.resolver_match.url_name == 'editar_referencias' %}ativo{% endif %}">Referências</a>
    <a href="{% url 'editar_apendices' ppc.id %}"
        class="{% if request.resolver_match.url_name == 'editar_apendice' %}ativo{% endif %}">Apêndices</a>
-   <a href="{% url 'comparar_ppcs' ppc.id %}"
-       class="{% if request.resolver_match.url_name == 'comparar_ppcs' %}ativo{% endif %}">Comparar Versões</a>
    <a href="{% url 'lista_nde' ppc.curso.id %}?ppc_id={{ ppc.id }}">Membros do NDE</a>
 </nav>
     <div id="ppc-conteudo">
         {% load ppc_extras %}
         {% painel_completude_ppc ppc %}
+        {% barra_revisao_secao %}
         {% block ppc_content %}{% endblock %}
     </div>
 </div>

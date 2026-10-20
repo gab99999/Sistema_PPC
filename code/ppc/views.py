@@ -55,6 +55,21 @@ from django.core.paginator import Paginator
 from django.db.models import Count
 from django.forms import formset_factory
 from .forms import CodigoComponenteForm, CodigoComponenteFormSet
+from django.utils.http import url_has_allowed_host_and_scheme
+from .completude import confirmar_revisao
+
+@login_required
+@require_POST
+def confirmar_revisao_secao(request, ppc_id):
+    ppc = get_object_or_404(PPC, id=ppc_id)
+    confirmar_revisao(ppc, request.POST.getlist("secao"), request.user)
+    messages.success(request, "Revisão confirmada.")
+    destino = request.POST.get("next", "")
+    if not url_has_allowed_host_and_scheme(
+        destino, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        destino = reverse("detalhe_curso", args=[ppc.curso_id])
+    return redirect(destino)
 
 @staff_member_required
 def preencher_codigos_componentes(request):

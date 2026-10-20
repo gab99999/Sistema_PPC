@@ -1,0 +1,22 @@
+{% if secoes %}
+<div class="barra-revisao {% if pendentes %}barra-revisao-pendente{% else %}barra-revisao-ok{% endif %}">
+  {% if pendentes %}
+    <form method="post" action="{% url 'confirmar_revisao_secao' ppc.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      {% for s in pendentes %}<input type="hidden" name="secao" value="{{ s.chave }}">{% endfor %}
+      <span>
+        {% for s in pendentes %}{% if s.estado == "desatualizada" %}O conteúdo mudou desde a última revisão.{% endif %}{% endfor %}
+        Esta seção ainda precisa da sua confirmação de revisão.
+        {% if em_branco %}<small>(há campos em branco; você pode confirmar mesmo assim)</small>{% endif %}
+        <br><small>Salve suas alterações antes de confirmar.</small>
+      </span>
+      <button type="submit" class="btn btn-primario">Confirmar que revisei</button>
+    </form>
+  {% else %}
+    {% with s=secoes.0 %}
+      <span>✔ Revisada{% if s.revisado_por %} por {{ s.revisado_por.get_full_name|default:s.revisado_por.username }}{% endif %} em {{ s.revisado_em|date:"d/m/Y H:i" }}.</span>
+    {% endwith %}
+  {% endif %}
+</div>
+{% endif %}
