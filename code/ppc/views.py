@@ -21,7 +21,7 @@ from .forms import ( ObjetivosForm, EditarPermissoesForm, CursoForm,
                     QualificacaoForm, RequisitosLegaisForm, ApendiceForm, DinamicaEADForm, 
                     EstruturaCurricularForm, ComponenteCurricularForm, BibliografiaForm, RelacaoComponenteForm,
                     ReferenciasForm, MembroNDEForm, ImportarPDFForm, ImportarPPCModeloAntigoForm, LimitesCargaHorariaFormSet,
-                    ComponenteNaMatrizForm, ResumoCargaHorariaPPCForm, VinculoUsuarioCursoForm )
+                    ComponenteNaMatrizForm, ResumoCargaHorariaPPCForm, VinculoUsuarioCursoForm, ComponenteMatrizReferenciaForm )
 from django.db.models import Q
 from .importacao import extrair_dados_pdf
 from .importacao_modelos_antigos import ErroImportacaoPPC, preparar_importacao_modelo_antigo
@@ -601,50 +601,15 @@ def adicionar_componente_existente_matriz_referencia(request, matriz_id):
 @login_required
 def criar_componente_matriz_referencia(request, matriz_id):
     matriz = get_object_or_404(MatrizReferenciaCurricular, id=matriz_id)
-
-    if request.method == 'POST':
-        dados = request.POST
-        try:
-            componente = ComponenteCurricular(
-                codigo=dados.get('codigo', ''),
-                nome=dados['nome'],
-                tipo=dados['tipo'],
-                carga_horaria_teorica=dados.get('carga_horaria_teorica') or 0,
-                carga_horaria_pratica=dados.get('carga_horaria_pratica') or 0,
-                carga_horaria_estudante=dados.get('carga_horaria_estudante') or None,
-                carga_horaria_professor=dados.get('carga_horaria_professor') or None,
-                carga_horaria_acex=dados.get('carga_horaria_acex') or None,
-                ementa=dados.get('ementa', ''),
-                criado_por=request.user,
-            )
-            componente.full_clean()
-            componente.save()
-
-            nucleo = dados['nucleo']
-            natureza = dados.get('natureza') or ('obrigatoria' if nucleo == 'NC' else None)
-            
-            if not natureza:
-                # nucleo é NE mas por algum motivo natureza não veio — erro real, não inferível
-                raise ValidationError({'natureza': 'Informe a natureza do componente.'})
-            
-            item = ComponenteNaMatrizReferencia(
-                matriz=matriz,
-                componente=componente,
-                nucleo=nucleo,
-                natureza=natureza,
-                periodo=dados.get('periodo') or 1,
-            )
-            item.full_clean()
-            item.save()
-
-            return redirect("matriz_referencia_detalhe", matriz.id)
-        except ValidationError as erro:
-            erros = erro.message_dict if hasattr(erro, 'message_dict') else {'__all__': erro.messages}
-            return render(request, 'ppc/matrizes_referencia/criar_componente.html', {
-                'matriz': matriz, 'dados': dados, 'erros': erros,
-            })
-
-    return render(request, 'ppc/matrizes_referencia/criar_componente.html', {'matriz': matriz, 'dados': {}})
+    form = ComponenteMatrizReferenciaForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.salvar_na_matriz(matriz, request.user)
+        messages.success(request, "Componente criado e adicionado à matriz.")
+        return redirect('matriz_referencia_detalhe', matriz_id=matriz.id)
+    return render(request, 'ppc/matrizes_referencia/criar_componente.html', {
+        'matriz': matriz,
+        'form': form,
+    })
 
 @login_required
 @require_POST

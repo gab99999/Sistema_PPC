@@ -73,10 +73,7 @@
           <div class="alerta alerta-info">
             Nome e carga horária são do catálogo compartilhado — a alteração afeta todos os PPCs e matrizes que usam este componente.
           </div>
-          <div class="painel-edicao-campo">
-            <label>Nome</label>
-            <input type="text" class="campo-nome" value="{{ item.componente.nome }}">
-          </div>
+          
           <div class="painel-edicao-campo">
             <label>Núcleo</label>
             <select class="campo-nucleo">
@@ -91,14 +88,7 @@
               <option value="optativa" {% if item.natureza == "optativa" %}selected{% endif %}>Optativa</option>
             </select>
           </div>
-          <div class="painel-edicao-campo">
-            <label>Carga horária teórica</label>
-            <input type="number" class="campo-carga-teorica" value="{{ item.componente.carga_horaria_teorica }}" min="0">
-          </div>
-          <div class="painel-edicao-campo">
-            <label>Carga horária prática</label>
-            <input type="number" class="campo-carga-pratica" value="{{ item.componente.carga_horaria_pratica }}" min="0">
-          </div>
+          
           <div class="painel-edicao-acoes">
             <button type="button" class="btn btn-primario botao-salvar-edicao" data-item-id="{{ item.id }}">Salvar</button>
             <button type="button" class="btn btn-secundario botao-cancelar-edicao" data-item-id="{{ item.id }}">Cancelar</button>

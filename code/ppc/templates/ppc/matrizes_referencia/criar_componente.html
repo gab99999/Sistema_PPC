@@ -1,77 +1,41 @@
-{# ppc/templates/ppc/matrizes_referencia/criar_componente.html #}
 {% extends "base.html" %}
 {% block content %}
 <h1>Novo componente — {{ matriz }}</h1>
 
-{% if erros %}
-<div class="alerta alerta-erro">
-  <ul>{% for campo, msgs in erros.items %}<li>{{ campo }}: {{ msgs|join:", " }}</li>{% endfor %}</ul>
-</div>
-{% endif %}
-
 <form method="post" class="form-vinculo-matriz">
   {% csrf_token %}
-  <label>Código<input type="text" name="codigo" value="{{ dados.codigo|default:'' }}"></label>
-  <label>Nome<input type="text" name="nome" value="{{ dados.nome|default:'' }}" required></label> <br><br>
+  {{ form.non_field_errors }}
 
-  <label>Tipo
-    <select name="tipo" id="campo-tipo">
-      <option value="disciplina" {% if not dados.tipo or dados.tipo == "disciplina" %}selected{% endif %}>Disciplina</option>
-      <option value="modulo" {% if dados.tipo == "modulo" %}selected{% endif %}>Módulo</option>
-      <option value="seminario" {% if dados.tipo == "seminario" %}selected{% endif %}>Seminário de Integração</option>
-      <option value="atividade" {% if dados.tipo == "atividade" %}selected{% endif %}>Atividade Orientada</option>
-    </select>
-  </label> <br><br>
-
-  <label>Núcleo
-    <select name="nucleo" id="campo-nucleo">
-      <option value="NC" {% if dados.nucleo == "NC" %}selected{% endif %}>Núcleo Comum</option>
-      <option value="NE" {% if not dados.nucleo or dados.nucleo == "NE" %}selected{% endif %}>Núcleo Específico</option>
-    </select>
-  </label> <br><br> 
-
-  <label>Natureza
-    <select name="natureza" id="campo-natureza">
-      <option value="obrigatoria" {% if dados.natureza == "obrigatoria" or not dados.natureza %}selected{% endif %}>Obrigatória</option>
-      <option value="optativa" {% if dados.natureza == "optativa" %}selected{% endif %}>Optativa</option>
-    </select>
-    <span class="ajuda-campo" id="ajuda-natureza-nc" style="display:none;">Núcleo Comum é sempre de natureza obrigatória.</span>
-  </label><br> 
-  <label>Período<input type="number" name="periodo" value="{{ dados.periodo|default:1 }}" min="1"></label> <br>
-
-  <label>É uma CCU?
-    <select name="ccu" id="campo-ccu">
-      <option value=True {% if dados.ccu == True or not dados.ccu %}selected{% endif %}>Sim</option>
-      <option value=None {% if dados.ccu == None %}selected{% endif %}>Não sei</option>
-      <option value=False {% if dados.ccu == False %}selected{% endif %}>Não</option>
-    </select>
-  </label> <br><br>
+  {{ form.codigo.as_field_group }}
+  {{ form.nome.as_field_group }}
+  {{ form.tipo.as_field_group }}
+  {{ form.nucleo.as_field_group }}
+  {{ form.natureza.as_field_group }}
+  <span class="ajuda-campo" id="ajuda-natureza-nc" style="display:none;">Núcleo Comum é sempre de natureza obrigatória.</span>
+  {{ form.periodo.as_field_group }}
+  {{ form.ccu.as_field_group }}
 
   <div id="grupo-carga-padrao">
-    <label>Carga horária teórica<input type="number" name="carga_horaria_teorica" value="{{ dados.carga_horaria_teorica|default:0 }}" min="0"></label>
-    <label>Carga horária prática<input type="number" name="carga_horaria_pratica" value="{{ dados.carga_horaria_pratica|default:0 }}" min="0"></label>
+    {{ form.carga_horaria_teorica.as_field_group }}
+    {{ form.carga_horaria_pratica.as_field_group }}
   </div>
 
   <div id="grupo-carga-atividade" style="display:none;">
-    <label>Carga horária do estudante<input type="number" name="carga_horaria_estudante" value="{{ dados.carga_horaria_estudante|default:0 }}" min="0"></label>
-    <label>Carga horária do professor<input type="number" name="carga_horaria_professor" value="{{ dados.carga_horaria_professor|default:0 }}" min="0"></label>
+    {{ form.carga_horaria_estudante.as_field_group }}
+    {{ form.carga_horaria_professor.as_field_group }}
     <span class="ajuda-campo">A carga do professor não pode passar da carga do estudante — só a do estudante entra na carga horária total.</span>
   </div>
 
-  <label>Carga horária ACEx<input type="number" name="carga_horaria_acex" value="{{ dados.carga_horaria_acex|default:0 }}" min="0"></label> 
-  <span class="ajuda-campo"></span>
-
-  <label>Ementa
-    <textarea name="ementa" rows="4">{{ dados.ementa|default:'' }}</textarea>
-  </label> <br> <br>
+  {{ form.carga_horaria_acex.as_field_group }}
+  {{ form.ementa.as_field_group }}
 
   <button type="submit" class="btn btn-primario">Criar e adicionar</button>
 </form>
 
 <script>
-const campoTipo = document.getElementById("campo-tipo");
-const campoNucleo = document.getElementById("campo-nucleo");
-const campoNatureza = document.getElementById("campo-natureza");
+const campoTipo = document.getElementById("id_tipo");
+const campoNucleo = document.getElementById("id_nucleo");
+const campoNatureza = document.getElementById("id_natureza");
 const ajudaNaturezaNC = document.getElementById("ajuda-natureza-nc");
 const grupoPadrao = document.getElementById("grupo-carga-padrao");
 const grupoAtividade = document.getElementById("grupo-carga-atividade");
@@ -87,7 +51,6 @@ function atualizarNatureza() {
     if (ehNucleoComum) {
         campoNatureza.value = "obrigatoria";
     }
-    // trava a INTERAÇÃO sem remover do POST: readonly via pointer-events + optativa escondida
     campoNatureza.style.pointerEvents = ehNucleoComum ? "none" : "auto";
     campoNatureza.style.backgroundColor = ehNucleoComum ? "#f3f4f6" : "";
     ajudaNaturezaNC.style.display = ehNucleoComum ? "inline" : "none";
@@ -100,4 +63,3 @@ atualizarNatureza();
 </script>
 {% endblock %}
 {% block ajuda %}<p>Cadastre um componente para a matriz de referência. Informe carga, núcleo, natureza e período com cuidado: a matriz curricular deve especificar esses elementos (RGCG, art. 20, II).</p>{% endblock %}
-</document_content></document>

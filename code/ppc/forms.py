@@ -4,6 +4,83 @@ from ppc.models import PPC, Curso, DinamicaEAD, Apendice, ComponenteNaMatrizRefe
 from django.contrib.auth.models import User, Group
 from django.forms import modelformset_factory
 from django.contrib.auth import get_user_model
+from django.db import transaction
+
+class ComponenteMatrizReferenciaForm(forms.ModelForm):
+    """Cria o ComponenteCurricular e o vínculo na matriz de referência de uma vez."""
+    nucleo = forms.ChoiceField(
+        label="Núcleo", choices=ComponenteNaMatrizReferencia.NUCLEO_CHOICES, initial='NE'
+    )
+    natureza = forms.ChoiceField(
+        label="Natureza", choices=ComponenteNaMatrizReferencia.NATUREZA_CHOICES, initial='obrigatoria'
+    )
+    periodo = forms.IntegerField(label="Período", min_value=1, initial=1)
+
+    class Meta:
+        model = ComponenteCurricular
+        fields = [
+            'codigo', 'nome', 'tipo', 'ccu',
+            'carga_horaria_teorica', 'carga_horaria_pratica',
+            'carga_horaria_estudante', 'carga_horaria_professor',
+            'carga_horaria_acex', 'ementa',
+        ]
+        labels = {
+            'codigo': 'Código',
+            'carga_horaria_teorica': 'Carga horária teórica',
+            'carga_horaria_pratica': 'Carga horária prática',
+            'carga_horaria_estudante': 'Carga horária do estudante',
+            'carga_horaria_professor': 'Carga horária do professor',
+            'carga_horaria_acex': 'Carga horária ACEx',
+        }
+        widgets = {'ementa': forms.Textarea(attrs={'rows': 4})}
+
+    field_order = [
+        'codigo', 'nome', 'tipo', 'nucleo', 'natureza', 'periodo', 'ccu',
+        'carga_horaria_teorica', 'carga_horaria_pratica',
+        'carga_horaria_estudante', 'carga_horaria_professor',
+        'carga_horaria_acex', 'ementa',
+    ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Cada grupo de carga fica oculto conforme o tipo; a obrigatoriedade é tratada no clean()
+        for nome in ('carga_horaria_teorica', 'carga_horaria_pratica',
+                     'carga_horaria_estudante', 'carga_horaria_professor',
+                     'carga_horaria_acex'):
+            self.fields[nome].required = False
+            self.fields[nome].initial = 0
+        self.fields['ccu'].initial = True   # mesmo padrão do formulário antigo (Sim)
+
+    def clean(self):
+        cleaned = super().clean()
+        tipo = cleaned.get('tipo')
+
+        if tipo == 'atividade':
+            cleaned['carga_horaria_teorica'] = 0
+            cleaned['carga_horaria_pratica'] = 0
+        else:
+            cleaned['carga_horaria_teorica'] = cleaned.get('carga_horaria_teorica') or 0
+            cleaned['carga_horaria_pratica'] = cleaned.get('carga_horaria_pratica') or 0
+        cleaned['carga_horaria_estudante'] = cleaned.get('carga_horaria_estudante') or 0
+        cleaned['carga_horaria_professor'] = cleaned.get('carga_horaria_professor') or 0
+        cleaned['carga_horaria_acex'] = cleaned.get('carga_horaria_acex') or 0
+
+        if cleaned.get('nucleo') == 'NC' and cleaned.get('natureza') != 'obrigatoria':
+            self.add_error('natureza', "Componentes do Núcleo Comum são sempre de natureza obrigatória.")
+        return cleaned
+
+    @transaction.atomic
+    def salvar_na_matriz(self, matriz, usuario):
+        componente = self.save(commit=False)
+        componente.criado_por = usuario
+        componente.save()
+        return ComponenteNaMatrizReferencia.objects.create(
+            matriz=matriz,
+            componente=componente,
+            periodo=self.cleaned_data['periodo'],
+            natureza=self.cleaned_data['natureza'],
+            nucleo=self.cleaned_data['nucleo'],
+        )
 
 class VinculoUsuarioCursoForm(forms.ModelForm):
     class Meta:
