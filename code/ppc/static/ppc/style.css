@@ -994,7 +994,10 @@ h3 {
 .barra-revisao form { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin: 0; }
 .barra-revisao-pendente { background: #fffbeb; border-color: #f59e0b; }
 .barra-revisao-ok { background: #f0fdf4; border-color: #22c55e; }
-
+.aviso-em-branco {
+    font-size: 0.85rem;
+    color: #92400e;
+}
 
 /* MENU DE AÇÔES DO PPC*/
 

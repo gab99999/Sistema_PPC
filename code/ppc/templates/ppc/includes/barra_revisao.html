@@ -8,7 +8,6 @@
       <span>
         {% for s in pendentes %}{% if s.estado == "desatualizada" %}O conteúdo mudou desde a última revisão.{% endif %}{% endfor %}
         Esta seção ainda precisa da sua confirmação de revisão.
-        {% if em_branco %}<small>(há campos em branco; você pode confirmar mesmo assim)</small>{% endif %}
         <br><small>Salve suas alterações antes de confirmar.</small>
       </span>
       <button type="submit" class="btn btn-primario">Confirmar que revisei</button>
@@ -17,6 +16,12 @@
     {% with s=secoes.0 %}
       <span>✔ Revisada{% if s.revisado_por %} por {{ s.revisado_por.get_full_name|default:s.revisado_por.username }}{% endif %} em {{ s.revisado_em|date:"d/m/Y H:i" }}.</span>
     {% endwith %}
+  {% endif %}
+
+  {% if campos_em_branco %}
+    <span class="aviso-em-branco">
+      ⚠ {{ campos_em_branco }} de {{ total_campos }} campo{{ campos_em_branco|pluralize }} em branco nesta seção{% if pendentes %} (você pode confirmar mesmo assim){% endif %}.
+    </span>
   {% endif %}
 </div>
 {% endif %}

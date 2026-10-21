@@ -14,6 +14,7 @@ def painel_completude_ppc(ppc):
     return {
         "ppc": ppc,
         "pendentes": [s for s in secoes if not s["revisada"]],
+        "com_branco": [s for s in secoes if s["campos_em_branco"]],
         "revisadas": revisadas,
         "total": total,
         "percentual": round((revisadas / total) * 100) if total else 0,
@@ -34,7 +35,8 @@ def barra_revisao_secao(context):
         "ppc": ppc,
         "secoes": secoes,
         "pendentes": [s for s in secoes if not s["revisada"]],
-        "em_branco": any(not s["preenchida"] for s in secoes),
+        "campos_em_branco": sum(s["campos_em_branco"] for s in secoes),
+        "total_campos": sum(s["total_campos"] for s in secoes),
         "next": request.get_full_path(),
         "csrf_token": context.get("csrf_token"),
     }

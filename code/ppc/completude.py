@@ -6,7 +6,9 @@ from ppc.models import DinamicaEAD, RevisaoSecaoPPC
 
 
 def _normalizar(valor):
-    return " ".join(strip_tags(str(valor or "")).replace("\xa0", " ").split())
+    # None vira vazio; 0 e False não são "em branco" (importa quando houver campos numéricos)
+    texto = "" if valor is None else str(valor)
+    return " ".join(strip_tags(texto).replace("\xa0", " ").split())
 
 
 def _preenchido(valor):
@@ -46,11 +48,12 @@ def secoes_do_ppc(ppc):
 
 def _valores(ppc, campos):
     if campos is None:  # Dinâmica EAD: campos do model relacionado
+        campos_modelo = list(DinamicaEAD._meta.fields)[2:]
         try:
             dinamica = ppc.dinamica_ead
         except DinamicaEAD.DoesNotExist:
-            return []
-        return [getattr(dinamica, f.name) for f in list(dinamica._meta.fields)[2:]]
+            return [""] * len(campos_modelo)   # ainda não existe: todos em branco
+        return [getattr(dinamica, f.name) for f in campos_modelo]
     return [getattr(ppc, c) for c in campos]
 
 
@@ -64,6 +67,7 @@ def calcular_completude_ppc(ppc):
     resultado = []
     for chave, nome, url, campos in secoes_do_ppc(ppc):
         valores = _valores(ppc, campos)
+        em_branco = sum(1 for v in valores if not _preenchido(v))
         revisao = revisoes.get(chave)
         if revisao is None:
             estado = "pendente"
@@ -75,7 +79,9 @@ def calcular_completude_ppc(ppc):
             "chave": chave,
             "nome": nome,
             "url": url,
-            "preenchida": bool(valores) and all(_preenchido(v) for v in valores),
+            "preenchida": em_branco == 0,
+            "campos_em_branco": em_branco,
+            "total_campos": len(valores),
             "estado": estado,
             "revisada": estado == "revisada",
             "revisado_por": revisao.revisado_por if revisao else None,

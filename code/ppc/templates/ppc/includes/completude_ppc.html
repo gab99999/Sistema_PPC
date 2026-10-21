@@ -17,8 +17,21 @@
             {% for secao in pendentes %}
                 <li>
                     <a href="{% url secao.url ppc.id %}">{{ secao.nome }}</a>
-                    {% if secao.estado == "desatualizada" %}<small>(alterada após a revisão)</small>
-                    {% elif not secao.preenchida %}<small>(em branco)</small>{% endif %}
+                    {% if secao.estado == "desatualizada" %}<small>(alterada após a revisão)</small>{% endif %}
+                    {% if secao.campos_em_branco %}<small>({{ secao.campos_em_branco }} de {{ secao.total_campos }} campo{{ secao.campos_em_branco|pluralize }} em branco)</small>{% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </details>
+    {% endif %}
+    {% if com_branco %}
+    <details class="painel-completude-detalhes">
+        <summary>{{ com_branco|length }} seç{{ com_branco|length|pluralize:"ão,ões" }} com campos em branco</summary>
+        <ul class="lista-completude">
+            {% for secao in com_branco %}
+                <li>
+                    <a href="{% url secao.url ppc.id %}">{{ secao.nome }}</a>
+                    <small>({{ secao.campos_em_branco }} de {{ secao.total_campos }} campo{{ secao.campos_em_branco|pluralize }} em branco{% if secao.revisada %}; já revisada{% endif %})</small>
                 </li>
             {% endfor %}
         </ul>
