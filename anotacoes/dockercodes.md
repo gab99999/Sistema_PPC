@@ -16,3 +16,8 @@ python manage.py runserver           --> roda o servidor Django local
 python manage.py dbshell             --> abre o terminal MySQL conectado ao banco
 python manage.py migrate             --> aplica as migrações no banco (⚠️ cuidado no banco de produção)
 python manage.py makemigrations      --> gera novas migrações a partir de mudanças nos models
+
+python manage.py importar_matriz_referencia ppc/componentes/(coloque o arquivo.xlsx aqui)
+python manage.py importar_bibliografias ppc/bibliografias/bibliografias_limpas.csv
+python manage.py importar_ccu ppc/componentes_ccu/ccu.xlsx
+python manage.py importar_cine_brasil ppc/cinebrasil/cine_brasil_cursos_corrigido.csv
