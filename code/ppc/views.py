@@ -57,6 +57,7 @@ from django.forms import formset_factory
 from .forms import CodigoComponenteForm, CodigoComponenteFormSet
 from django.utils.http import url_has_allowed_host_and_scheme
 from .completude import confirmar_revisao
+from ppc.services.eventos import registrar_evento, suspender_eventos_edicao
 
 @login_required
 @require_POST
@@ -494,33 +495,36 @@ def duplicar_ppc(request, ppc_id):
             novo.save()
 
             if copiar_matriz:
-                mapa_componentes = {}  # id do ComponenteNaMatriz original -> novo ComponenteNaMatriz
-            
-                for item in ComponenteNaMatriz.objects.filter(ppc=original):
-                    novo_item = ComponenteNaMatriz.objects.create(
-                        ppc=novo, componente=item.componente,
-                        periodo=item.periodo, natureza=item.natureza,
-                    )
-                    mapa_componentes[item.id] = novo_item
-            
-                    for bib in item.bibliografias.all():
-                        Bibliografia.objects.create(
-                            componente_na_matriz=novo_item,
-                            tipo=bib.tipo, titulo=bib.titulo, autores=bib.autores,
-                            editora=bib.editora, cidade=bib.cidade, ano=bib.ano,
+                # cópia em lote: o history grava tudo, mas não geramos um EventoEdicao por item
+                with suspender_eventos_edicao():
+                    mapa_componentes = {}  # id do ComponenteNaMatriz original -> novo ComponenteNaMatriz
+
+                    for item in ComponenteNaMatriz.objects.filter(ppc=original):
+                        novo_item = ComponenteNaMatriz.objects.create(
+                            ppc=novo, componente=item.componente,
+                            periodo=item.periodo, natureza=item.natureza,
+                            nucleo=item.nucleo, grupo_licenciatura=item.grupo_licenciatura,
                         )
-            
-                # só depois que TODOS os componentes novos existem é que dá pra recriar
-                # as relações — uma relação exige as duas pontas já presentes
-                for relacao in RelacaoComponente.objects.filter(componente_na_matriz__ppc=original):
-                    origem_nova = mapa_componentes.get(relacao.componente_na_matriz_id)
-                    destino_novo = mapa_componentes.get(relacao.componente_relacionado_na_matriz_id)
-                    if origem_nova and destino_novo:
-                        RelacaoComponente.objects.create(
-                            componente_na_matriz=origem_nova,
-                            componente_relacionado_na_matriz=destino_novo,
-                            tipo=relacao.tipo,
-                        )
+                        mapa_componentes[item.id] = novo_item
+
+                        for bib in item.bibliografias.all():
+                            Bibliografia.objects.create(
+                                componente_na_matriz=novo_item,
+                                tipo=bib.tipo, titulo=bib.titulo, autores=bib.autores,
+                                editora=bib.editora, cidade=bib.cidade, ano=bib.ano,
+                            )
+
+                    # só depois que TODOS os componentes novos existem é que dá pra recriar
+                    # as relações — uma relação exige as duas pontas já presentes
+                    for relacao in RelacaoComponente.objects.filter(componente_na_matriz__ppc=original):
+                        origem_nova = mapa_componentes.get(relacao.componente_na_matriz_id)
+                        destino_novo = mapa_componentes.get(relacao.componente_relacionado_na_matriz_id)
+                        if origem_nova and destino_novo:
+                            RelacaoComponente.objects.create(
+                                componente_na_matriz=origem_nova,
+                                componente_relacionado_na_matriz=destino_novo,
+                                tipo=relacao.tipo,
+                            )
 
             if hasattr(original, "dinamica_ead") and original.modalidade == "ead":
                 original_ead = original.dinamica_ead
@@ -536,6 +540,10 @@ def duplicar_ppc(request, ppc_id):
                     carga_horaria_presencial_acompanhamento=original_ead.carga_horaria_presencial_acompanhamento,
                     armazenamento_gerenciamento_dados=original_ead.armazenamento_gerenciamento_dados,
                 )
+        registrar_evento(
+            "ppc_duplicado", usuario=request.user, ppc=novo,
+            origem_id=original.id, copiou_matriz=copiar_matriz, secoes=secoes_marcadas,
+        )
 
         return redirect("editar_apresentacao", ppc_id=novo.id)
 
@@ -558,7 +566,7 @@ def reverter_ppc(request, ppc_id, history_id):
 
     campos_diferentes = []
     for campo in ppc._meta.fields:
-        if campo.name == "id":
+        if campo.name in ("id", "atualizado_em"):
             continue
         if getattr(ppc, campo.name, None) != getattr(registro, campo.name, None):
             campos_diferentes.append(str(campo.verbose_name or campo.name))
@@ -569,6 +577,10 @@ def reverter_ppc(request, ppc_id, history_id):
         # nunca apaga o que aconteceu depois — o "futuro" continua recuperável
         # revertendo de novo pra frente, se precisar.
         registro.instance.save()
+        registrar_evento(
+            "ppc_revertido", usuario=request.user, ppc=ppc,
+            history_id=registro.history_id, campos=campos_diferentes,
+        )
         return redirect("historico_ppc", ppc_id=ppc.id)
 
     return render(request, "ppc/confirmar_reversao.html", {
@@ -608,16 +620,23 @@ def duplicar_matriz_referencia(request, matriz_id):
             nome=f"{original.nome or original.identificador_origem or 'Matriz'} (cópia)",
             numero_periodos=original.numero_periodos,
         )
-        ComponenteNaMatrizReferencia.objects.bulk_create([
-            ComponenteNaMatrizReferencia(
-                matriz=copia, componente=item.componente,
-                periodo=item.periodo, natureza=item.natureza, ordem=item.ordem,
-            )
-            for item in original.componentes.all()
-        ])
+        total_itens = 0
+        # create() (e não bulk_create) para o history de cada item ser gravado;
+        # o EventoEdicao por item fica suspenso e entra um único evento-resumo abaixo
+        with suspender_eventos_edicao():
+            for item in original.componentes.all():
+                ComponenteNaMatrizReferencia.objects.create(
+                    matriz=copia, componente_id=item.componente_id,
+                    periodo=item.periodo, natureza=item.natureza, ordem=item.ordem,
+                    nucleo=item.nucleo, grupo_licenciatura=item.grupo_licenciatura,
+                )
+                total_itens += 1
 
+    registrar_evento(
+        "matriz_duplicada", usuario=request.user, curso=original.curso,
+        origem_id=original.id, matriz_id=copia.id, itens=total_itens,
+    )
     return redirect("matriz_referencia_detalhe", matriz_id=copia.id)
-
 
 @login_required
 def buscar_componente_existente_matriz_referencia(request, matriz_id):
@@ -1905,6 +1924,7 @@ def gerar_pdf_ppc(request, ppc_id):
     }, request=request)
 
     pdf = HTML(string=html, base_url=request.build_absolute_uri('/')).write_pdf()
+    registrar_evento("pdf_gerado", usuario=request.user, ppc=ppc)
     nome = slugify(ppc.curso.nome) or f'ppc-{ppc.pk}'
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="ppc-{nome}.pdf"'

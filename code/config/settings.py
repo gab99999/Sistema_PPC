@@ -57,8 +57,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'ppc.middleware.AcessoPorCursoMiddleware', 
+    'ppc.middleware.AcessoPorCursoMiddleware',
+    'ppc.middleware.UsoMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'

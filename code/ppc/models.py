@@ -133,9 +133,6 @@ class PPC(models.Model):
     # -- Trabalho de Conclusão de Curso --
     tcc = CKEditor5Field(blank=True, config_name='default')
 
-    # -- Detalhes sobre Política e Gestão do Estágio Obrigátorio e Não Obrigátorio
-    estagio = CKEditor5Field(blank=True, config_name='default')
-
     # -- Detalhes sobre Política e Gestão do Estágio Obrigatório e Não Obrigatório --
     estagio = CKEditor5Field(blank=True, config_name='default', verbose_name="Política e Gestão de Estágio Curricular Obrigatório e Não Obrigatório")
 
@@ -229,7 +226,6 @@ class ComponenteCurricular(models.Model):
     
     carga_horaria_teorica = models.PositiveIntegerField()
     carga_horaria_pratica = models.PositiveIntegerField()
-    carga_horaria_pcc = models.PositiveIntegerField(default=0, help_text="Horas de Prática como Componente Curricular (só licenciaturas)")
     unidade_academica_componente = models.CharField(max_length=200, blank=True)
     ementa = models.TextField()
 
@@ -329,6 +325,7 @@ class Bibliografia(models.Model):
     editora = models.CharField(max_length=150, blank=True)
     cidade = models.CharField(max_length=100, blank=True)
     ano = models.PositiveIntegerField(blank=True, null=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.titulo
@@ -425,6 +422,8 @@ class MembroNDE(models.Model):
     class Meta:
         verbose_name = "Membro do NDE"
         verbose_name_plural = "Membros do NDE"
+
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.nome} ({self.curso.nome})"
@@ -726,6 +725,8 @@ class VinculoUsuarioCurso(models.Model):
         ]
         ordering = ['usuario__username', 'curso__nome']
 
+    history = HistoricalRecords()
+
     def __str__(self):
         return f"{self.usuario} → {self.curso.nome}"
 
@@ -749,3 +750,79 @@ class RevisaoSecaoPPC(models.Model):
 
     def __str__(self):
         return f"{self.ppc} — {self.secao}"
+
+class EventoUso(models.Model):
+    """Log append-only de acessos e ações de negócio. Edições de campos ficam em EventoEdicao."""
+
+    class Tipo(models.TextChoices):
+        LOGIN = "login", "Login"
+        LOGOUT = "logout", "Logout"
+        LOGIN_FALHOU = "login_falhou", "Falha de login"
+        PPC_DUPLICADO = "ppc_duplicado", "PPC duplicado"
+        PPC_REVERTIDO = "ppc_revertido", "PPC revertido"
+        PDF_GERADO = "pdf_gerado", "PDF gerado"
+        MATRIZ_APLICADA = "matriz_aplicada", "Matriz aplicada ao PPC"
+        IMPORTACAO = "importacao", "Importação"
+        MATRIZ_DUPLICADA = "matriz_duplicada", "Matriz de referência duplicada"
+
+    # tipos sujeitos à retenção de 12 meses
+    TIPOS_ACESSO = ("login", "logout", "login_falhou")
+
+    tipo = models.CharField(max_length=30, choices=Tipo.choices)
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    identificador = models.CharField(max_length=150, blank=True, help_text="Só em falha de login: o username digitado.")
+    curso = models.ForeignKey(Curso, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    ppc = models.ForeignKey(PPC, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    metadados = models.JSONField(default=dict, blank=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-criado_em"]
+        indexes = [
+            models.Index(fields=["tipo", "criado_em"]),
+            models.Index(fields=["usuario", "criado_em"]),
+        ]
+
+
+class EventoEdicao(models.Model):
+    """Uma edição real (o save mudou algo) em modelo rastreado. Alimentado por signal do simple_history."""
+    TIPO_CHOICES = [("criacao", "Criação"), ("edicao", "Edição"), ("exclusao", "Exclusão")]
+
+    modelo = models.CharField(max_length=60)          # ex.: 'ppc.PPC'
+    objeto_id = models.PositiveIntegerField()
+    history_id = models.PositiveIntegerField()
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
+    campos = models.JSONField(default=list, blank=True)  # [] = não se sabe quais (ou criação/exclusão)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    ppc = models.ForeignKey(PPC, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    curso = models.ForeignKey(Curso, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    matriz = models.ForeignKey(MatrizReferenciaCurricular, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    ocorreu_em = models.DateTimeField(db_index=True)  # = history_date (preserva a data original no backfill)
+
+    class Meta:
+        ordering = ["-ocorreu_em"]
+        constraints = [
+            models.UniqueConstraint(fields=["modelo", "history_id"], name="uniq_evento_edicao_historico"),
+        ]
+        indexes = [
+            models.Index(fields=["ppc", "ocorreu_em"]),
+            models.Index(fields=["curso", "ocorreu_em"]),
+            models.Index(fields=["usuario", "ocorreu_em"]),
+            models.Index(fields=["matriz", "ocorreu_em"]),
+        ]
+
+
+class UsoDiario(models.Model):
+    """Contador de páginas vistas por usuário/dia/hora/tela (data e hora já no fuso local)."""
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
+    data = models.DateField()
+    hora = models.PositiveSmallIntegerField()  # 0-23
+    url_name = models.CharField(max_length=100)
+    contagem = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["usuario", "data", "hora", "url_name"], name="uniq_uso_diario"),
+        ]

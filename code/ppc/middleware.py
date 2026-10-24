@@ -4,6 +4,28 @@ from .models import (
     PPC, ComponenteNaMatriz, MembroNDE, Bibliografia,
     RelacaoComponente, Apendice, VinculoUsuarioCurso,
 )
+# topo do arquivo
+from .services.eventos import registrar_uso
+
+# final do arquivo
+class UsoMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        user = getattr(request, "user", None)
+        match = request.resolver_match
+        if (
+            request.method == "GET"
+            and response.status_code == 200
+            and user is not None and user.is_authenticated
+            and match is not None and match.url_name
+            and "admin" not in match.namespaces
+            and response.get("Content-Type", "").startswith("text/html")
+        ):
+            registrar_uso(user, match.url_name)
+        return response
 
 
 def _primeiro(model, campo):

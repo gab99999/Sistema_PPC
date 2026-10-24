@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Relatórios{% endblock %}
+{% block content %}
+<h1>Relatórios</h1>
+{% for grupo, itens in grupos.items %}
+  <h2>{{ grupo }}</h2>
+  <div class="grade-estatisticas">
+    {% for r in itens %}
+      <a href="{% url 'ver_relatorio' r.chave %}" class="card estatistica">
+        <strong>{{ r.titulo }}</strong>
+        <span class="estatistica-rotulo">{{ r.descricao }}</span>
+      </a>
+    {% endfor %}
+  </div>
+{% endfor %}
+{% endblock %}
+{% block ajuda %}<p>Relatórios disponíveis apenas para a DAA. Cada um pode ser filtrado e exportado em CSV.</p>{% endblock %}

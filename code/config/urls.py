@@ -35,6 +35,8 @@ from ppc.views import (home, ajuda, lista_cursos, gestao_usuarios, criar_usuario
                            lista_pendencias_por_matriz, revisar_pendencias_matriz, selecionar_matriz_referencia_para_ppc, preview_aplicar_matriz_referencia, criar_matriz_referencia, duplicar_matriz_referencia, historico_item_matriz_referencia, 
                            criar_componente_matriz_referencia, remover_componente_matriz_referencia, buscar_componente_existente_matriz_referencia, historico_matriz_referencia, adicionar_componente_existente_matriz_referencia,
                            painel_institucional, comparar_ppcs)
+from ppc import views_relatorios  # no bloco de imports
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -139,6 +141,8 @@ urlpatterns = [
     path('matrizes-referencia/relacao/<int:relacao_id>/remover/', views.remover_relacao_referencia, name='remover_relacao_referencia'),
     path('componentes/codigos/', views.preencher_codigos_componentes, name='preencher_codigos_componentes'),
     path('ppc/<int:ppc_id>/revisao/confirmar/', views.confirmar_revisao_secao, name='confirmar_revisao_secao'),
+    path("relatorios/", views_relatorios.indice_relatorios, name="relatorios"),
+    path("relatorios/<slug:chave>/", views_relatorios.ver_relatorio, name="ver_relatorio"),
 ]
 
 if settings.DEBUG:

@@ -5,6 +5,7 @@
 {% if request.user.is_staff %}
   <a href="{% url 'preencher_codigos_componentes' %}" class="btn btn-primario">Códigos de componentes</a>
   <a href="{% url 'chamados_lista' %}" class="btn-ver-chamados">Ver chamados</a>
+  <a href="{% url 'relatorios' %}" class="btn btn-primario">Relatórios</a>
 {% endif %} <br>
 <div class="grade-estatisticas">
     <div class="card estatistica"><span class="estatistica-numero">{{ total_matrizes }}</span><span class="estatistica-rotulo">Matrizes de referência</span></div>
