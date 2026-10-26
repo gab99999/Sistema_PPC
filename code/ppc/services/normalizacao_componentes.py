@@ -246,6 +246,10 @@ def normalizar_planilha_matriz(caminho_arquivo: str) -> list[dict]:
                 "carga_horaria_pratica": carga_horaria_pratica,
                 "carga_horaria_acex": carga_horaria_acex,
                 "ementa": ementa,
+                "id_componente_interno": (
+                    _valor_str(linha["id_componente_interno"])
+                    if "id_componente_interno" in df.columns else ""
+                ),
             }
         )
 

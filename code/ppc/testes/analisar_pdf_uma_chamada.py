@@ -182,7 +182,6 @@ CONTRATO_BANCO = {
             "periodo": "inteiro",
             "carga_horaria_teorica": "inteiro",
             "carga_horaria_pratica": "inteiro",
-            "carga_horaria_pcc": "inteiro",
             "unidade_academica_componente": "string",
             "ementa": "string",
             "bibliografias": [

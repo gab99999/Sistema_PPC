@@ -13,7 +13,7 @@ from weasyprint import HTML
 from django.http import HttpResponseForbidden, Http404
 from .permissions import cursos_do_usuario
 from ppc.testes.analisar_pdf_uma_chamada import analisar_pdf_adaptativo, ErroOpenRouter
-from .models import Curso, CineBrasilCurso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, Apendice, VinculoUsuarioCurso , RelacaoComponente, MembroNDE, ComponenteNaMatriz, Chamado, ResumoCargaHorariaPPC, GrupoEquivalenciaComponentes, ItemEquivalencia, ReferenciaBibliografica
+from .models import Curso, CineBrasilCurso, PPC, DinamicaEAD, ComponenteCurricular, Bibliografia, BibliografiaReferencia, Apendice, VinculoUsuarioCurso , RelacaoComponente, MembroNDE, ComponenteNaMatriz, Chamado, ResumoCargaHorariaPPC, GrupoEquivalenciaComponentes, ItemEquivalencia, ReferenciaBibliografica
 from .forms import ( ObjetivosForm, EditarPermissoesForm, CursoForm,
                     ApresentacaoForm, ExposicaoMotivosForm, PrincipiosForm,
                     ExpectativasForm, TccForm, EstagioForm, AtividadesComplementaresForm,
@@ -21,22 +21,30 @@ from .forms import ( ObjetivosForm, EditarPermissoesForm, CursoForm,
                     QualificacaoForm, RequisitosLegaisForm, ApendiceForm, DinamicaEADForm, 
                     EstruturaCurricularForm, ComponenteCurricularForm, BibliografiaForm, RelacaoComponenteForm,
                     ReferenciasForm, MembroNDEForm, ImportarPDFForm, ImportarPPCModeloAntigoForm, LimitesCargaHorariaFormSet,
-                    ComponenteNaMatrizForm, ResumoCargaHorariaPPCForm, VinculoUsuarioCursoForm, ComponenteMatrizReferenciaForm )
+                    ComponenteNaMatrizForm, ResumoCargaHorariaPPCForm, VinculoUsuarioCursoForm, ComponenteMatrizReferenciaForm, BibliografiaReferenciaForm )
 from django.db.models import Q
 from .importacao import extrair_dados_pdf
 from .importacao_modelos_antigos import ErroImportacaoPPC, preparar_importacao_modelo_antigo
 import logging
+from functools import wraps
 from types import SimpleNamespace
 from django.db import transaction
 import tempfile
 from pathlib import Path
+from io import BytesIO
+try:
+    import openpyxl
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+except ImportError:  # permite iniciar o sistema mesmo em ambientes sem o extra de exportação
+    openpyxl = None
+    Alignment = Border = Font = PatternFill = Side = None
 logger = logging.getLogger(__name__)
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .models import MatrizReferenciaCurricular, ComponenteNaMatrizReferencia
-from django.db.models import Count
+from django.db.models import Count, Max
 from .models import ImportacaoPendencia
 from .services.resolucao_pendencias import resolver_pendencia_ambigua
 from django.core.mail import send_mail
@@ -47,7 +55,7 @@ from django.db.models import Case, When, Value, IntegerField
 from django.db.models import Q
 from django.core.paginator import Paginator
 from .models import ReferenciaBibliografica
-from .services.fluxograma import montar_fluxograma_ppc, montar_fluxograma_referencia
+from .services.fluxograma import montar_fluxograma_ppc, montar_fluxograma_referencia, copiar_relacoes_referencia_para_ppc, copiar_relacoes_entre_matrizes
 from .forms import RelacaoComponenteReferenciaForm
 from .models import MatrizReferenciaCurricular, RelacaoComponenteReferencia
 from django.urls import reverse
@@ -58,6 +66,22 @@ from .forms import CodigoComponenteForm, CodigoComponenteFormSet
 from django.utils.http import url_has_allowed_host_and_scheme
 from .completude import confirmar_revisao
 from ppc.services.eventos import registrar_evento, suspender_eventos_edicao
+from ppc.services.regras_matriz import pendencias_referencias, relacoes_invalidas, contar_relacoes_invalidas, ppcs_fora_da_duracao_queryset, maior_periodo_ppc, validar_mudanca_periodo, periodo_relacao_invalido
+from ppc.services.comparacao_bibliografias import calcular_operacoes_bibliografia, resumir_operacoes
+from ppc.services.painel_bibliografias import (
+    resumo_pendencias_bibliograficas, queryset_componentes_pendentes_ppc,
+    queryset_componentes_pendentes_matriz,
+)
+
+
+def _bloquear_nde_em_detalhes_staff(view_func):
+    """Mantém o fluxo staff_member_required e responde 403 a usuário logado NDE."""
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        if request.user.is_authenticated and not request.user.is_staff:
+            raise PermissionDenied
+        return view_func(request, *args, **kwargs)
+    return _wrapped
 
 @login_required
 @require_POST
@@ -145,9 +169,12 @@ def relacoes_matriz_referencia(request, matriz_id):
     matriz = get_object_or_404(MatrizReferenciaCurricular, id=matriz_id)
     form = RelacaoComponenteReferenciaForm(request.POST or None, matriz=matriz)
     if request.method == 'POST' and form.is_valid():
-        form.save()
-        messages.success(request, "Relação adicionada.")
-        return redirect('relacoes_matriz_referencia', matriz_id=matriz.id)
+        try:
+            form.save()
+            messages.success(request, "Relação adicionada.")
+            return redirect('relacoes_matriz_referencia', matriz_id=matriz.id)
+        except ValidationError as exc:
+            form.add_error(None, exc)
     relacoes = RelacaoComponenteReferencia.objects.filter(
         item__matriz=matriz
     ).select_related('item__componente', 'item_relacionado__componente')
@@ -158,8 +185,8 @@ def relacoes_matriz_referencia(request, matriz_id):
 
 @login_required
 @require_POST
-def remover_relacao_referencia(request, relacao_id):
-    relacao = get_object_or_404(RelacaoComponenteReferencia, id=relacao_id)
+def remover_relacao_referencia(request, relacao_referencia_id):
+    relacao = get_object_or_404(RelacaoComponenteReferencia, id=relacao_referencia_id)
     matriz_id = relacao.item.matriz_id
     relacao.delete()
     messages.success(request, "Relação removida.")
@@ -275,6 +302,126 @@ def biblioteca(request):
         "resultados": resultados,
     }
     return render(request, "ppc/biblioteca.html", contexto)
+
+
+def _buscar_bibliografia_vinculo(request, item, escopo):
+    termo = request.GET.get("q", "").strip()
+    tipo = request.GET.get("tipo", "basica")
+    erro = None
+    resultados = None
+    if tipo not in {"basica", "complementar"}:
+        tipo = "basica"
+    if request.GET.get("buscar"):
+        if len(termo) < 3:
+            erro = "Digite ao menos 3 caracteres para pesquisar."
+        else:
+            qs = ReferenciaBibliografica.objects.filter(
+                Q(titulo__icontains=termo) | Q(autores__icontains=termo)
+            ).order_by("titulo", "ano", "id")
+            resultados = Paginator(qs, 25).get_page(request.GET.get("page"))
+    return render(request, "ppc/bibliografia/buscar_vinculo.html", {
+        "item": item, "escopo": escopo, "termo": termo, "tipo": tipo,
+        "erro": erro, "resultados": resultados,
+        "busca_enviada": request.GET.get("buscar") == "1",
+        "referencias_vinculadas": item.bibliografias.values_list("referencia_id", flat=True),
+    })
+
+
+@login_required
+def buscar_bibliografia_ppc(request, componente_na_matriz_id):
+    item = get_object_or_404(ComponenteNaMatriz, pk=componente_na_matriz_id)
+    return _buscar_bibliografia_vinculo(request, item, "ppc")
+
+
+@login_required
+def buscar_bibliografia_referencia(request, item_id):
+    item = get_object_or_404(ComponenteNaMatrizReferencia, pk=item_id)
+    return _buscar_bibliografia_vinculo(request, item, "referencia")
+
+
+@login_required
+@require_POST
+def vincular_bibliografia_ppc(request, componente_na_matriz_id):
+    item = get_object_or_404(ComponenteNaMatriz, pk=componente_na_matriz_id)
+    obra = get_object_or_404(ReferenciaBibliografica, pk=request.POST.get("referencia_id"))
+    tipo = request.POST.get("tipo")
+    if tipo not in {"basica", "complementar"}:
+        return HttpResponseForbidden("Tipo bibliográfico inválido.")
+    if item.bibliografias.filter(referencia=obra).exists():
+        messages.info(request, "Esta obra já está vinculada ao componente.")
+    else:
+        manual = item.bibliografias.filter(
+            referencia__isnull=True, tipo=tipo, titulo__iexact=obra.titulo,
+            autores__iexact=obra.autores, ano=obra.ano,
+        ).first()
+        if manual:
+            manual.referencia = obra
+            manual.titulo, manual.autores = obra.titulo, obra.autores
+            manual.editora, manual.cidade, manual.ano = obra.editora, obra.cidade, obra.ano
+            manual.save()
+            messages.success(request, "Referência manual correspondente vinculada à Biblioteca.")
+        else:
+            item.bibliografias.create(
+                referencia=obra, tipo=tipo, titulo=obra.titulo, autores=obra.autores,
+                editora=obra.editora, cidade=obra.cidade, ano=obra.ano,
+            )
+            messages.success(request, "Referência da Biblioteca vinculada ao componente.")
+    return redirect("detalhe_componente_na_matriz", componente_na_matriz_id=item.pk)
+
+
+@login_required
+@require_POST
+def vincular_bibliografia_referencia(request, item_id):
+    item = get_object_or_404(ComponenteNaMatrizReferencia, pk=item_id)
+    obra = get_object_or_404(ReferenciaBibliografica, pk=request.POST.get("referencia_id"))
+    tipo = request.POST.get("tipo")
+    if tipo not in {"basica", "complementar"}:
+        return HttpResponseForbidden("Tipo bibliográfico inválido.")
+    if item.bibliografias.filter(referencia=obra).exists():
+        messages.info(request, "Esta obra já está vinculada ao componente.")
+    else:
+        manual = item.bibliografias.filter(
+            referencia__isnull=True, tipo=tipo, titulo__iexact=obra.titulo,
+            autores__iexact=obra.autores, ano=obra.ano,
+        ).first()
+        if manual:
+            manual.referencia = obra
+            manual.titulo, manual.autores = obra.titulo, obra.autores
+            manual.editora, manual.cidade, manual.ano = obra.editora, obra.cidade, obra.ano
+            manual.save()
+            messages.success(request, "Referência manual correspondente vinculada à Biblioteca.")
+        else:
+            item.bibliografias.create(
+                referencia=obra, tipo=tipo, titulo=obra.titulo, autores=obra.autores,
+                editora=obra.editora, cidade=obra.cidade, ano=obra.ano,
+            )
+            messages.success(request, "Referência da Biblioteca vinculada ao componente.")
+    return redirect("matriz_referencia_detalhe", matriz_id=item.matriz_id)
+
+
+@login_required
+@require_POST
+def adicionar_bibliografia_manual_referencia(request, item_id):
+    item = get_object_or_404(ComponenteNaMatrizReferencia, pk=item_id)
+    form = BibliografiaReferenciaForm(request.POST)
+    if form.is_valid():
+        bib = form.save(commit=False)
+        bib.componente_na_matriz_referencia = item
+        bib.save()
+        messages.success(request, "Referência manual adicionada; ela ficará pendente de vínculo à Biblioteca.")
+    else:
+        messages.error(request, "Não foi possível adicionar a referência manual. Confira os campos informados.")
+    return redirect("matriz_referencia_detalhe", matriz_id=item.matriz_id)
+
+
+@login_required
+@require_POST
+def excluir_bibliografia_referencia(request, bibliografia_referencia_id):
+    bib = get_object_or_404(BibliografiaReferencia, pk=bibliografia_referencia_id)
+    matriz_id = bib.componente_na_matriz_referencia.matriz_id
+    bib.delete()
+    messages.success(request, "Referência removida do componente.")
+    return redirect("matriz_referencia_detalhe", matriz_id=matriz_id)
 
 @login_required
 def detalhe_componente_pendente(request, componente_id):
@@ -475,6 +622,8 @@ def duplicar_ppc(request, ppc_id):
         copiar_matriz = request.POST.get("copiar_matriz") == "on"
         secoes_marcadas = request.POST.getlist("secoes")
 
+        relacoes_ignoradas = []
+        periodos_acima_maximo = []
         with transaction.atomic():
             novo = PPC(curso=original.curso, tipo_ppc=tipo_ppc, status="rascunho")
 
@@ -500,16 +649,20 @@ def duplicar_ppc(request, ppc_id):
                     mapa_componentes = {}  # id do ComponenteNaMatriz original -> novo ComponenteNaMatriz
 
                     for item in ComponenteNaMatriz.objects.filter(ppc=original):
-                        novo_item = ComponenteNaMatriz.objects.create(
+                        novo_item = ComponenteNaMatriz(
                             ppc=novo, componente=item.componente,
                             periodo=item.periodo, natureza=item.natureza,
                             nucleo=item.nucleo, grupo_licenciatura=item.grupo_licenciatura,
                         )
+                        novo_item.save(validar_limite_periodo=False)
+                        if novo.duracao_maxima_semestres and item.periodo > novo.duracao_maxima_semestres:
+                            periodos_acima_maximo.append({"componente": item.componente.nome, "periodo": item.periodo})
                         mapa_componentes[item.id] = novo_item
 
                         for bib in item.bibliografias.all():
                             Bibliografia.objects.create(
                                 componente_na_matriz=novo_item,
+                                referencia_id=bib.referencia_id,
                                 tipo=bib.tipo, titulo=bib.titulo, autores=bib.autores,
                                 editora=bib.editora, cidade=bib.cidade, ano=bib.ano,
                             )
@@ -520,11 +673,21 @@ def duplicar_ppc(request, ppc_id):
                         origem_nova = mapa_componentes.get(relacao.componente_na_matriz_id)
                         destino_novo = mapa_componentes.get(relacao.componente_relacionado_na_matriz_id)
                         if origem_nova and destino_novo:
-                            RelacaoComponente.objects.create(
+                            existente = RelacaoComponente.objects.filter(
                                 componente_na_matriz=origem_nova,
                                 componente_relacionado_na_matriz=destino_novo,
                                 tipo=relacao.tipo,
-                            )
+                            ).first()
+                            if existente is None:
+                                nova = RelacaoComponente(
+                                    componente_na_matriz=origem_nova,
+                                    componente_relacionado_na_matriz=destino_novo,
+                                    tipo=relacao.tipo,
+                                )
+                                nova.save(validar_periodo=False)
+                                mensagem = periodo_relacao_invalido(nova)
+                                if mensagem:
+                                    relacoes_ignoradas.append({"relacao": relacao, "mensagem": mensagem})
 
             if hasattr(original, "dinamica_ead") and original.modalidade == "ead":
                 original_ead = original.dinamica_ead
@@ -544,6 +707,15 @@ def duplicar_ppc(request, ppc_id):
             "ppc_duplicado", usuario=request.user, ppc=novo,
             origem_id=original.id, copiou_matriz=copiar_matriz, secoes=secoes_marcadas,
         )
+        if relacoes_ignoradas:
+            detalhes = " ".join(
+                f"{r['relacao'].componente_na_matriz.componente.nome} → {r['relacao'].componente_relacionado_na_matriz.componente.nome}: {r['mensagem']}"
+                for r in relacoes_ignoradas
+            )
+            messages.warning(request, f"{len(relacoes_ignoradas)} relação(ões) legada(s) inválida(s) foram copiadas. {detalhes}")
+        if periodos_acima_maximo:
+            detalhes = ", ".join(f"{item['componente']} (período {item['periodo']})" for item in periodos_acima_maximo)
+            messages.warning(request, f"{len(periodos_acima_maximo)} componente(s) copiado(s) ficaram acima da duração máxima: {detalhes}.")
 
         return redirect("editar_apresentacao", ppc_id=novo.id)
 
@@ -614,6 +786,7 @@ def criar_matriz_referencia(request):
 def duplicar_matriz_referencia(request, matriz_id):
     original = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
 
+    relacoes_ignoradas = []
     with transaction.atomic():
         copia = MatrizReferenciaCurricular.objects.create(
             curso=original.curso,
@@ -621,21 +794,37 @@ def duplicar_matriz_referencia(request, matriz_id):
             numero_periodos=original.numero_periodos,
         )
         total_itens = 0
+        mapa_itens = {}
         # create() (e não bulk_create) para o history de cada item ser gravado;
         # o EventoEdicao por item fica suspenso e entra um único evento-resumo abaixo
         with suspender_eventos_edicao():
             for item in original.componentes.all():
-                ComponenteNaMatrizReferencia.objects.create(
+                novo_item = ComponenteNaMatrizReferencia.objects.create(
                     matriz=copia, componente_id=item.componente_id,
                     periodo=item.periodo, natureza=item.natureza, ordem=item.ordem,
                     nucleo=item.nucleo, grupo_licenciatura=item.grupo_licenciatura,
                 )
+                mapa_itens[item.pk] = novo_item
                 total_itens += 1
+                for bib in item.bibliografias.all():
+                    BibliografiaReferencia.objects.create(
+                        componente_na_matriz_referencia=novo_item,
+                        referencia_id=bib.referencia_id, tipo=bib.tipo,
+                        titulo=bib.titulo, autores=bib.autores,
+                        editora=bib.editora, cidade=bib.cidade, ano=bib.ano,
+                    )
+            relacoes_ignoradas = copiar_relacoes_entre_matrizes(original, copia)
 
     registrar_evento(
         "matriz_duplicada", usuario=request.user, curso=original.curso,
         origem_id=original.id, matriz_id=copia.id, itens=total_itens,
     )
+    if relacoes_ignoradas:
+        detalhes = " ".join(
+            f"{r['relacao'].item.componente.nome} → {r['relacao'].item_relacionado.componente.nome}: {r['mensagem']}"
+            for r in relacoes_ignoradas
+        )
+        messages.warning(request, f"{len(relacoes_ignoradas)} relação(ões) legada(s) inválida(s) foram copiadas. {detalhes}")
     return redirect("matriz_referencia_detalhe", matriz_id=copia.id)
 
 @login_required
@@ -735,13 +924,46 @@ def selecionar_matriz_referencia_para_ppc(request, ppc_id):
 def _montar_preview_aplicacao(ppc, matriz):
     """Categoriza cada item da matriz de referência frente ao que já existe
     no PPC. Nunca decide sozinho — só classifica, para o humano decidir."""
-    itens_referencia = matriz.componentes.select_related("componente")
+    itens_referencia = list(matriz.componentes.select_related("componente").prefetch_related(
+        Prefetch("bibliografias", queryset=BibliografiaReferencia.objects.select_related("referencia").order_by("pk"))
+    ))
     existentes = {
         cm.componente_id: cm
-        for cm in ComponenteNaMatriz.objects.filter(ppc=ppc).select_related("componente")
+        for cm in ComponenteNaMatriz.objects.filter(ppc=ppc).select_related("componente").prefetch_related(
+            Prefetch("bibliografias", queryset=Bibliografia.objects.select_related("referencia").order_by("pk"))
+        )
     }
 
-    return _categorizar_componentes(itens_referencia, existentes)
+    preview = _categorizar_componentes(itens_referencia, existentes)
+    preview["periodos_acima_maximo"] = [
+        item for item in itens_referencia
+        if ppc.duracao_maxima_semestres and item.periodo > ppc.duracao_maxima_semestres
+    ]
+    categorias = {
+        item.pk: "novo" for item in preview["novos"]
+    }
+    categorias.update({item.pk: "igual" for item in preview["existentes_iguais"]})
+    categorias.update({c["referencia"].pk: "conflito" for c in preview["conflitos"]})
+    grupos, identicas = [], 0
+    for item in itens_referencia:
+        atual = existentes.get(item.componente_id)
+        operacoes = calcular_operacoes_bibliografia(item, atual)
+        categoria = categorias[item.pk]
+        if not operacoes and categoria != "novo":
+            identicas += 1
+        if operacoes:
+            for operacao in operacoes:
+                operacao["item_id"] = item.pk
+                operacao["componente_id"] = item.componente_id
+            grupos.append({
+                "item": item, "categoria": categoria,
+                "operacoes": operacoes, "resumo": resumir_operacoes(operacoes),
+                "componente_id": item.componente_id,
+            })
+    preview["bibliografias_diferencas"] = grupos
+    preview["bibliografias_identicas"] = identicas
+    preview["bibliografias_total_operacoes"] = sum(len(g["operacoes"]) for g in grupos)
+    return preview
 
 
 def _categorizar_componentes(itens_referencia, existentes):
@@ -758,6 +980,64 @@ def _categorizar_componentes(itens_referencia, existentes):
             conflitos.append({"referencia": item, "atual": existente})
 
     return {"novos": novos, "existentes_iguais": existentes_iguais, "conflitos": conflitos}
+
+
+def _executar_operacoes_bibliografia(matriz, operacoes, selecionadas, destinos, obsoletas=()):
+    resumo = {"adicionadas": 0, "removidas": 0, "alteradas": 0, "substituidas": 0, "ignoradas": 0}
+    ignoradas = []
+    for chave in sorted(obsoletas):
+        resumo["ignoradas"] += 1
+        ignoradas.append(f"Operação {chave}: não existe mais no estado atual da matriz.")
+
+    for op in operacoes:
+        if op["key"] not in selecionadas:
+            continue
+        destino = destinos.get(op["item_id"])
+        if destino is None:
+            resumo["ignoradas"] += 1
+            ignoradas.append(f"{op['rotulo']}: o componente não foi selecionado para aplicação.")
+            continue
+        atual = None
+        if op["atual"] is not None:
+            atual = Bibliografia.objects.filter(
+                pk=op["atual"].pk, componente_na_matriz=destino,
+            ).first()
+            if atual is None:
+                resumo["ignoradas"] += 1
+                ignoradas.append(f"{op['rotulo']}: a bibliografia do PPC foi alterada ou removida após o preview.")
+                continue
+        fonte = None
+        if op["fonte"] is not None:
+            fonte = BibliografiaReferencia.objects.filter(
+                pk=op["fonte"].pk,
+                componente_na_matriz_referencia__matriz=matriz,
+                componente_na_matriz_referencia__componente_id=op["componente_id"],
+            ).first()
+            if fonte is None:
+                resumo["ignoradas"] += 1
+                ignoradas.append(f"{op['rotulo']}: a referência foi alterada ou removida após o preview.")
+                continue
+
+        if op["acao"] == "remover":
+            atual.delete()
+            resumo["removidas"] += 1
+            continue
+
+        if op["acao"] in {"alterar_tipo", "substituir"}:
+            atual.delete()
+        Bibliografia.objects.create(
+            componente_na_matriz=destino,
+            referencia_id=fonte.referencia_id,
+            tipo=fonte.tipo, titulo=fonte.titulo, autores=fonte.autores,
+            editora=fonte.editora, cidade=fonte.cidade, ano=fonte.ano,
+        )
+        if op["acao"] == "adicionar":
+            resumo["adicionadas"] += 1
+        elif op["acao"] == "alterar_tipo":
+            resumo["alteradas"] += 1
+        else:
+            resumo["substituidas"] += 1
+    return resumo, ignoradas
 
 
 @staff_member_required
@@ -781,6 +1061,13 @@ def painel_institucional(request):
         | Q(carga_horaria_total__gt=F("curso__carga_horaria_maxima"))
     ).order_by("curso__nome", "id")
 
+    resumo_bibliografias = resumo_pendencias_bibliograficas()
+    total_relacoes_invalidas = contar_relacoes_invalidas()
+    ppcs_sem_duracoes = PPC.objects.filter(
+        duracao_minima_semestres=0, duracao_media_semestres=0, duracao_maxima_semestres=0
+    )
+    total_ppcs_fora_duracao = ppcs_fora_da_duracao_queryset().count()
+
     return render(request, "ppc/painel_institucional.html", {
         "total_matrizes": MatrizReferenciaCurricular.objects.count(),
         "matrizes_sem_curso": MatrizReferenciaCurricular.objects.filter(curso__isnull=True).count(),
@@ -792,6 +1079,69 @@ def painel_institucional(request):
         "cursos_sem_faixa": cursos_sem_faixa,
         "ppcs_fora_da_faixa": ppcs_fora_da_faixa,
         "componentes_pendentes": ComponenteCurricular.objects.filter(status="pendente").count(),
+        "resumo_bibliografias": resumo_bibliografias,
+        "total_relacoes_invalidas": total_relacoes_invalidas,
+        "ppcs_sem_duracoes_count": ppcs_sem_duracoes.count(),
+        "ppcs_fora_duracao_count": total_ppcs_fora_duracao,
+    })
+
+
+@_bloquear_nde_em_detalhes_staff
+@staff_member_required
+def detalhe_pendencias_bibliografia_ppc(request, ppc_id):
+    ppc = get_object_or_404(PPC.objects.select_related("curso"), pk=ppc_id)
+    pagina = Paginator(queryset_componentes_pendentes_ppc(ppc.pk).order_by("periodo", "componente__nome"), 25).get_page(request.GET.get("page"))
+    return render(request, "ppc/painel/detalhe_pendencias_bibliografia.html", {
+        "escopo": "PPC", "entidade": ppc, "curso": ppc.curso,
+        "itens": pagina, "pagina": pagina,
+    })
+
+
+@_bloquear_nde_em_detalhes_staff
+@staff_member_required
+def detalhe_pendencias_bibliografia_matriz(request, matriz_id):
+    matriz = get_object_or_404(MatrizReferenciaCurricular.objects.select_related("curso"), pk=matriz_id)
+    pagina = Paginator(queryset_componentes_pendentes_matriz(matriz.pk).order_by("periodo", "componente__nome"), 25).get_page(request.GET.get("page"))
+    return render(request, "ppc/painel/detalhe_pendencias_bibliografia.html", {
+        "escopo": "Matriz de referência", "entidade": matriz, "curso": matriz.curso,
+        "itens": pagina, "pagina": pagina,
+    })
+
+
+@_bloquear_nde_em_detalhes_staff
+@staff_member_required
+def detalhe_relacoes_invalidas(request):
+    pagina = Paginator(relacoes_invalidas(), 25).get_page(request.GET.get("page"))
+    return render(request, "ppc/painel/detalhe_relacoes_invalidas.html", {
+        "relacoes": pagina, "pagina": pagina,
+    })
+
+
+@_bloquear_nde_em_detalhes_staff
+@staff_member_required
+def detalhe_ppcs_sem_duracoes(request):
+    queryset = PPC.objects.select_related("curso").filter(
+        duracao_minima_semestres=0, duracao_media_semestres=0, duracao_maxima_semestres=0
+    ).order_by("curso__nome", "pk")
+    pagina = Paginator(queryset, 25).get_page(request.GET.get("page"))
+    return render(request, "ppc/painel/detalhe_ppcs_sem_duracoes.html", {
+        "ppcs": pagina, "pagina": pagina,
+    })
+
+
+@_bloquear_nde_em_detalhes_staff
+@staff_member_required
+def detalhe_ppcs_fora_duracao(request):
+    queryset = ppcs_fora_da_duracao_queryset().select_related("curso").order_by("curso__nome", "pk")
+    pagina = Paginator(queryset, 25).get_page(request.GET.get("page"))
+    ids_ppcs = [ppc.pk for ppc in pagina]
+    componentes_fora = {ppc_id: [] for ppc_id in ids_ppcs}
+    for item in ComponenteNaMatriz.objects.filter(ppc_id__in=ids_ppcs).select_related("componente", "ppc"):
+        if item.ppc.duracao_maxima_semestres and item.periodo > item.ppc.duracao_maxima_semestres:
+            componentes_fora[item.ppc_id].append(item)
+    linhas = [{"ppc": ppc, "componentes_fora": componentes_fora[ppc.pk]} for ppc in pagina]
+    return render(request, "ppc/painel/detalhe_ppcs_fora_duracao.html", {
+        "linhas": linhas, "pagina": pagina,
     })
 
 
@@ -832,29 +1182,101 @@ def preview_aplicar_matriz_referencia(request, ppc_id, matriz_id):
     preview = _montar_preview_aplicacao(ppc, matriz)
 
     if request.method == "POST":
-        with transaction.atomic():
-            aplicados = 0
+        with transaction.atomic(), suspender_eventos_edicao():
+            # Recalcula dentro da transação; nenhum dado do formulário é usado
+            # como fonte de bibliografias ou como decisão de diferença.
+            preview = _montar_preview_aplicacao(ppc, matriz)
+            novos_selecionados = [
+                item for item in preview["novos"]
+                if request.POST.get(f"aplicar_novo_{item.id}") == "on"
+            ]
+            conflitos_selecionados = [
+                conflito for conflito in preview["conflitos"]
+                if request.POST.get(f"conflito_{conflito['referencia'].id}") == "usar_referencia"
+            ]
+            ids_elegiveis = {item.pk for item in preview["existentes_iguais"]}
+            ids_elegiveis.update(item.pk for item in novos_selecionados)
+            ids_elegiveis.update(c["referencia"].pk for c in conflitos_selecionados)
+            grupos_elegiveis = [g for g in preview["bibliografias_diferencas"] if g["item"].pk in ids_elegiveis]
+            operacoes_elegiveis = [op for grupo in grupos_elegiveis for op in grupo["operacoes"]]
+            selecionadas = set(request.POST.getlist("bibliografia_operacao"))
+            if preview["bibliografias_total_operacoes"] and request.POST.get("confirmar_bibliografias") != "on":
+                messages.error(request, "Confira as diferenças bibliográficas e confirme as operações antes de aplicar a matriz.")
+                return render(request, "ppc/matrizes_referencia/preview_aplicacao.html", {
+                    "ppc": ppc, "matriz": matriz, "preview": preview,
+                })
 
-            for item in preview["novos"]:
-                if request.POST.get(f"aplicar_novo_{item.id}") == "on":
-                    ComponenteNaMatriz.objects.create(
-                        ppc=ppc, componente=item.componente,
-                        periodo=item.periodo, natureza=item.natureza,
-                    )
-                    aplicados += 1
+            periodos_acima_maximo = [
+                item for item in novos_selecionados + [c["referencia"] for c in conflitos_selecionados]
+                if ppc.duracao_maxima_semestres and item.periodo > ppc.duracao_maxima_semestres
+            ]
+            componentes_nao_atualizados = []
+            aplicados = 0
+            vinculos_destino = {}
+            for item in preview["existentes_iguais"]:
+                vinculos_destino[item.pk] = ComponenteNaMatriz.objects.filter(
+                    ppc=ppc, componente_id=item.componente_id
+                ).first()
+
+            for item in novos_selecionados:
+                vinculo = ComponenteNaMatriz(
+                    ppc=ppc, componente=item.componente,
+                    periodo=item.periodo, natureza=item.natureza,
+                )
+                vinculo.save(validar_limite_periodo=False)
+                vinculos_destino[item.pk] = vinculo
+                aplicados += 1
 
             for conflito in preview["conflitos"]:
-                decisao = request.POST.get(f"conflito_{conflito['referencia'].id}")
-                if decisao == "usar_referencia":
+                if conflito in conflitos_selecionados:
                     atual = conflito["atual"]
+                    periodo_anterior = atual.periodo
+                    natureza_anterior = atual.natureza
                     atual.periodo = conflito["referencia"].periodo
                     atual.natureza = conflito["referencia"].natureza
-                    atual.save(update_fields=["periodo", "natureza"])
-                    aplicados += 1
+                    try:
+                        atual.save(update_fields=["periodo", "natureza"], validar_limite_periodo=False)
+                    except ValidationError as exc:
+                        atual.periodo, atual.natureza = periodo_anterior, natureza_anterior
+                        componentes_nao_atualizados.append({
+                            "componente": atual.componente.nome,
+                            "mensagem": "; ".join(exc.messages),
+                        })
+                    else:
+                        aplicados += 1
+                    vinculos_destino[conflito["referencia"].pk] = atual
                 # "manter_ppc" ou nenhuma escolha -> não mexe, PPC continua como está
+
+            todas_chaves_atuais = {
+                op["key"] for grupo in preview["bibliografias_diferencas"] for op in grupo["operacoes"]
+            }
+            chaves_elegiveis = {op["key"] for op in operacoes_elegiveis}
+            resumo_bibliografias, operacoes_ignoradas = _executar_operacoes_bibliografia(
+                matriz, operacoes_elegiveis, selecionadas & chaves_elegiveis,
+                vinculos_destino, obsoletas=selecionadas - todas_chaves_atuais,
+            )
+
+            resultado_relacoes = copiar_relacoes_referencia_para_ppc(matriz, ppc)
+
+        registrar_evento(
+            "matriz_aplicada", usuario=request.user, ppc=ppc,
+            matriz_referencia_id=matriz.pk, componentes_aplicados=aplicados,
+            bibliografias_adicionadas=resumo_bibliografias["adicionadas"],
+            bibliografias_removidas=resumo_bibliografias["removidas"],
+            bibliografias_alteradas=resumo_bibliografias["alteradas"],
+            bibliografias_substituidas=resumo_bibliografias["substituidas"],
+            bibliografias_ignoradas=resumo_bibliografias["ignoradas"],
+            relacoes_copiadas=resultado_relacoes["criadas"],
+            relacoes_ignoradas=len(resultado_relacoes["invalidas"]),
+        )
 
         return render(request, "ppc/matrizes_referencia/aplicacao_concluida.html", {
             "ppc": ppc, "matriz": matriz, "aplicados": aplicados,
+            "relacoes_ignoradas": resultado_relacoes["invalidas"],
+            "periodos_acima_maximo": periodos_acima_maximo,
+            "componentes_nao_atualizados": componentes_nao_atualizados,
+            "resumo_bibliografias": resumo_bibliografias,
+            "operacoes_bibliograficas_ignoradas": operacoes_ignoradas,
         })
 
     return render(request, "ppc/matrizes_referencia/preview_aplicacao.html", {
@@ -917,6 +1339,7 @@ def matriz_referencia_detalhe(request, matriz_id):
     itens = (
         matriz.componentes
         .select_related("componente")
+        .prefetch_related("bibliografias")
         .order_by("periodo", "ordem")
     )
 
@@ -933,6 +1356,154 @@ def matriz_referencia_detalhe(request, matriz_id):
         "cursos": Curso.objects.order_by("nome"),
     }
     return render(request, "ppc/matrizes_referencia/detalhe.html", context)
+
+
+@login_required
+def exportar_matriz_referencia_xlsx(request, matriz_id):
+    matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    if openpyxl is None:
+        messages.error(request, "A exportação Excel está indisponível neste ambiente porque o componente openpyxl não está instalado.")
+        return redirect("matriz_referencia_detalhe", matriz_id=matriz.pk)
+    itens = list(matriz.componentes.select_related("componente").prefetch_related("bibliografias").order_by("periodo", "ordem", "componente__nome"))
+    colunas = [
+        "matriz_curricular", "codigo", "id_componente_interno", "nucleo", "disciplina", "fase",
+        "cargahorariateorica", "cargahorariapratica", "cargahorariaacex", "ementa",
+    ]
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Matriz"
+    ws.append(colunas)
+    for cell in ws[1]:
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.fill = PatternFill("solid", fgColor="24527A")
+    identificador = matriz.identificador_origem or f"EXPORT-{matriz.pk}"
+    for item in itens:
+        componente = item.componente
+        nucleo = (
+            "NÚCLEO COMUM" if item.nucleo == "NC" else
+            "NÚCLEO ESPECÍFICO OPTATIVO" if item.natureza == "optativa" else
+            "NÚCLEO ESPECÍFICO OBRIGATÓRIO"
+        )
+        ws.append([
+            identificador, componente.codigo, item.pk, nucleo,
+            componente.nome, item.periodo, componente.carga_horaria_teorica,
+            componente.carga_horaria_pratica, componente.carga_horaria_acex or 0,
+            componente.ementa,
+        ])
+    ws.freeze_panes = "A2"
+    ws.auto_filter.ref = ws.dimensions
+    for col, width in {"A": 24, "B": 16, "C": 22, "D": 32, "E": 42, "F": 12, "G": 20, "H": 20, "I": 18, "J": 70}.items():
+        ws.column_dimensions[col].width = width
+
+    # O diagrama é a primeira aba aberta e reproduz o layout que o Apps Script exporta.
+    diagrama = wb.create_sheet("Diagrama")
+    fases = sorted({item.periodo for item in itens})
+    largura_bloco = 3
+    total_colunas = max(1, len(fases) * largura_bloco)
+    titulo_fim = openpyxl.utils.get_column_letter(total_colunas)
+    diagrama.merge_cells(f"A1:{titulo_fim}1")
+    diagrama["A1"] = f"MATRIZ CURRICULAR — {matriz}"
+    diagrama["A1"].font = Font(bold=True, size=15)
+    diagrama["A1"].fill = PatternFill("solid", fgColor="DCEAF7")
+    diagrama["A1"].alignment = Alignment(vertical="center")
+    diagrama.row_dimensions[1].height = 28
+    cores = {
+        "NC": "FFF2CC",
+        "NE_OBRIGATORIA": "E4F5E8",
+        "NE_OPTATIVA": "E9E8FF",
+        "ACEX": "FCE8E8",
+    }
+    borda = Side(style="thin", color="A9B7C7")
+    for indice, fase in enumerate(fases):
+        primeira_coluna = indice * largura_bloco + 1
+        ultima_coluna = primeira_coluna + largura_bloco - 1
+        inicio = openpyxl.utils.get_column_letter(primeira_coluna)
+        fim = openpyxl.utils.get_column_letter(ultima_coluna)
+        for col in range(primeira_coluna, ultima_coluna + 1):
+            diagrama.column_dimensions[openpyxl.utils.get_column_letter(col)].width = 16
+        diagrama.merge_cells(start_row=3, start_column=primeira_coluna, end_row=3, end_column=ultima_coluna)
+        celula_fase = diagrama.cell(3, primeira_coluna, f"{fase}º PERÍODO")
+        celula_fase.font = Font(bold=True)
+        celula_fase.fill = PatternFill("solid", fgColor="DDE7F2")
+        celula_fase.alignment = Alignment(horizontal="center", vertical="center")
+        linha = 5
+        por_fase = [item for item in itens if item.periodo == fase]
+        for item in por_fase:
+            componente = item.componente
+            nucleo = "Núcleo Comum" if item.nucleo == "NC" else (
+                "Núcleo Específico Optativo" if item.natureza == "optativa"
+                else "Núcleo Específico Obrigatório"
+            )
+            cor = "ACEX" if (componente.carga_horaria_acex or 0) > 0 else (
+                "NC" if item.nucleo == "NC" else
+                "NE_OPTATIVA" if item.natureza == "optativa" else "NE_OBRIGATORIA"
+            )
+            fundo = PatternFill("solid", fgColor=cores[cor])
+            estilo_borda = Border(left=borda, right=borda, top=borda, bottom=borda)
+            diagrama.merge_cells(start_row=linha, start_column=primeira_coluna, end_row=linha, end_column=ultima_coluna)
+            diagrama.cell(linha, primeira_coluna, componente.codigo or "Sem código").font = Font(bold=True)
+            diagrama.merge_cells(start_row=linha + 1, start_column=primeira_coluna, end_row=linha + 2, end_column=ultima_coluna)
+            nome_celula = diagrama.cell(linha + 1, primeira_coluna, componente.nome)
+            nome_celula.font = Font(bold=True)
+            nome_celula.alignment = Alignment(vertical="center", wrap_text=True)
+            diagrama.merge_cells(start_row=linha + 3, start_column=primeira_coluna, end_row=linha + 3, end_column=ultima_coluna)
+            diagrama.cell(linha + 3, primeira_coluna, nucleo)
+            ch_total = componente.carga_horaria_computada_total
+            resumo = f"{componente.carga_horaria_teorica}T · {componente.carga_horaria_pratica}P · {componente.carga_horaria_acex or 0} ACEx · {ch_total} Total"
+            diagrama.merge_cells(start_row=linha + 4, start_column=primeira_coluna, end_row=linha + 4, end_column=ultima_coluna)
+            diagrama.cell(linha + 4, primeira_coluna, resumo)
+            for r in range(linha, linha + 5):
+                for c in range(primeira_coluna, ultima_coluna + 1):
+                    cell = diagrama.cell(r, c)
+                    cell.fill = fundo
+                    cell.border = estilo_borda
+                    cell.alignment = Alignment(vertical="center", wrap_text=True)
+            diagrama.row_dimensions[linha + 1].height = 27
+            diagrama.row_dimensions[linha + 2].height = 27
+            linha += 7
+    diagrama.freeze_panes = "A4"
+
+    bibliografias = wb.create_sheet("Bibliografias")
+    bibliografias.append(["fase", "codigo", "componente", "tipo", "titulo", "autores", "editora", "cidade", "ano", "id_referencia_biblioteca"])
+    for item in itens:
+        for bib in item.bibliografias.all():
+            bibliografias.append([
+                item.periodo, item.componente.codigo, item.componente.nome, bib.tipo,
+                bib.titulo, bib.autores, bib.editora, bib.cidade, bib.ano,
+                bib.referencia_id or "",
+            ])
+    for cell in bibliografias[1]:
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.fill = PatternFill("solid", fgColor="24527A")
+    bibliografias.freeze_panes = "A2"
+    bibliografias.auto_filter.ref = bibliografias.dimensions
+
+    relacoes = wb.create_sheet("Relacoes")
+    relacoes.append(["codigo_componente", "componente", "tipo", "codigo_relacionado", "componente_relacionado", "periodo_componente", "periodo_relacionado"])
+    for relacao in RelacaoComponenteReferencia.objects.filter(item__matriz=matriz).select_related(
+        "item__componente", "item_relacionado__componente"
+    ):
+        relacoes.append([
+            relacao.item.componente.codigo, relacao.item.componente.nome, relacao.tipo,
+            relacao.item_relacionado.componente.codigo, relacao.item_relacionado.componente.nome,
+            relacao.item.periodo, relacao.item_relacionado.periodo,
+        ])
+    for cell in relacoes[1]:
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.fill = PatternFill("solid", fgColor="24527A")
+    relacoes.freeze_panes = "A2"
+    relacoes.auto_filter.ref = relacoes.dimensions
+
+    wb.active = wb.sheetnames.index("Diagrama")
+    buffer = BytesIO()
+    wb.save(buffer)
+    nome = slugify(matriz.nome or matriz.identificador_origem or f"matriz-{matriz.pk}") or f"matriz-{matriz.pk}"
+    response = HttpResponse(
+        buffer.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    response["Content-Disposition"] = f'attachment; filename="matriz-referencia-{nome}.xlsx"'
+    return response
 
 
 @login_required
@@ -972,25 +1543,29 @@ def mover_item_matriz_referencia(request, item_id):
 
     item = get_object_or_404(ComponenteNaMatrizReferencia, pk=item_id)
 
-    with transaction.atomic():
-        item.periodo = novo_periodo
-        item.ordem = nova_ordem
-        item.save(update_fields=["periodo", "ordem"])
+    try:
+        with transaction.atomic():
+            item.periodo = novo_periodo
+            item.ordem = nova_ordem
+            item.save(update_fields=["periodo", "ordem"])
 
-        irmaos = (
-            ComponenteNaMatrizReferencia.objects
-            .filter(matriz=item.matriz, periodo=novo_periodo)
-            .exclude(pk=item.pk)
-            .order_by("ordem")
-        )
-        posicao = 0
-        for irmao in irmaos:
-            if posicao == nova_ordem:
+            irmaos = (
+                ComponenteNaMatrizReferencia.objects
+                .filter(matriz=item.matriz, periodo=novo_periodo)
+                .exclude(pk=item.pk)
+                .order_by("ordem")
+            )
+            posicao = 0
+            for irmao in irmaos:
+                if posicao == nova_ordem:
+                    posicao += 1
+                if irmao.ordem != posicao:
+                    irmao.ordem = posicao
+                    irmao.save(update_fields=["periodo", "ordem"])
                 posicao += 1
-            if irmao.ordem != posicao:
-                irmao.ordem = posicao
-                irmao.save(update_fields=["ordem"])
-            posicao += 1
+    except ValidationError as exc:
+        mensagem = "; ".join(exc.messages)
+        return JsonResponse({"erro": mensagem}, status=400)
 
     return JsonResponse({"ok": True})
 
@@ -1512,8 +2087,11 @@ def detalhe_componente_na_matriz(request, componente_na_matriz_id):
             if relacao_form.is_valid():
                 relacao = relacao_form.save(commit=False)
                 relacao.componente_na_matriz = componente_na_matriz
-                relacao.save()
-                return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=componente_na_matriz.id)
+                try:
+                    relacao.save()
+                    return redirect('detalhe_componente_na_matriz', componente_na_matriz_id=componente_na_matriz.id)
+                except ValidationError as exc:
+                    relacao_form.add_error(None, exc)
 
     bibliografias_basicas = componente_na_matriz.bibliografias.filter(tipo='basica')
     bibliografias_complementares = componente_na_matriz.bibliografias.filter(tipo='complementar')
@@ -1526,6 +2104,8 @@ def detalhe_componente_na_matriz(request, componente_na_matriz_id):
         'relacao_form': relacao_form,
         'bibliografias_basicas': bibliografias_basicas,
         'bibliografias_complementares': bibliografias_complementares,
+        'basicas_na_biblioteca': bibliografias_basicas.filter(referencia__isnull=False).values('referencia_id').distinct().count(),
+        'complementares_na_biblioteca': bibliografias_complementares.filter(referencia__isnull=False).values('referencia_id').distinct().count(),
     })
 
 @login_required
@@ -1765,13 +2345,13 @@ def editar_principios(request, ppc_id):
 def editar_apresentacao(request, ppc_id):
     ppc = get_object_or_404(PPC, id=ppc_id)
     if request.method == 'POST':
-        form = ApresentacaoForm(request.POST, instance=ppc)
+        form = ApresentacaoForm(request.POST, instance=ppc, usuario=request.user)
         if form.is_valid():
             form.save()
             _consumir_campos_rascunho(request, ppc, ApresentacaoForm)
             return redirect('editar_apresentacao', ppc_id=ppc.id)
     else:
-        form = ApresentacaoForm(instance=ppc, initial=_initial_rascunho(request, ppc, ApresentacaoForm))
+        form = ApresentacaoForm(instance=ppc, usuario=request.user, initial=_initial_rascunho(request, ppc, ApresentacaoForm))
     return render(request, 'ppc/editar_apresentacao.html', {'form': form, 'ppc': ppc})
 
 

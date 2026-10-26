@@ -147,10 +147,6 @@ def gerar_pdf_ppc(request, ppc_id):
                 item.componente.carga_horaria_pratica
             ),
 
-            "ch_pcc": (
-                item.componente.carga_horaria_pcc
-            ),
-
             "ch_acex": (
                 item.componente.carga_horaria_acex or 0
             ),

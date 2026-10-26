@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Pendências bibliográficas{% endblock %}
+{% block content %}
+<h1>Pendências bibliográficas — {{ escopo }}</h1>
+<p>{% if curso %}{{ curso.nome }} — {% endif %}{% if escopo == "PPC" %}PPC #{{ entidade.id }} · {{ entidade.get_status_display }} · vigência {{ entidade.periodo_vigencia }}{% else %}{{ entidade }}{% endif %}</p>
+<p>{{ pagina.paginator.count }} componente(s) com pendência. Cada componente aparece uma vez.</p>
+{% include "ppc/painel/_lista_componentes_pendencia_bibliografica.html" %}
+{% include "ppc/painel/_paginacao.html" %}
+{% endblock %}

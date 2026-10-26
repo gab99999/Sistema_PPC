@@ -1,5 +1,6 @@
 # ppc/services/importacao_matriz_referencia.py
 from django.db import transaction
+from ppc.services.eventos import registrar_evento, suspender_eventos_edicao
 from ppc.models import (
     ComponenteCurricular,
     MatrizReferenciaCurricular,
@@ -12,7 +13,7 @@ def importar_linhas_normalizadas(linhas, dry_run=True):
     relatorio = {
         "ok": [], "pendentes_revisao": [],
         "duplicadas_identicas": [], "duplicadas_conflitantes": [],
-        "erros": [],
+        "erros": [], "sem_mapeamento": [],
     }
 
     vistas = {}
@@ -22,7 +23,8 @@ def importar_linhas_normalizadas(linhas, dry_run=True):
             relatorio["pendentes_revisao"].append(linha)
             continue
 
-        chave = (linha["identificador_origem"], linha["codigo"])
+        chave_componente = linha["codigo"] or linha.get("id_componente_interno") or f"linha-{linha['linha_origem']}"
+        chave = (linha["identificador_origem"], chave_componente)
         if chave in vistas:
             anterior = vistas[chave]
             mesma_coisa = (
@@ -42,30 +44,47 @@ def importar_linhas_normalizadas(linhas, dry_run=True):
         vistas[chave] = linha
         relatorio["ok"].append(linha)
 
-    _persistir_pendencias(relatorio)
-
     if dry_run:
         return relatorio
 
-    with transaction.atomic():
+    with transaction.atomic(), suspender_eventos_edicao():
+        _persistir_pendencias(relatorio)
         for linha in relatorio["ok"]:
             matriz, _ = MatrizReferenciaCurricular.objects.get_or_create(
                 identificador_origem=linha["identificador_origem"],
             )
 
-            componente, criado = ComponenteCurricular.objects.get_or_create(
-                codigo=linha["codigo"],
-                defaults={
-                    "nome": linha["nome"],
-                    "tipo": "disciplina",
-                    
-                    "carga_horaria_teorica": linha["carga_horaria_teorica"],
-                    "carga_horaria_pratica": linha["carga_horaria_pratica"],
-                    "unidade_academica_componente": "",
-                    "ementa": linha.get("ementa", ""),
-                    "status": "aprovado",
-                },
-            )
+            if linha["codigo"]:
+                componente, criado = ComponenteCurricular.objects.get_or_create(
+                    codigo=linha["codigo"],
+                    defaults={
+                        "nome": linha["nome"],
+                        "tipo": "disciplina",
+                        "carga_horaria_teorica": linha["carga_horaria_teorica"],
+                        "carga_horaria_pratica": linha["carga_horaria_pratica"],
+                        "unidade_academica_componente": "",
+                        "ementa": linha.get("ementa", ""),
+                        "status": "aprovado",
+                    },
+                )
+            else:
+                item_existente = None
+                id_interno = linha.get("id_componente_interno")
+                if id_interno and str(id_interno).isdigit():
+                    item_existente = ComponenteNaMatrizReferencia.objects.filter(
+                        pk=int(id_interno), matriz=matriz
+                    ).select_related("componente").first()
+                if item_existente:
+                    componente, criado = item_existente.componente, False
+                else:
+                    componente = ComponenteCurricular.objects.create(
+                        codigo="", nome=linha["nome"], tipo="disciplina",
+                        carga_horaria_teorica=linha["carga_horaria_teorica"],
+                        carga_horaria_pratica=linha["carga_horaria_pratica"],
+                        unidade_academica_componente="",
+                        ementa=linha.get("ementa", ""), status="aprovado",
+                    )
+                    criado = True
 
             if not criado and not componente.ementa and linha.get("ementa"):
                 componente.ementa = linha["ementa"]
@@ -84,6 +103,12 @@ def importar_linhas_normalizadas(linhas, dry_run=True):
             except Exception as e:
                 relatorio["erros"].append({"linha": linha, "erro": str(e)})
 
+    registrar_evento(
+        "matriz_referencia_importada", identificador="importacao_matriz_referencia",
+        linhas_gravadas=len(relatorio["ok"]), pendencias=len(relatorio["pendentes_revisao"]),
+        erros=len(relatorio["erros"]),
+    )
+
     return relatorio
 
 
@@ -93,8 +118,23 @@ def _persistir_pendencias(relatorio):
         "duplicadas_conflitantes": "duplicada_conflitante",
     }
 
+    identificadores = {
+        linha["identificador_origem"] for linha in relatorio.get("ok", [])
+    }
+    identificadores.update(
+        linha["identificador_origem"] for linha in relatorio.get("pendentes_revisao", [])
+    )
+    identificadores.update(
+        item["linha_atual"]["identificador_origem"]
+        for item in relatorio.get("duplicadas_conflitantes", [])
+    )
+
     for chave_relatorio, tipo in tipos_map.items():
-        ImportacaoPendencia.objects.filter(tipo=tipo, resolvido=False).delete()
+        if identificadores:
+            ImportacaoPendencia.objects.filter(
+                tipo=tipo, resolvido=False,
+                identificador_origem__in=identificadores,
+            ).delete()
 
         novas = []
         for item in relatorio[chave_relatorio]:

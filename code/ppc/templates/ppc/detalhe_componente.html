@@ -32,13 +32,13 @@
     <p>{{ componente.ementa }}</p>
 
     <br>
-    <h3>Bibliografia Básica ({{ bibliografias_basicas.count }} — mínimo 2 exigido)</h3>
+    <h3>Bibliografia Básica ({{ basicas_na_biblioteca }} obra(s) da Biblioteca — mínimo 3)</h3>
         <ul class="lista-cursos">
             {% for bib in bibliografias_basicas %}
                 <li class="card">
-                    <p class="card-corpo">{{ bib.titulo }} — {{ bib.autores }} ({{ bib.ano }})</p>
+                    <p class="card-corpo">{{ bib.titulo }} — {{ bib.autores }} ({{ bib.ano }}){% if bib.referencia_id %}<br><small>Origem: Biblioteca UFCAT</small>{% else %}<br><small>Pendente: fora da Biblioteca</small>{% endif %}</p>
                     <div class="btn-group">
-                        <a href="{% url 'editar_bibliografia' bib.id %}" class="btn btn-secundario">Editar</a>
+                        {% if not bib.referencia_id %}<a href="{% url 'editar_bibliografia' bib.id %}" class="btn btn-secundario">Editar</a>{% endif %}
                         <form method="post" action="{% url 'excluir_bibliografia' bib.id %}"
                               onsubmit="return confirm('Excluir esta referência?');">
                             {% csrf_token %}
@@ -51,13 +51,13 @@
             {% endfor %}
         </ul>
     <br>
-    <h3>Bibliografia Complementar ({{ bibliografias_complementares.count }} — mínimo 3 exigido)</h3>
+    <h3>Bibliografia Complementar ({{ complementares_na_biblioteca }} obra(s) da Biblioteca — mínimo 5)</h3>
         <ul class="lista-cursos">
             {% for bib in bibliografias_complementares %}
                 <li class="card">
-                    <p class="card-corpo">{{ bib.titulo }} — {{ bib.autores }} ({{ bib.ano }})</p>
+                    <p class="card-corpo">{{ bib.titulo }} — {{ bib.autores }} ({{ bib.ano }}){% if bib.referencia_id %}<br><small>Origem: Biblioteca UFCAT</small>{% else %}<br><small>Pendente: fora da Biblioteca</small>{% endif %}</p>
                     <div class="btn-group">
-                        <a href="{% url 'editar_bibliografia' bib.id %}" class="btn btn-secundario">Editar</a>
+                        {% if not bib.referencia_id %}<a href="{% url 'editar_bibliografia' bib.id %}" class="btn btn-secundario">Editar</a>{% endif %}
                         <form method="post" action="{% url 'excluir_bibliografia' bib.id %}"
                               onsubmit="return confirm('Excluir esta referência?');">
                             {% csrf_token %}
@@ -71,6 +71,8 @@
         </ul>
     <br>
     <h3>Adicionar Bibliografia</h3>
+    <p>Referências manuais ficam pendentes e não contam para o mínimo até serem vinculadas à Biblioteca.</p>
+    <a class="btn btn-secundario" href="{% url 'buscar_bibliografia_ppc' componente_na_matriz.id %}?tipo=basica">Buscar na Biblioteca</a>
     <form method="post" class="form-secao">
         {% csrf_token %}
         {{ bibliografia_form.as_p }}

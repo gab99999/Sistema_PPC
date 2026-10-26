@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}PPCs fora da duração{% endblock %}
+{% block content %}
+<h1>PPCs fora da duração declarada</h1>
+<p>{{ pagina.paginator.count }} PPC(s).</p>
+{% for linha in linhas %}{% with ppc=linha.ppc %}
+  <article class="card"><div class="card-corpo">
+    <strong>{{ ppc.curso.nome }} — PPC #{{ ppc.id }}</strong> · {{ ppc.get_status_display }} · vigência {{ ppc.periodo_vigencia }}<br>
+    Duração mínima: {{ ppc.duracao_minima_semestres }} · máxima: {{ ppc.duracao_maxima_semestres }} · maior período utilizado: {{ ppc.maior_periodo_usado }}.
+    {% if linha.componentes_fora %}<ul>{% for item in linha.componentes_fora %}<li>Período {{ item.periodo }} — {{ item.componente.nome }}</li>{% endfor %}</ul>{% endif %}
+  </div></article>
+{% endwith %}{% empty %}<p>Nenhum PPC fora da duração declarada.</p>{% endfor %}
+{% include "ppc/painel/_paginacao.html" %}
+{% endblock %}

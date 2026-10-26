@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Buscar bibliografia na Biblioteca{% endblock %}
+{% block content %}
+<div class="card cabecalho-curso">
+  <h1>Biblioteca da UFCAT</h1>
+  <p class="card-corpo">Selecione uma obra para copiar os dados para este componente. A seleção não cria vínculo vivo com o catálogo.</p>
+</div>
+<div class="card form-secao">
+  <h2>{{ item.componente.nome }}</h2>
+  <form method="get" class="form-empilhado">
+    <label for="id_q">Título ou autor</label>
+    <input id="id_q" type="search" name="q" value="{{ termo }}" minlength="3" required>
+    <label for="id_tipo">Tipo de bibliografia</label>
+    <select id="id_tipo" name="tipo">
+      <option value="basica" {% if tipo == "basica" %}selected{% endif %}>Básica</option>
+      <option value="complementar" {% if tipo == "complementar" %}selected{% endif %}>Complementar</option>
+    </select>
+    <button class="btn btn-primario" type="submit" name="buscar" value="1">Buscar</button>
+    {% if escopo == "ppc" %}<a class="btn btn-secundario" href="{% url 'detalhe_componente_na_matriz' item.id %}">Voltar ao componente</a>
+    {% else %}<a class="btn btn-secundario" href="{% url 'matriz_referencia_detalhe' item.matriz_id %}">Voltar à matriz</a>{% endif %}
+  </form>
+  {% if erro %}<div class="alerta alerta-aviso">{{ erro }}</div>{% endif %}
+</div>
+{% include "ppc/bibliografia/_resultados_busca.html" %}
+{% endblock %}
+{% block ajuda %}<p>A busca consulta título e autoria, exige três caracteres e apresenta resultados paginados. A obra selecionada é copiada para o componente e vinculada à origem no catálogo.</p>{% endblock %}

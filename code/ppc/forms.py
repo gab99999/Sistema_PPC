@@ -1,6 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from ppc.models import PPC, Curso, DinamicaEAD, Apendice, ComponenteNaMatrizReferencia, Bibliografia, RelacaoComponente, ComponenteCurricular, MembroNDE, ComponenteNaMatriz, CineBrasilCurso, ResumoCargaHorariaPPC, VinculoUsuarioCurso, RelacaoComponenteReferencia
+from ppc.models import PPC, Curso, DinamicaEAD, Apendice, ComponenteNaMatrizReferencia, Bibliografia, BibliografiaReferencia, RelacaoComponente, ComponenteCurricular, MembroNDE, ComponenteNaMatriz, CineBrasilCurso, ResumoCargaHorariaPPC, VinculoUsuarioCurso, RelacaoComponenteReferencia
 from django.contrib.auth.models import User, Group
 from django.forms import modelformset_factory
 from django.contrib.auth import get_user_model
@@ -153,6 +153,16 @@ class ComponenteNaMatrizForm(forms.ModelForm):
             ppc = self.instance.ppc          # edição: pega do próprio vínculo
         if ppc is not None and ppc.grau_academico != 'licenciatura':
             self.fields.pop('grupo_licenciatura')
+        self.ppc = ppc
+
+    def clean_periodo(self):
+        periodo = self.cleaned_data['periodo']
+        if self.ppc is not None:
+            atual = self.instance.periodo if self.instance and self.instance.pk else None
+            if atual is None or atual != periodo:
+                from ppc.services.regras_matriz import validar_periodo_ppc
+                validar_periodo_ppc(self.ppc, periodo)
+        return periodo
 
 class ImportarPDFForm(forms.Form):
     arquivo = forms.FileField(label="Arquivo PDF do PPC", widget=forms.ClearableFileInput(attrs={"accept": "application/pdf,.pdf"}))
@@ -207,6 +217,24 @@ class BibliografiaForm(forms.ModelForm):
     class Meta:
         model = Bibliografia
         fields = ['tipo', 'titulo', 'autores', 'editora', 'cidade', 'ano']  # sem componente_na_matriz
+
+    def clean(self):
+        cleaned = super().clean()
+        if self.instance.pk and self.instance.referencia_id:
+            raise ValidationError("Esta referência veio da Biblioteca e não pode ser editada. Remova-a e escolha outra obra.")
+        return cleaned
+
+
+class BibliografiaReferenciaForm(forms.ModelForm):
+    class Meta:
+        model = BibliografiaReferencia
+        fields = ['tipo', 'titulo', 'autores', 'editora', 'cidade', 'ano']
+
+    def clean(self):
+        cleaned = super().clean()
+        if self.instance.pk and self.instance.referencia_id:
+            raise ValidationError("Esta referência veio da Biblioteca e não pode ser editada. Remova-a e escolha outra obra.")
+        return cleaned
 class RelacaoComponenteForm(forms.ModelForm):
     class Meta:
         model = RelacaoComponente
@@ -360,6 +388,7 @@ class ApresentacaoForm(forms.ModelForm):
         if status == 'aprovado' and self.usuario is not None and not self.usuario.is_staff:
             raise forms.ValidationError("Somente um administrador pode marcar um PPC como aprovado.")
         return status
+
         # clean_carga_horaria_total removido inteiro — não existe mais campo pra validar aqui
 
 

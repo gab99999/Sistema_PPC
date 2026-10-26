@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Relações inválidas{% endblock %}
+{% block content %}
+<h1>Relações curriculares fora da sequência</h1>
+<p>{{ pagina.paginator.count }} relação(ões) inválida(s).</p>
+{% for alerta in relacoes %}
+  <article class="card"><div class="card-corpo">
+    <strong>{{ alerta.escopo }}</strong> — {{ alerta.mensagem }}<br>
+    {% if alerta.relacao.item_id %}{{ alerta.relacao.item.componente.nome }} → {{ alerta.relacao.item_relacionado.componente.nome }}{% else %}{{ alerta.relacao.componente_na_matriz.componente.nome }} → {{ alerta.relacao.componente_relacionado_na_matriz.componente.nome }}{% endif %}
+  </div></article>
+{% empty %}<p>Nenhuma relação inválida encontrada.</p>{% endfor %}
+{% include "ppc/painel/_paginacao.html" %}
+{% endblock %}

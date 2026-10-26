@@ -1,0 +1,29 @@
+{% if resultados is not None %}
+  <h2>Resultados — {{ resultados.paginator.count }}</h2>
+  <ul class="lista-cursos">
+    {% for obra in resultados %}
+      <li class="card"><div class="card-corpo">
+        <h3>{{ obra.titulo }}</h3>
+        <p><strong>Autores:</strong> {{ obra.autores|default:"Não informado" }}</p>
+        <p><strong>Editora:</strong> {{ obra.editora|default:"Não informada" }} · <strong>Ano:</strong> {{ obra.ano|default:"Não informado" }}</p>
+        {% if escopo == "ppc" %}
+          <form method="post" action="{% url 'vincular_bibliografia_ppc' item.id %}">
+        {% else %}
+          <form method="post" action="{% url 'vincular_bibliografia_referencia' item.id %}">
+        {% endif %}
+          {% csrf_token %}
+          <input type="hidden" name="referencia_id" value="{{ obra.id }}">
+          <input type="hidden" name="tipo" value="{{ tipo }}">
+          <button class="btn btn-primario" type="submit" {% if obra.id in referencias_vinculadas %}disabled{% endif %}>
+            {% if obra.id in referencias_vinculadas %}Já vinculada{% else %}Vincular como {{ tipo }}{% endif %}
+          </button>
+        </form>
+      </div></li>
+    {% empty %}<li class="card"><p class="card-corpo">Nenhuma obra encontrada.</p></li>{% endfor %}
+  </ul>
+  {% if resultados.has_other_pages %}<nav class="btn-group paginacao">
+    {% if resultados.has_previous %}<a class="btn btn-secundario" href="?q={{ termo|urlencode }}&tipo={{ tipo }}&buscar=1&page={{ resultados.previous_page_number }}">← Anterior</a>{% endif %}
+    <span>Página {{ resultados.number }} de {{ resultados.paginator.num_pages }}</span>
+    {% if resultados.has_next %}<a class="btn btn-secundario" href="?q={{ termo|urlencode }}&tipo={{ tipo }}&buscar=1&page={{ resultados.next_page_number }}">Próxima →</a>{% endif %}
+  </nav>{% endif %}
+{% endif %}

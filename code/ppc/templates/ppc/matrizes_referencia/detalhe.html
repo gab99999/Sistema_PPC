@@ -9,6 +9,7 @@
   <a href="{% url 'criar_componente_matriz_referencia' matriz.id %}" class="btn btn-secundario">+ Novo Componente</a>
   <button type="button" class="btn btn-secundario" id="botao-buscar-existente">+ Usar Componente Existente</button>
   <a href="{% url 'fluxograma_matriz_referencia' matriz.id %}" class="btn btn-secundario">Fluxograma</a>
+  <a href="{% url 'exportar_matriz_referencia_xlsx' matriz.id %}" class="btn btn-secundario">Exportar Excel</a>
   <a href="{% url 'relacoes_matriz_referencia' matriz.id %}" class="btn btn-secundario">Pré/co-requisitos</a>
   <form method="post" action="{% url 'duplicar_matriz_referencia' matriz.id %}" style="display:inline;">
     {% csrf_token %}
@@ -45,6 +46,8 @@
 
 <span id="status-salvamento-matriz"></span>
 
+<p class="alerta alerta-info">Mínimo por componente: 3 obras básicas e 5 complementares vinculadas à Biblioteca. Referências manuais aparecem como pendência e não completam a quantidade.</p>
+
 <div id="colunas-periodos">
   {% for periodo, itens in periodos %}
   <div class="coluna-periodo" data-periodo="{{ periodo }}">
@@ -62,6 +65,31 @@
         <div class="item-carga-horaria">
           {{ item.componente.carga_horaria_teorica }}h teóricas · {{ item.componente.carga_horaria_pratica }}h práticas
         </div>
+        <details class="card form-secao" style="margin-top:.75rem">
+          <summary>Bibliografias ({{ item.bibliografias.count }})</summary>
+          <ul class="lista-cursos">
+            {% for bib in item.bibliografias.all %}
+              <li class="card"><div class="card-corpo">
+                <strong>{{ bib.get_tipo_display }}</strong> — {{ bib.titulo }} — {{ bib.autores }} ({{ bib.ano|default:"s.d." }})
+                {% if bib.referencia_id %}<p>Origem: Biblioteca UFCAT</p>{% else %}<p>Pendência: fora da Biblioteca; não conta para o mínimo.</p>{% endif %}
+                <form method="post" action="{% url 'excluir_bibliografia_referencia' bib.id %}">{% csrf_token %}<button class="btn btn-perigo" type="submit">Remover</button></form>
+              </div></li>
+            {% empty %}<li>Nenhuma referência cadastrada.</li>{% endfor %}
+          </ul>
+          <a class="btn btn-secundario" href="{% url 'buscar_bibliografia_referencia' item.id %}?tipo=basica">Buscar na Biblioteca</a>
+          <details><summary>Adicionar referência manual</summary>
+            <form method="post" action="{% url 'adicionar_bibliografia_manual_referencia' item.id %}" class="form-empilhado">
+              {% csrf_token %}
+              <label>Tipo<select name="tipo"><option value="basica">Básica</option><option value="complementar">Complementar</option></select></label>
+              <label>Título<input name="titulo" maxlength="300" required></label>
+              <label>Autores<input name="autores" maxlength="300" required></label>
+              <label>Editora<input name="editora" maxlength="150"></label>
+              <label>Cidade<input name="cidade" maxlength="100"></label>
+              <label>Ano<input name="ano" type="number" min="1"></label>
+              <button class="btn btn-primario" type="submit">Adicionar referência manual</button>
+            </form>
+          </details>
+        </details>
         <button type="button" class="link-botao botao-editar" data-item-id="{{ item.id }}">Editar</button>
         <a href="{% url 'historico_item_matriz_referencia' item.id %}" class="link-botao">Hist.</a>
         <form method="post" action="{% url 'remover_componente_matriz_referencia' item.id %}" style="display:inline;" onsubmit="return confirm('Remover este componente da matriz?');">
@@ -158,14 +186,16 @@ function atualizarPlaceholders() {
 }
 
 let itemArrastado = null;
+let localizacaoOriginal = null;
 
 document.querySelectorAll(".item-componente").forEach((item) => {
     item.addEventListener("dragstart", (evento) => {
-        if (evento.target.closest("button, input, select")) {
+        if (evento.target.closest("button, input, select, textarea, a, form, details, summary, label")) {
             evento.preventDefault();
             return;
         }
         itemArrastado = item;
+        localizacaoOriginal = { pai: item.parentElement, proximo: item.nextElementSibling };
         item.style.opacity = "0.4";
     });
     item.addEventListener("dragend", () => { item.style.opacity = "1"; });
@@ -183,16 +213,27 @@ function elementoApos(container, y) {
     }, { deslocamento: Number.NEGATIVE_INFINITY, elemento: null }).elemento;
 }
 
-function salvarPosicao(itemId, novoPeriodo, novaOrdem) {
+function salvarPosicao(itemId, novoPeriodo, novaOrdem, item, original) {
     mostrarStatus("Salvando...", "");
     fetch(`/matrizes-referencia/item/${itemId}/mover/`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken },
         body: JSON.stringify({ novo_periodo: novoPeriodo, nova_ordem: novaOrdem }),
     })
-        .then((resposta) => { if (!resposta.ok) throw new Error(); return resposta.json(); })
+        .then(async (resposta) => {
+            const dados = await resposta.json();
+            if (!resposta.ok) throw new Error(dados.erro || "Não foi possível validar a nova posição.");
+            return dados;
+        })
         .then(() => mostrarStatus("✓ Salvo", "sucesso"))
-        .catch(() => mostrarStatus("⚠ Não foi possível salvar. Recarregue a página.", "erro"));
+        .catch((erro) => {
+            if (original?.pai) {
+                if (original.proximo && original.proximo.parentElement === original.pai) original.pai.insertBefore(item, original.proximo);
+                else original.pai.appendChild(item);
+            }
+            atualizarPlaceholders();
+            mostrarStatus(`⚠ ${erro.message || "Não foi possível salvar."} A posição visual foi restaurada.`, "erro");
+        });
 }
 
 /* -- Um único conjunto de listeners por coluna, com placeholder já embutido -- */
@@ -213,7 +254,7 @@ document.querySelectorAll(".lista-itens").forEach((lista) => {
         const coluna = lista.closest(".coluna-periodo");
         const novoPeriodo = parseInt(coluna.dataset.periodo, 10);
         const novaOrdem = Array.from(lista.children).indexOf(itemArrastado);
-        salvarPosicao(itemArrastado.dataset.itemId, novoPeriodo, novaOrdem);
+        salvarPosicao(itemArrastado.dataset.itemId, novoPeriodo, novaOrdem, itemArrastado, localizacaoOriginal);
         atualizarPlaceholders();
     });
 });

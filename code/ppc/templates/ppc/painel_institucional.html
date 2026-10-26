@@ -14,5 +14,50 @@
     <div class="card estatistica"><span class="estatistica-numero">{{ componentes_pendentes }}</span><span class="estatistica-rotulo">Componentes aguardando aprovação</span></div>
 </div>
 
+<section class="form-secao">
+  <h2>Pendências de bibliografia</h2>
+  <p>Obras distintas da Biblioteca: mínimo de 3 básicas e 5 complementares por componente. Manuais ficam fora da contagem.</p>
+  <div class="grade-estatisticas">
+    <div class="card estatistica"><span class="estatistica-numero">{{ resumo_bibliografias.ppcs_com_pendencia }}</span><span class="estatistica-rotulo">PPCs com pendência</span></div>
+    <div class="card estatistica"><span class="estatistica-numero">{{ resumo_bibliografias.componentes_ppc_pendentes|add:resumo_bibliografias.componentes_matriz_pendentes }}</span><span class="estatistica-rotulo">Componentes com pendência</span></div>
+    <div class="card estatistica"><span class="estatistica-numero">{{ resumo_bibliografias.bibliografias_fora_biblioteca }}</span><span class="estatistica-rotulo">Bibliografias fora da Biblioteca</span></div>
+    <div class="card estatistica"><span class="estatistica-numero">{{ resumo_bibliografias.matrizes_com_pendencia }}</span><span class="estatistica-rotulo">Matrizes com pendência</span></div>
+  </div>
+  <p>{{ resumo_bibliografias.ppcs_sem_pendencia }} PPC(s) e {{ resumo_bibliografias.matrizes_sem_pendencia }} matriz(es) sem pendência.</p>
+  {% regroup resumo_bibliografias.ppcs by curso_nome as ppcs_por_curso %}
+  {% for grupo in ppcs_por_curso %}
+    <h3>{{ grupo.grouper }}</h3>
+    <table class="tabela-dados"><thead><tr><th>PPC</th><th>Vigência</th><th>Status</th><th>Componentes</th><th>Com pendência</th><th>Mínimo insuficiente</th><th>Com bibliografia fora</th></tr></thead><tbody>
+      {% for linha in grupo.list %}<tr><td><a href="{% url 'detalhe_pendencias_bibliografia_ppc' ppc_id=linha.id %}">PPC #{{ linha.id }}</a></td><td>{{ linha.vigencia }}</td><td>{{ linha.status }}</td><td>{{ linha.total_componentes }}</td><td>{{ linha.componentes_pendentes }}</td><td>{{ linha.componentes_minimo_insuficiente }}</td><td>{{ linha.componentes_fora_biblioteca }}</td></tr>{% endfor %}
+    </tbody></table>
+  {% empty %}<p>Nenhum PPC com pendência bibliográfica.</p>{% endfor %}
+
+  {% regroup resumo_bibliografias.matrizes by curso_nome as matrizes_por_curso %}
+  {% for grupo in matrizes_por_curso %}
+    <h3>Matrizes — {{ grupo.grouper }}</h3>
+    <table class="tabela-dados"><thead><tr><th>Matriz</th><th>Componentes</th><th>Com pendência</th><th>Mínimo insuficiente</th><th>Com bibliografia fora</th></tr></thead><tbody>
+      {% for linha in grupo.list %}<tr><td><a href="{% url 'detalhe_pendencias_bibliografia_matriz' matriz_id=linha.id %}">{{ linha.nome }}</a></td><td>{{ linha.total_componentes }}</td><td>{{ linha.componentes_pendentes }}</td><td>{{ linha.componentes_minimo_insuficiente }}</td><td>{{ linha.componentes_fora_biblioteca }}</td></tr>{% endfor %}
+    </tbody></table>
+  {% empty %}<p>Nenhuma matriz de referência com pendência bibliográfica.</p>{% endfor %}
+</section><br>
+
+<section class="form-secao">
+  <h2>Relações curriculares fora da sequência</h2>
+  <p>{{ total_relacoes_invalidas }} relação(ões) inválida(s).</p>
+  <a class="btn btn-secundario" href="{% url 'detalhe_relacoes_invalidas' %}">Abrir relações inválidas</a>
+</section> <br>
+
+<section class="form-secao">
+  <h2>PPCs sem durações informadas</h2>
+  <p>{{ ppcs_sem_duracoes_count }} PPC(s) com durações mínima, média e máxima zeradas.</p>
+  <a class="btn btn-secundario" href="{% url 'detalhe_ppcs_sem_duracoes' %}">Abrir PPCs sem durações</a>
+</section><br>
+
+<section class="form-secao">
+  <h2>PPCs fora da duração declarada</h2>
+  <p>{{ ppcs_fora_duracao_count }} PPC(s) cuja matriz não alcança a duração mínima ou excede a máxima.</p>
+  <a class="btn btn-secundario" href="{% url 'detalhe_ppcs_fora_duracao' %}">Abrir PPCs fora da duração</a>
+</section>
+
 {% endblock %}
 {% block ajuda %}<p>Este painel é somente leitura e consolida dados já registrados no sistema para acompanhamento institucional.</p>{% endblock %}

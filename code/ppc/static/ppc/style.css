@@ -118,6 +118,7 @@ select:focus-visible {
 .alerta-success { border-left-color: var(--cor-sucesso); }
 .alerta-erro, .alerta-error { border-left-color: var(--cor-perigo); color: var(--cor-perigo); }
 .alerta-info { border-left-color: var(--cor-destaque); }
+.alerta-warning { border-left-color: #d99a25; color: #584421; }
 .card-importacao { max-width: 760px; }
 .painel-processamento { display: flex; align-items: center; gap: 1rem; max-width: 760px; margin-top: 1rem; padding: 1rem 1.25rem; border: 1px solid var(--cor-borda); border-radius: var(--raio); background: var(--cor-superficie); box-shadow: var(--sombra); }
 .painel-processamento[hidden], .alerta[hidden] { display: none !important; }

@@ -101,6 +101,42 @@ class PPC(models.Model):
     def periodo_vigencia(self):
         return f"{self.ano_vigencia}/{self.semestre_vigencia}"
 
+    def clean(self):
+        super().clean()
+        self._validar_transicao_duracoes()
+
+    def _validar_transicao_duracoes(self, campos_salvos=None):
+        campos = {"status", "duracao_minima_semestres", "duracao_media_semestres", "duracao_maxima_semestres"}
+        if campos_salvos is not None and not (campos & set(campos_salvos)):
+            return
+        anterior = type(self).objects.filter(pk=self.pk).values(
+            *campos
+        ).first() if self.pk else None
+        if anterior:
+            alterados = {campo for campo in campos if getattr(self, campo) != anterior[campo]}
+            if campos_salvos is not None:
+                alterados &= set(campos_salvos)
+            if not alterados:
+                return
+            status_original = anterior["status"]
+            maximo_original = anterior["duracao_maxima_semestres"]
+        else:
+            alterados = {"status", "duracao_minima_semestres", "duracao_media_semestres", "duracao_maxima_semestres"}
+            status_original = "rascunho"
+            maximo_original = None
+            if self.status == "rascunho":
+                return
+        from .services.regras_matriz import validar_status_e_duracoes
+        validar_status_e_duracoes(
+            self, status_original=status_original, maximo_original=maximo_original,
+            validar_duracoes=bool(alterados & {"duracao_minima_semestres", "duracao_media_semestres", "duracao_maxima_semestres", "status"}),
+        )
+
+    def save(self, *args, **kwargs):
+        update_fields = kwargs.get("update_fields")
+        self._validar_transicao_duracoes(update_fields)
+        super().save(*args, **kwargs)
+
     # -- Campos condicionais (só para EAD) --
     publico_alvo_ead = CKEditor5Field(blank=True, config_name='default')
     ato_integracao_uab = CKEditor5Field(blank=True, config_name='default')
@@ -295,6 +331,15 @@ class ComponenteNaMatriz(models.Model):
                 raise ValidationError({
                     "natureza": "Componentes do Núcleo Comum são sempre de natureza obrigatória."
                 })
+            if self.ppc_id and self.periodo is not None:
+                from .services.regras_matriz import validar_periodo_ppc, validar_mudanca_periodo
+                if self.pk:
+                    anterior = type(self).objects.filter(pk=self.pk).values_list("periodo", flat=True).first()
+                    if anterior is not None and anterior != self.periodo:
+                        validar_periodo_ppc(self.ppc, self.periodo)
+                        validar_mudanca_periodo(self, self.periodo, "ppc")
+                else:
+                    validar_periodo_ppc(self.ppc, self.periodo)
     ppc = models.ForeignKey(PPC, on_delete=models.CASCADE, related_name="matriz_componentes")
     componente = models.ForeignKey(ComponenteCurricular, on_delete=models.PROTECT, related_name="uso_em_ppcs")
     periodo = models.PositiveSmallIntegerField()
@@ -303,11 +348,22 @@ class ComponenteNaMatriz(models.Model):
     class Meta:
         unique_together = ('ppc', 'componente')
     
-    def save(self, *args, **kwargs):
+    def save(self, *args, validar_limite_periodo=True, **kwargs):
         # Regra no servidor: fora de licenciatura o grupo nunca é gravado,
         # independentemente de qual view, import ou script criou o vínculo.
         if self.ppc_id and self.ppc.grau_academico != 'licenciatura':
             self.grupo_licenciatura = None
+        if self.ppc_id:
+            from .services.regras_matriz import validar_periodo_ppc, validar_mudanca_periodo
+            if self.pk:
+                anterior = type(self).objects.filter(pk=self.pk).values_list('periodo', flat=True).first()
+                if anterior is not None and anterior != self.periodo:
+                    if validar_limite_periodo:
+                        validar_periodo_ppc(self.ppc, self.periodo)
+                    validar_mudanca_periodo(self, self.periodo, 'ppc')
+            else:
+                if validar_limite_periodo:
+                    validar_periodo_ppc(self.ppc, self.periodo)
         super().save(*args, **kwargs)
 
     history = HistoricalRecords()
@@ -319,12 +375,33 @@ class ComponenteNaMatriz(models.Model):
 class Bibliografia(models.Model):
     TIPO_CHOICES = [("basica", "Básica"), ("complementar", "Complementar")]
     componente_na_matriz = models.ForeignKey(ComponenteNaMatriz, on_delete=models.CASCADE, related_name="bibliografias")
+    referencia = models.ForeignKey(
+        "ReferenciaBibliografica", null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="bibliografias_ppc",
+    )
     tipo = models.CharField(max_length=15, choices=TIPO_CHOICES)
     titulo = models.CharField(max_length=300)
     autores = models.CharField(max_length=300)
     editora = models.CharField(max_length=150, blank=True)
     cidade = models.CharField(max_length=100, blank=True)
     ano = models.PositiveIntegerField(blank=True, null=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(
+            fields=["componente_na_matriz", "referencia"],
+            name="uniq_bibliografia_obra_por_componente",
+        )]
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            anterior = type(self).objects.filter(pk=self.pk).values(
+                "componente_na_matriz_id", "referencia_id", "tipo", "titulo", "autores", "editora", "cidade", "ano"
+            ).first()
+            if anterior and anterior["referencia_id"] and any(anterior[campo] != getattr(self, campo) for campo in (
+                "componente_na_matriz_id", "referencia_id", "tipo", "titulo", "autores", "editora", "cidade", "ano"
+            )):
+                raise ValidationError("Esta referência veio da Biblioteca e não pode ser editada. Remova-a e escolha outra obra.")
+        super().save(*args, **kwargs)
     history = HistoricalRecords()
 
     def __str__(self):
@@ -357,11 +434,25 @@ class RelacaoComponente(models.Model):
     class Meta:
         unique_together = ('componente_na_matriz', 'componente_relacionado_na_matriz', 'tipo')
 
-    def clean(self):
+    def clean(self, validar_periodo=True):
         super().clean()
         if self.componente_na_matriz_id and self.componente_relacionado_na_matriz_id:
             if self.componente_na_matriz.ppc_id != self.componente_relacionado_na_matriz.ppc_id:
                 raise ValidationError("Os dois componentes da relação precisam estar na mesma matriz (mesmo PPC).")
+            if validar_periodo:
+                from .services.regras_matriz import validar_relacao_periodo
+                validar_relacao_periodo(self)
+
+    def save(self, *args, validar_periodo=True, **kwargs):
+        validar = not self.pk
+        if self.pk:
+            anterior = type(self).objects.filter(pk=self.pk).values(
+                "componente_na_matriz_id", "componente_relacionado_na_matriz_id", "tipo"
+            ).first()
+            validar = anterior is None or any(anterior[campo] != getattr(self, campo) for campo in anterior)
+        if validar:
+            self.clean(validar_periodo=validar_periodo)
+        super().save(*args, **kwargs)
 
     history = HistoricalRecords()
 
@@ -496,6 +587,13 @@ class ComponenteNaMatrizReferencia(models.Model):
             raise ValidationError({
                 "natureza": "Componentes do Núcleo Comum são sempre de natureza obrigatória."
             })
+        if self.periodo is None or self.periodo < 1:
+            raise ValidationError({"periodo": "O período deve ser maior que zero."})
+        if self.pk:
+            from .services.regras_matriz import validar_mudanca_periodo
+            anterior = type(self).objects.filter(pk=self.pk).values_list("periodo", flat=True).first()
+            if anterior is not None and anterior != self.periodo:
+                validar_mudanca_periodo(self, self.periodo, "referencia")
 
     matriz = models.ForeignKey(
         MatrizReferenciaCurricular,
@@ -522,6 +620,16 @@ class ComponenteNaMatrizReferencia(models.Model):
             )
         ]
         ordering = ["periodo", "ordem"]
+
+    def save(self, *args, **kwargs):
+        if self.periodo is None or self.periodo < 1:
+            raise ValidationError({"periodo": "O período deve ser maior que zero."})
+        if self.pk:
+            from .services.regras_matriz import validar_mudanca_periodo
+            anterior = type(self).objects.filter(pk=self.pk).values_list('periodo', flat=True).first()
+            if anterior is not None and anterior != self.periodo:
+                validar_mudanca_periodo(self, self.periodo, 'referencia')
+        super().save(*args, **kwargs)
 
     history = HistoricalRecords()
 
@@ -552,13 +660,25 @@ class RelacaoComponenteReferencia(models.Model):
             ),
         ]
 
-    def clean(self):
+    def clean(self, validar_periodo=True):
         super().clean()
         if self.item_id and self.item_relacionado_id:
             if self.item_id == self.item_relacionado_id:
                 raise ValidationError("Um componente não pode se relacionar consigo mesmo.")
             if self.item.matriz_id != self.item_relacionado.matriz_id:
                 raise ValidationError("Os dois componentes precisam estar na mesma matriz de referência.")
+            if validar_periodo:
+                from .services.regras_matriz import validar_relacao_periodo
+                validar_relacao_periodo(self)
+
+    def save(self, *args, validar_periodo=True, **kwargs):
+        validar = not self.pk
+        if self.pk:
+            anterior = type(self).objects.filter(pk=self.pk).values("item_id", "item_relacionado_id", "tipo").first()
+            validar = anterior is None or any(anterior[campo] != getattr(self, campo) for campo in anterior)
+        if validar:
+            self.clean(validar_periodo=validar_periodo)
+        super().save(*args, **kwargs)
 
     history = HistoricalRecords()
 
@@ -633,12 +753,33 @@ class BibliografiaReferencia(models.Model):
     componente_na_matriz_referencia = models.ForeignKey(
         ComponenteNaMatrizReferencia, on_delete=models.CASCADE, related_name="bibliografias"
     )
+    referencia = models.ForeignKey(
+        ReferenciaBibliografica, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="bibliografias_matrizes_referencia",
+    )
     tipo = models.CharField(max_length=15, choices=TIPO_CHOICES)
     titulo = models.CharField(max_length=300)
     autores = models.CharField(max_length=300)
     editora = models.CharField(max_length=150, blank=True)
     cidade = models.CharField(max_length=100, blank=True)
     ano = models.PositiveIntegerField(blank=True, null=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(
+            fields=["componente_na_matriz_referencia", "referencia"],
+            name="uniq_bibliografia_ref_obra_por_item",
+        )]
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            anterior = type(self).objects.filter(pk=self.pk).values(
+                "componente_na_matriz_referencia_id", "referencia_id", "tipo", "titulo", "autores", "editora", "cidade", "ano"
+            ).first()
+            if anterior and anterior["referencia_id"] and any(anterior[campo] != getattr(self, campo) for campo in (
+                "componente_na_matriz_referencia_id", "referencia_id", "tipo", "titulo", "autores", "editora", "cidade", "ano"
+            )):
+                raise ValidationError("Esta referência veio da Biblioteca e não pode ser editada. Remova-a e escolha outra obra.")
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.titulo

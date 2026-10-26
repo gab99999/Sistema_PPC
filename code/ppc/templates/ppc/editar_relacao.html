@@ -1,7 +1,7 @@
 {% extends "ppc_base.html" %}
 {% block title %}Editar Relação{% endblock %}
 {% block ppc_content %}
-    <a href="{% url 'detalhe_componente' componente.id %}" class="link-voltar">← Voltar para {{ componente.nome }}</a>
+    <a href="{% url 'detalhe_componente_na_matriz' componente_na_matriz_id=componente_na_matriz.id %}" class="link-voltar">← Voltar para {{ componente_na_matriz.componente.nome }}</a>
     <h2>Editar Relação</h2>
     <form method="post" class="form-secao">
         {% csrf_token %}

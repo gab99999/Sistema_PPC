@@ -6,6 +6,11 @@
 <div class="alerta alerta-info">
   {{ preview.novos|length }} novo(s) · {{ preview.existentes_iguais|length }} já iguais (nada a fazer) · {{ preview.conflitos|length }} em conflito
 </div>
+{% if preview.periodos_acima_maximo %}
+<div class="alerta alerta-warning">
+  A matriz tem {{ preview.periodos_acima_maximo|length }} componente(s) acima da duração máxima declarada do PPC. Eles podem ser aplicados, mas ficarão sinalizados para revisão.
+</div>
+{% endif %}
 
 <form method="post">
   {% csrf_token %}
@@ -50,13 +55,39 @@
   </table>
   {% endif %}
 
-  {% if preview.existentes_iguais %}
-  <div class="alerta">
-    {{ preview.existentes_iguais|length }} componente(s) já estão idênticos no PPC — nada será alterado neles.
-  </div>
+  {% if preview.bibliografias_identicas or preview.bibliografias_diferencas %}
+  <section class="form-secao">
+    <h3>Conferência das bibliografias</h3>
+    {% if preview.bibliografias_identicas %}<p>{{ preview.bibliografias_identicas }} componente(s) existente(s) com bibliografia idêntica.</p>{% endif %}
+    {% for grupo in preview.bibliografias_diferencas %}
+      <details class="card">
+        <summary><strong>{{ grupo.item.componente.nome }}</strong> —
+          {{ grupo.resumo.adicionar }} a adicionar, {{ grupo.resumo.remover }} a remover,
+          {{ grupo.resumo.alterar_tipo }} com tipo a alterar, {{ grupo.resumo.substituir }} a substituir
+        </summary>
+        <div class="card-corpo">
+          <ul>
+            {% for operacao in grupo.operacoes %}
+              <li class="{% if operacao.acao == 'remover' %}alerta alerta-warning{% endif %}">
+                <label>
+                  <input type="checkbox" name="bibliografia_operacao" value="{{ operacao.key }}" checked>
+                  {{ operacao.rotulo }}
+                </label>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </details>
+    {% endfor %}
+  </section>
   {% endif %}
 
-  <button type="submit" class="btn btn-primario">Aplicar selecionados</button>
+  {% if preview.bibliografias_total_operacoes %}
+    <p class="alerta alerta-info">As operações marcadas reproduzem a bibliografia da referência. Desmarque as que deseja ignorar.</p>
+    <button type="submit" name="confirmar_bibliografias" value="on" class="btn btn-primario">Confirmar bibliografias e aplicar selecionados</button>
+  {% else %}
+    <button type="submit" class="btn btn-primario">Aplicar selecionados</button>
+  {% endif %}
 </form>
 {% endblock %}
 {% block ajuda %}<p>Revise os novos componentes e conflitos antes de aplicar a matriz ao PPC. Escolha conscientemente entre manter o dado atual do PPC ou usar a referência.</p>{% endblock %}

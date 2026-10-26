@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}PPCs sem durações{% endblock %}
+{% block content %}
+<h1>PPCs sem durações informadas</h1>
+<p>{{ pagina.paginator.count }} PPC(s) com duração mínima, média e máxima zeradas.</p>
+<table class="tabela-dados">
+  <thead><tr><th>Curso</th><th>PPC</th><th>Vigência</th><th>Status</th></tr></thead>
+  <tbody>{% for ppc in ppcs %}<tr><td>{{ ppc.curso.nome }}</td><td>#{{ ppc.id }}</td><td>{{ ppc.periodo_vigencia }}</td><td>{{ ppc.get_status_display }}</td></tr>{% empty %}<tr><td colspan="4">Nenhum PPC nesta condição.</td></tr>{% endfor %}</tbody>
+</table>
+{% include "ppc/painel/_paginacao.html" %}
+{% endblock %}

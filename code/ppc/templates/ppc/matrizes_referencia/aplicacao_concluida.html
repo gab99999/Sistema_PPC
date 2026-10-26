@@ -3,6 +3,27 @@
 {% block content %}
 <h1>Aplicação concluída</h1>
 <p>{{ aplicados }} componente(s) atualizados no PPC a partir de "{{ matriz }}".</p>
+{% if resumo_bibliografias %}
+<section class="form-secao">
+  <h2>Resumo das bibliografias</h2>
+  <div class="grade-estatisticas">
+    <div class="card estatistica"><span class="estatistica-numero">{{ resumo_bibliografias.adicionadas }}</span><span class="estatistica-rotulo">Adicionadas</span></div>
+    <div class="card estatistica"><span class="estatistica-numero">{{ resumo_bibliografias.removidas }}</span><span class="estatistica-rotulo">Removidas</span></div>
+    <div class="card estatistica"><span class="estatistica-numero">{{ resumo_bibliografias.alteradas }}</span><span class="estatistica-rotulo">Tipos alterados</span></div>
+    <div class="card estatistica"><span class="estatistica-numero">{{ resumo_bibliografias.substituidas }}</span><span class="estatistica-rotulo">Substituídas</span></div>
+    <div class="card estatistica"><span class="estatistica-numero">{{ resumo_bibliografias.ignoradas }}</span><span class="estatistica-rotulo">Ignoradas</span></div>
+  </div>
+</section>
+{% endif %}
+{% if operacoes_bibliograficas_ignoradas %}<section class="form-secao"><h2>Operações bibliográficas ignoradas</h2><ul>{% for mensagem in operacoes_bibliograficas_ignoradas %}<li>{{ mensagem }}</li>{% endfor %}</ul></section>{% endif %}
+{% if relacoes_ignoradas %}
+<div class="alerta alerta-warning">
+  {{ relacoes_ignoradas|length }} relação(ões) legada(s) inválida(s) foram copiadas e sinalizadas. Confira a lista no Painel Institucional.
+  <ul>{% for item in relacoes_ignoradas %}<li>{{ item.mensagem }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+{% if periodos_acima_maximo %}<div class="alerta alerta-warning">{{ periodos_acima_maximo|length }} componente(s) ficaram acima da duração máxima configurada para o PPC:<ul>{% for item in periodos_acima_maximo %}<li>{{ item.componente.nome }} — período {{ item.periodo }}</li>{% endfor %}</ul></div>{% endif %}
+{% if componentes_nao_atualizados %}<div class="alerta alerta-warning">{{ componentes_nao_atualizados|length }} componente(s) não puderam receber o período da matriz por causa de relações já existentes:<ul>{% for item in componentes_nao_atualizados %}<li>{{ item.componente }} — {{ item.mensagem }}</li>{% endfor %}</ul></div>{% endif %}
 <a href="{% url 'editar_apresentacao' ppc.id %}" class="link-voltar">← Voltar ao PPC</a>
 {% endblock %}
 {% block ajuda %}<p>A aplicação da matriz de referência foi concluída. Abra o PPC e confira os componentes, períodos e naturezas antes de seguir com a revisão.</p>{% endblock %}

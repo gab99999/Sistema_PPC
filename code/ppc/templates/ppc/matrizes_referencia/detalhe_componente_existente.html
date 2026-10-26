@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<a href="{% url 'detalhe_matriz_referencia' matriz.id %}" class="link-voltar">← Voltar para a matriz</a>
+<a href="{% url 'matriz_referencia_detalhe' matriz_id=matriz.id %}" class="link-voltar">← Voltar para a matriz</a>
 <h2>Adicionar componente à matriz</h2>
 <div class="card">
     <p class="card-corpo">

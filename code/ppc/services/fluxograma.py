@@ -1,6 +1,6 @@
 import textwrap
-
 from ..models import RelacaoComponente, RelacaoComponenteReferencia
+from .regras_matriz import periodo_relacao_invalido
 
 LARGURA, ALTURA = 150, 60
 GAP_X, GAP_Y = 56, 14
@@ -91,7 +91,7 @@ def calcular_layout(nos, arestas):
         vistos.add(chave)
 
         path, seta = _caminho(o, d)
-        erro = (not co) and o['col'] >= d['col']   # pré-requisito no mesmo período ou depois
+        erro = (o['col'] >= d['col']) if not co else (d['col'] > o['col'])
         erros += erro
         saidas.append({
             'path': path,
@@ -117,7 +117,7 @@ def _no(id_, periodo, componente, nucleo, natureza):
 def _aresta(id_componente, id_relacionado, tipo):
     if tipo == 'pre_requisito':
         # o relacionado é o pré-requisito: a seta vai dele para o componente
-        return {'origem': id_relacionado, 'destino': id_componente, 'tipo': tipo}  # <- inverter se necessário
+        return {'origem': id_relacionado, 'destino': id_componente, 'tipo': tipo}
     return {'origem': id_componente, 'destino': id_relacionado, 'tipo': tipo}
 
 
@@ -148,23 +148,35 @@ def montar_fluxograma_referencia(matriz):
 def copiar_relacoes_referencia_para_ppc(matriz, ppc):
     """Depois de aplicar a matriz ao PPC, recria as relações entre os vínculos do PPC."""
     vinculos = {v.componente_id: v for v in ppc.matriz_componentes.all()}
-    criadas = 0
+    criadas, invalidas = 0, []
     for r in RelacaoComponenteReferencia.objects.filter(item__matriz=matriz).select_related('item', 'item_relacionado'):
         a = vinculos.get(r.item.componente_id)
         b = vinculos.get(r.item_relacionado.componente_id)
         if a and b:
-            _, novo = RelacaoComponente.objects.get_or_create(
-                componente_na_matriz=a, componente_relacionado_na_matriz=b, tipo=r.tipo
-            )
-            criadas += novo
-    return criadas
+            existente = RelacaoComponente.objects.filter(componente_na_matriz=a, componente_relacionado_na_matriz=b, tipo=r.tipo).first()
+            if existente is None:
+                nova = RelacaoComponente(componente_na_matriz=a, componente_relacionado_na_matriz=b, tipo=r.tipo)
+                nova.save(validar_periodo=False)
+                criadas += 1
+                mensagem = periodo_relacao_invalido(r)
+                if mensagem:
+                    invalidas.append({"relacao": r, "mensagem": mensagem, "copiada": nova})
+    return {"criadas": criadas, "invalidas": invalidas}
 
 
 def copiar_relacoes_entre_matrizes(origem, nova):
     """Usado ao duplicar uma matriz de referência."""
     itens = {i.componente_id: i for i in nova.componentes.all()}
+    invalidas = []
     for r in RelacaoComponenteReferencia.objects.filter(item__matriz=origem).select_related('item', 'item_relacionado'):
         a = itens.get(r.item.componente_id)
         b = itens.get(r.item_relacionado.componente_id)
         if a and b:
-            RelacaoComponenteReferencia.objects.get_or_create(item=a, item_relacionado=b, tipo=r.tipo)
+            existente = RelacaoComponenteReferencia.objects.filter(item=a, item_relacionado=b, tipo=r.tipo).first()
+            if existente is None:
+                nova = RelacaoComponenteReferencia(item=a, item_relacionado=b, tipo=r.tipo)
+                nova.save(validar_periodo=False)
+                mensagem = periodo_relacao_invalido(r)
+                if mensagem:
+                    invalidas.append({"relacao": r, "mensagem": mensagem, "copiada": nova})
+    return invalidas

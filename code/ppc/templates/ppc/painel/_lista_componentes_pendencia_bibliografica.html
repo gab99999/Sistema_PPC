@@ -1,0 +1,10 @@
+{% for item in itens %}
+  <article class="card"><div class="card-corpo">
+    <strong>{{ item.componente.nome }}</strong> — Período {{ item.periodo }}
+    <p>
+      {% if item.basicas < 3 %}{{ item.basicas }} de 3 básicas distintas da Biblioteca. {% endif %}
+      {% if item.complementares < 5 %}{{ item.complementares }} de 5 complementares distintas da Biblioteca. {% endif %}
+      {{ item.fora }} bibliografia(s) fora da Biblioteca.
+    </p>
+  </div></article>
+{% empty %}<p>Nenhuma pendência bibliográfica encontrada.</p>{% endfor %}
