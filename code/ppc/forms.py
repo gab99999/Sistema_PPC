@@ -48,6 +48,10 @@ class ComponenteMatrizReferenciaForm(forms.ModelForm):
         label="Natureza", choices=ComponenteNaMatrizReferencia.NATUREZA_CHOICES, initial='obrigatoria'
     )
     periodo = forms.IntegerField(label="Período", min_value=1, initial=1)
+    grupo_licenciatura = forms.ChoiceField(
+        label="Grupo (licenciatura)", required=False,
+        choices=[("", "—") , *ComponenteNaMatrizReferencia.GRUPO_LICENCIATURA_CHOICES],
+    )
 
     class Meta:
         model = ComponenteCurricular
@@ -68,14 +72,18 @@ class ComponenteMatrizReferenciaForm(forms.ModelForm):
         widgets = {'ementa': forms.Textarea(attrs={'rows': 4})}
 
     field_order = [
-        'codigo', 'nome', 'tipo', 'nucleo', 'natureza', 'periodo', 'ccu',
+        'codigo', 'nome', 'tipo', 'nucleo', 'natureza', 'periodo', 'grupo_licenciatura', 'ccu',
         'carga_horaria_teorica', 'carga_horaria_pratica',
         'carga_horaria_estudante', 'carga_horaria_professor',
         'carga_horaria_acex', 'ementa',
     ]
 
     def __init__(self, *args, **kwargs):
+        matriz = kwargs.pop('matriz', None)
         super().__init__(*args, **kwargs)
+        if matriz is not None and matriz.grau_academico != 'licenciatura':
+            self.fields.pop('grupo_licenciatura')
+        self.matriz = matriz
         # Cada grupo de carga fica oculto conforme o tipo; a obrigatoriedade é tratada no clean()
         for nome in ('carga_horaria_teorica', 'carga_horaria_pratica',
                      'carga_horaria_estudante', 'carga_horaria_professor',
@@ -113,6 +121,7 @@ class ComponenteMatrizReferenciaForm(forms.ModelForm):
             periodo=self.cleaned_data['periodo'],
             natureza=self.cleaned_data['natureza'],
             nucleo=self.cleaned_data['nucleo'],
+            grupo_licenciatura=(self.cleaned_data.get('grupo_licenciatura') or None),
         )
 
 class VinculoUsuarioCursoForm(forms.ModelForm):

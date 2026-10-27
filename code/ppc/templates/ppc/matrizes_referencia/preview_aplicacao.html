@@ -11,6 +11,12 @@
   A matriz tem {{ preview.periodos_acima_maximo|length }} componente(s) acima da duração máxima declarada do PPC. Eles podem ser aplicados, mas ficarão sinalizados para revisão.
 </div>
 {% endif %}
+{% if preview.graus_divergentes %}
+<div class="alerta alerta-warning">O grau acadêmico do PPC ({{ ppc.get_grau_academico_display }}) difere do grau da matriz ({{ matriz.get_grau_academico_display|default:"não definido" }}). A aplicação não será bloqueada.</div>
+{% endif %}
+{% if preview.grupos_licenciatura_divergentes %}
+<div class="alerta alerta-info">{{ preview.grupos_licenciatura_divergentes|length }} componente(s) existente(s) têm grupo diferente da referência. O grupo do PPC será mantido; o NDE decide se deseja alterá-lo.</div>
+{% endif %}
 
 <form method="post">
   {% csrf_token %}
@@ -18,7 +24,7 @@
   {% if preview.novos %}
   <h3>Novos componentes</h3>
   <table class="tabela-dados">
-    <thead><tr><th></th><th>Código</th><th>Nome</th><th>Período</th><th>Natureza</th></tr></thead>
+    <thead><tr><th></th><th>Código</th><th>Nome</th><th>Período</th><th>Natureza</th>{% if ppc.grau_academico == 'licenciatura' %}<th>Grupo de licenciatura</th><th>Núcleo</th>{% endif %}</tr></thead>
     <tbody>
       {% for item in preview.novos %}
       <tr>
@@ -27,10 +33,18 @@
         <td>{{ item.componente.nome }}</td>
         <td>{{ item.periodo }}</td>
         <td>{{ item.get_natureza_display }}</td>
+        {% if ppc.grau_academico == 'licenciatura' %}<td>{{ item.get_grupo_licenciatura_display|default:"—" }}</td><td>{{ item.get_nucleo_display }}</td>{% endif %}
       </tr>
       {% endfor %}
     </tbody>
   </table>
+  {% endif %}
+
+  {% if preview.grupos_licenciatura_divergentes %}
+  <details class="card">
+    <summary>Componentes existentes com grupo diferente ({{ preview.grupos_licenciatura_divergentes|length }})</summary>
+    <ul>{% for diferenca in preview.grupos_licenciatura_divergentes %}<li>{{ diferenca.referencia.componente.nome }}: PPC {{ diferenca.atual.get_grupo_licenciatura_display|default:"—" }} · referência {{ diferenca.referencia.get_grupo_licenciatura_display|default:"—" }}</li>{% endfor %}</ul>
+  </details>
   {% endif %}
 
   {% if preview.conflitos %}

@@ -2,6 +2,11 @@
 {% block content %}
 <h2>Quadro de equivalência entre matrizes curriculares</h2>
 
+<section class="card">
+  <h3>Equivalências entre edições vinculadas</h3>
+  {% for matriz in matrizes_com_edicao_anterior %}<p><a href="{% url 'equivalencias_matriz' matriz.id %}">{{ matriz.nome|default:matriz }} — {{ matriz.curso.nome }}</a></p>{% empty %}<p>Nenhuma edição com matriz anterior configurada.</p>{% endfor %}
+</section>
+
 <form method="post" action="{% url 'criar_grupo_equivalencia' %}">
     {% csrf_token %}
     <button type="submit" class="btn btn-primario">+ Novo grupo de equivalência</button>

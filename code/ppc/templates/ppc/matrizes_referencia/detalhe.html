@@ -4,6 +4,23 @@
 <a href="{% url 'lista_matrizes_referencia' %}" class="link-voltar">← Voltar para matrizes</a>
 <h1>{{ matriz }}</h1>
 
+{% include "ppc/partials/_resumo_pendencias_bibliografia.html" with resumo=resumo_pendencias_matriz titulo="Pendências desta matriz" detalhe_url=detalhe_pendencias_url %}
+{% if confirmacao_limpeza_grupos %}
+<div class="alerta alerta-warning">
+  Alterar o grau acadêmico limpará {{ confirmacao_limpeza_grupos.quantidade }} grupo(s) de licenciatura. Confirme para continuar.
+  <form method="post" action="{% url 'vincular_curso_matriz_referencia' matriz.id %}" class="form-empilhado">
+    {% csrf_token %}
+    <input type="hidden" name="nome" value="{{ confirmacao_limpeza_grupos.nome }}">
+    <input type="hidden" name="curso_id" value="{{ confirmacao_limpeza_grupos.curso_id }}">
+    <input type="hidden" name="numero_periodos" value="{{ confirmacao_limpeza_grupos.numero_periodos }}">
+    <input type="hidden" name="grau_academico" value="{{ confirmacao_limpeza_grupos.grau_academico }}">
+    <input type="hidden" name="matriz_anterior_id" value="{{ confirmacao_limpeza_grupos.matriz_anterior_id }}">
+    <input type="hidden" name="confirmar_limpeza_grupos" value="1">
+    <button type="submit" class="btn btn-perigo">Confirmar limpeza e salvar</button>
+  </form>
+</div>
+{% endif %}
+
 
 <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
   <a href="{% url 'criar_componente_matriz_referencia' matriz.id %}" class="btn btn-secundario">+ Novo Componente</a>
@@ -14,6 +31,7 @@
   <form method="post" action="{% url 'duplicar_matriz_referencia' matriz.id %}" style="display:inline;">
     {% csrf_token %}
     <button type="submit" class="btn btn-secundario">Duplicar Matriz</button>
+    {% if matriz.curso_id %}<button type="submit" name="nova_edicao" value="1" class="btn btn-secundario">Criar nova edição</button>{% endif %}
   </form>
     <a href="{% url 'historico_matriz_referencia' matriz.id %}" class="link-voltar">Ver histórico</a>
 </div>
@@ -41,30 +59,56 @@
   <label>Número de períodos
     <input type="number" name="numero_periodos" value="{{ matriz.numero_periodos }}" min="1" max="20">
   </label>
+  <label>Grau acadêmico da matriz
+    <select name="grau_academico">
+      <option value="">— não definido —</option>
+      {% for valor, rotulo in matriz.GRAU_CHOICES %}<option value="{{ valor }}" {% if matriz.grau_academico == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Matriz anterior (para equivalências entre edições)
+    <select name="matriz_anterior_id">
+      <option value="">— sem edição anterior —</option>
+      {% for anterior in matrizes_do_mesmo_curso %}<option value="{{ anterior.id }}" {% if matriz.matriz_anterior_id == anterior.id %}selected{% endif %}>{{ anterior.nome|default:anterior }} </option>{% endfor %}
+    </select>
+  </label>
   <button type="submit" class="btn btn-primario">Salvar</button>
 </form>
+{% if matriz.curso_id %}<p><a class="btn btn-secundario" href="{% url 'equivalencias_matriz' matriz.id %}">Equivalências desta edição</a></p>{% else %}<p class="alerta alerta-info">Vincule esta matriz a um curso para consultar equivalências.</p>{% endif %}
 
 <span id="status-salvamento-matriz"></span>
 
 <p class="alerta alerta-info">Mínimo por componente: 3 obras básicas e 5 complementares vinculadas à Biblioteca. Referências manuais aparecem como pendência e não completam a quantidade.</p>
 
+<details class="card resumo-periodos">
+  <summary>Resumo por período</summary>
+  <div class="tabela-rolagem"><table class="tabela" id="tabela-resumo-periodos"><thead><tr><th>Período</th><th>Componentes</th><th>Obrig. h/sem</th><th>Optat. h/sem</th><th>Teórica (h)</th><th>Prática (h)</th><th>CH total (h)</th>{% if tem_acex %}<th>ACEx (h)</th>{% endif %}</tr></thead><tbody>
+    {% for resumo in resumo_periodos %}<tr data-resumo-periodo="{{ resumo.periodo }}"><td>{{ resumo.periodo }}</td><td><span data-resumo="componentes">{{ resumo.componentes }}</span> <small>(<span data-resumo="obrigatorias">{{ resumo.obrigatorias }}</span> obrig. · <span data-resumo="optativas">{{ resumo.optativas }}</span> optat.)</small></td><td data-resumo="obrig_h_sem">{{ resumo.obrig_h_sem_texto }} h/sem</td><td data-resumo="opt_h_sem">{{ resumo.opt_h_sem_texto }} h/sem</td><td data-resumo="teorica">{{ resumo.teorica }}</td><td data-resumo="pratica">{{ resumo.pratica }}</td><td data-resumo="ch_total">{{ resumo.ch_total }}</td>{% if tem_acex %}<td data-resumo="acex">{{ resumo.acex }}</td>{% endif %}</tr>{% endfor %}
+  </tbody></table></div>
+</details>
+
 <div id="colunas-periodos">
   {% for periodo, itens in periodos %}
   <div class="coluna-periodo" data-periodo="{{ periodo }}">
     <div class="coluna-periodo-cabecalho">
-      <h3>Período {{ periodo }}</h3>
-      <span class="coluna-periodo-total">{{ itens|length }} componente(s)</span>
+      <div class="periodo-titulo"><h3>{{ periodo }}.º período</h3><span class="coluna-periodo-total">{{ itens|length }}</span></div>
+      <div class="periodo-horas"><span class="horas-semanais-obrigatorias">Obrig. <strong>0 h/sem</strong></span> · <span class="horas-semanais-optativas">Optat. <strong>0 h/sem</strong></span></div>
     </div>
     <div class="lista-itens">
       {% for item in itens %}
-      <div class="item-componente" draggable="true" data-item-id="{{ item.id }}">
-        <div class="item-codigo">{{ item.componente.codigo }}</div>
-        <div class="item-nome">{{ item.componente.nome }}</div>
+      <div class="item-componente" draggable="true" data-item-id="{{ item.id }}" data-natureza="{{ item.natureza }}" data-horas-semanais="{{ item.horas_semanais.total|stringformat:'f' }}" data-horas-teoricas-semanais="{{ item.horas_semanais.teorica|stringformat:'f' }}" data-horas-praticas-semanais="{{ item.horas_semanais.pratica|stringformat:'f' }}" data-atividade="{{ item.horas_semanais.atividade|yesno:'true,false' }}" data-carga-total="{{ item.carga_total_segura }}" data-teorica-total="{{ item.componente.carga_horaria_teorica|default:0 }}" data-pratica-total="{{ item.componente.carga_horaria_pratica|default:0 }}" data-acex-total="{{ item.componente.carga_horaria_acex|default:0 }}">
+        <div class="item-codigo">{{ item.componente.codigo|default:"Sem código" }}</div>
+        <div class="item-nome">{{ item.componente.nome|default:"Componente sem nome" }}</div>
         <span class="badge-natureza badge-{{ item.natureza }}">{{ item.get_natureza_display }}</span>
         <span class="badge-nucleo">{{ item.get_nucleo_display }}</span>
-        <div class="item-carga-horaria">
-          {{ item.componente.carga_horaria_teorica }}h teóricas · {{ item.componente.carga_horaria_pratica }}h práticas
-        </div>
+        {% if matriz.grau_academico == 'licenciatura' %}<span class="status-badge status-resolvido badge-grupo-licenciatura">{{ item.get_grupo_licenciatura_display|default:"—" }}</span>{% endif %}
+        {% include "ppc/partials/_selo_pendencia_bibliografia.html" with item=item %}
+        <div class="item-carga-horaria" title="{{ item.horas_semanais.detalhe }}">{{ item.horas_semanais.texto }}</div>
+        <details class="catalogo-leitura"><summary>Dados do catálogo (somente leitura)</summary>
+          <dl><dt>Código</dt><dd>{{ item.componente.codigo|default:"—" }}</dd><dt>Nome</dt><dd>{{ item.componente.nome|default:"—" }}</dd><dt>Tipo</dt><dd>{{ item.componente.get_tipo_display|default:item.componente.tipo|default:"—" }}</dd>
+            <dt>Carga teórica</dt><dd>{{ item.componente.carga_horaria_teorica|default:0 }} h</dd><dt>Carga prática</dt><dd>{{ item.componente.carga_horaria_pratica|default:0 }} h</dd><dt>Carga estudante</dt><dd>{{ item.componente.carga_horaria_estudante|default:"—" }} h</dd><dt>Carga professor</dt><dd>{{ item.componente.carga_horaria_professor|default:"—" }} h</dd><dt>ACEx</dt><dd>{{ item.componente.carga_horaria_acex|default:0 }} h</dd><dt>CCU</dt><dd>{{ item.componente.get_ccu_display|default:item.componente.ccu|default:"—" }}</dd><dt>Unidade</dt><dd>{{ item.componente.unidade_academica_componente|default:"—" }}</dd></dl>
+          <details><summary>Ementa</summary><p>{{ item.componente.ementa|default:"Ementa não cadastrada." }}</p></details>
+          {% if request.user.is_staff %}<a class="link-voltar" href="{% url 'editar_componente' item.componente_id %}?retorno={{ item.id }}">Editar no catálogo</a><p class="ajuda-campo">A alteração afeta todos os PPCs e matrizes que usam este componente.</p>{% endif %}
+        </details>
         <details class="card form-secao" style="margin-top:.75rem">
           <summary>Bibliografias ({{ item.bibliografias.count }})</summary>
           <ul class="lista-cursos">
@@ -95,13 +139,9 @@
         <form method="post" action="{% url 'remover_componente_matriz_referencia' item.id %}" style="display:inline;" onsubmit="return confirm('Remover este componente da matriz?');">
           {% csrf_token %}
           <button type="submit" class="link-botao" style="color:var(--cor-perigo);">Remover</button>
-        </form>
+        </form> <br>
 
         <div class="painel-edicao" id="painel-{{ item.id }}">
-          <div class="alerta alerta-info">
-            Nome e carga horária são do catálogo compartilhado — a alteração afeta todos os PPCs e matrizes que usam este componente.
-          </div>
-          
           <div class="painel-edicao-campo">
             <label>Núcleo</label>
             <select class="campo-nucleo">
@@ -116,6 +156,15 @@
               <option value="optativa" {% if item.natureza == "optativa" %}selected{% endif %}>Optativa</option>
             </select>
           </div>
+          {% if matriz.grau_academico == 'licenciatura' %}
+          <div class="painel-edicao-campo">
+            <label>Grupo da licenciatura</label>
+            <select class="campo-grupo-licenciatura">
+              <option value="">—</option>
+              {% for valor, rotulo in item.GRUPO_LICENCIATURA_CHOICES %}<option value="{{ valor }}" {% if item.grupo_licenciatura == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+            </select>
+          </div>
+          {% endif %}
           
           <div class="painel-edicao-acoes">
             <button type="button" class="btn btn-primario botao-salvar-edicao" data-item-id="{{ item.id }}">Salvar</button>
@@ -185,6 +234,46 @@ function atualizarPlaceholders() {
     });
 }
 
+function formatarHorasSemanais(valor) {
+    return `${Number(valor || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} h/sem`;
+}
+function atualizarTotaisSemanais() {
+    document.querySelectorAll('.coluna-periodo').forEach((coluna) => {
+        const itens = [...coluna.querySelectorAll('.item-componente')];
+        const obrig = itens.filter(i => i.dataset.natureza === 'obrigatoria');
+        const opt = itens.filter(i => i.dataset.natureza === 'optativa');
+        const somar = (lista, campo) => lista.reduce((soma, item) => soma + Number(item.dataset[campo] || 0), 0);
+        const preencher = (seletor, lista) => {
+            const alvo = coluna.querySelector(seletor);
+            if (!alvo) return;
+            const total = somar(lista, 'horasSemanais');
+            alvo.querySelector('strong').textContent = formatarHorasSemanais(total);
+            const teorica = somar(lista, 'horasTeoricasSemanais');
+            const pratica = somar(lista, 'horasPraticasSemanais');
+            const atividade = lista.filter(i => i.dataset.atividade === 'true').reduce((n, i) => n + Number(i.dataset.horasSemanais || 0), 0);
+            alvo.title = `Teórica: ${formatarHorasSemanais(teorica)} · Prática: ${formatarHorasSemanais(pratica)} · Atividades: ${formatarHorasSemanais(atividade)}`;
+        };
+        preencher('.horas-semanais-obrigatorias', obrig);
+        preencher('.horas-semanais-optativas', opt);
+        const totalItens = itens.length;
+        coluna.querySelector('.coluna-periodo-total').textContent = totalItens;
+        const resumo = document.querySelector(`[data-resumo-periodo="${coluna.dataset.periodo}"]`);
+        if (resumo) {
+            const colocar = (campo, valor) => { const el = resumo.querySelector(`[data-resumo="${campo}"]`); if (el) el.textContent = valor; };
+            colocar('componentes', totalItens);
+            colocar('obrigatorias', obrig.length);
+            colocar('optativas', opt.length);
+            colocar('obrig_h_sem', `${formatarHorasSemanais(somar(obrig, 'horasSemanais'))}`);
+            colocar('opt_h_sem', `${formatarHorasSemanais(somar(opt, 'horasSemanais'))}`);
+            colocar('teorica', somar(itens, 'teoricaTotal'));
+            colocar('pratica', somar(itens, 'praticaTotal'));
+            colocar('ch_total', somar(itens, 'cargaTotal'));
+            colocar('acex', somar(itens, 'acexTotal'));
+        }
+    });
+}
+atualizarTotaisSemanais();
+
 let itemArrastado = null;
 let localizacaoOriginal = null;
 
@@ -225,13 +314,14 @@ function salvarPosicao(itemId, novoPeriodo, novaOrdem, item, original) {
             if (!resposta.ok) throw new Error(dados.erro || "Não foi possível validar a nova posição.");
             return dados;
         })
-        .then(() => mostrarStatus("✓ Salvo", "sucesso"))
+        .then(() => { atualizarTotaisSemanais(); mostrarStatus("✓ Salvo", "sucesso"); })
         .catch((erro) => {
             if (original?.pai) {
                 if (original.proximo && original.proximo.parentElement === original.pai) original.pai.insertBefore(item, original.proximo);
                 else original.pai.appendChild(item);
             }
             atualizarPlaceholders();
+            atualizarTotaisSemanais();
             mostrarStatus(`⚠ ${erro.message || "Não foi possível salvar."} A posição visual foi restaurada.`, "erro");
         });
 }
@@ -254,6 +344,7 @@ document.querySelectorAll(".lista-itens").forEach((lista) => {
         const coluna = lista.closest(".coluna-periodo");
         const novoPeriodo = parseInt(coluna.dataset.periodo, 10);
         const novaOrdem = Array.from(lista.children).indexOf(itemArrastado);
+        atualizarTotaisSemanais();
         salvarPosicao(itemArrastado.dataset.itemId, novoPeriodo, novaOrdem, itemArrastado, localizacaoOriginal);
         atualizarPlaceholders();
     });
@@ -273,39 +364,35 @@ document.querySelectorAll(".botao-salvar-edicao").forEach((botao) => {
     botao.addEventListener("click", () => {
         const itemId = botao.dataset.itemId;
         const painel = document.getElementById(`painel-${itemId}`);
-        const nome = painel.querySelector(".campo-nome").value.trim();
         const nucleo = painel.querySelector(".campo-nucleo").value;
         const natureza = painel.querySelector(".campo-natureza").value;
-        const cargaTeorica = painel.querySelector(".campo-carga-teorica").value;
-        const cargaPratica = painel.querySelector(".campo-carga-pratica").value;
+        const campoGrupo = painel.querySelector(".campo-grupo-licenciatura");
+        const grupoLicenciatura = campoGrupo ? campoGrupo.value : null;
 
         mostrarStatus("Salvando...", "");
         fetch(`/matrizes-referencia/item/${itemId}/editar/`, {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken },
-            body: JSON.stringify({
-                nome, nucleo, natureza,
-                carga_horaria_teorica: cargaTeorica,
-                carga_horaria_pratica: cargaPratica,
-            }),
+            body: JSON.stringify({ nucleo, natureza, grupo_licenciatura: grupoLicenciatura }),
         })
             .then((resposta) => resposta.json().then((dados) => ({ ok: resposta.ok, dados })))
             .then(({ ok, dados }) => {
                 if (!ok) throw new Error(dados.erro || "Erro ao salvar.");
                 const card = document.querySelector(`.item-componente[data-item-id="${itemId}"]`);
-                card.querySelector(".item-nome").textContent = dados.nome;
                 const badgeNatureza = card.querySelector(".badge-natureza");
                 badgeNatureza.textContent = dados.natureza === "obrigatoria" ? "Obrigatória" : "Optativa";
                 badgeNatureza.className = `badge-natureza badge-${dados.natureza}`;
                 card.querySelector(".badge-nucleo").textContent = dados.nucleo === "NC" ? "Núcleo Comum" : "Núcleo Específico";
-                card.querySelector(".item-carga-horaria").textContent =
-                    `${cargaTeorica}h teóricas · ${cargaPratica}h práticas`;
+                card.dataset.natureza = dados.natureza;
+                const grupoBadge = card.querySelector('.badge-grupo-licenciatura');
+                if (grupoBadge) grupoBadge.textContent = dados.grupo_licenciatura ? `Grupo ${dados.grupo_licenciatura}` : '—';
+                atualizarTotaisSemanais();
                 painel.classList.remove("aberto");
                 mostrarStatus("✓ Salvo", "sucesso");
             })
-            .catch((erro) => mostrarStatus(`⚠ ${erro.message}`, "erro"));
+            .catch((erro) => mostrarStatus(`⚠ ${erro.message || "Erro ao salvar."}`, "erro"));
     });
 });
 </script>
 {% endblock %}
-{% block ajuda %}<p>Gerencie os componentes da matriz de referência. Alterações de nome e carga afetam o catálogo compartilhado; natureza e período definem o vínculo na matriz.</p>{% endblock %}
+{% block ajuda %}<p>Gerencie os vínculos desta matriz: período por arrastar, natureza, núcleo e grupo da licenciatura. Os dados do componente são somente leitura; a edição no catálogo é restrita a administradores e afeta todos os PPCs e matrizes que usam o componente.</p>{% endblock %}

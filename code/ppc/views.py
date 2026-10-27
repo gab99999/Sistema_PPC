@@ -42,8 +42,8 @@ logger = logging.getLogger(__name__)
 from django.core.exceptions import ValidationError, PermissionDenied
 import json
 from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from .models import MatrizReferenciaCurricular, ComponenteNaMatrizReferencia
+from django.views.decorators.http import require_POST, require_GET
+from .models import MatrizReferenciaCurricular, ComponenteNaMatrizReferencia, EquivalenciaMatriz
 from django.db.models import Count, Max
 from .models import ImportacaoPendencia
 from .services.resolucao_pendencias import resolver_pendencia_ambigua
@@ -70,7 +70,13 @@ from ppc.services.regras_matriz import pendencias_referencias, relacoes_invalida
 from ppc.services.comparacao_bibliografias import calcular_operacoes_bibliografia, resumir_operacoes
 from ppc.services.painel_bibliografias import (
     resumo_pendencias_bibliograficas, queryset_componentes_pendentes_ppc,
-    queryset_componentes_pendentes_matriz,
+    queryset_componentes_pendentes_matriz, resumo_pendencias_matriz,
+)
+from ppc.services.carga_semanal import calcular_horas_semanais, formatar_horas_semanais_valor
+from ppc.services.equivalencias_matrizes import (
+    consultar_equivalencias_matriz, salvar_equivalencias_matriz,
+    preparar_editor_equivalencias, candidatos_equivalencia_celula,
+    previsualizar_equivalencias_matriz,
 )
 
 
@@ -443,9 +449,72 @@ def lista_equivalencias(request):
         grupo.itens_ordenados = list(grupo.itens.all())  # já vem ordenado por 'ordem' via Meta.ordering
         grupo.celulas_vazias = range(maior_grupo - len(grupo.itens_ordenados))
 
+    matrizes = MatrizReferenciaCurricular.objects.filter(matriz_anterior__isnull=False).select_related('curso').order_by('curso__nome', 'nome')
     return render(request, 'ppc/equivalencias/lista.html', {
         'grupos': grupos, 'colunas_cabecalho': colunas_cabecalho,
+        'matrizes_com_edicao_anterior': matrizes,
     })
+
+
+@login_required
+def equivalencias_matriz(request, matriz_id):
+    matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    dados = preparar_editor_equivalencias(matriz)
+    if request.method == 'POST' and not dados['erro']:
+        try:
+            payload = json.loads(request.body) if request.content_type == "application/json" else {"pares": [v.split(":", 1) for v in request.POST.getlist("pares")]}
+            pares = payload.get("pares", [])
+            pares = [(int(p[0]), int(p[1])) for p in pares]
+        except (ValueError, TypeError, KeyError, json.JSONDecodeError):
+            if request.content_type == "application/json":
+                return JsonResponse({"erro": "Seleção de equivalências inválida."}, status=400)
+            messages.error(request, 'Seleção de equivalências inválida.')
+            return render(request, 'ppc/equivalencias/matriz.html', dados)
+        try:
+            resumo = salvar_equivalencias_matriz(matriz.pk, pares, request.user)
+        except ValidationError as erro:
+            if request.content_type == "application/json":
+                return JsonResponse({"erro": " ".join(erro.messages)}, status=400)
+            messages.error(request, ' '.join(erro.messages))
+        else:
+            if request.content_type == "application/json":
+                return JsonResponse({"ok": True, "resumo": resumo})
+            messages.success(request, f"Equivalências salvas: {resumo['adicionadas']} adicionadas, {resumo['removidas']} removidas.")
+            return redirect('equivalencias_matriz', matriz_id=matriz.pk)
+    return render(request, 'ppc/equivalencias/matriz.html', dados)
+
+
+@login_required
+@require_GET
+def candidatos_equivalencia_matriz(request, matriz_id):
+    matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    try:
+        item_id = int(request.GET.get("item_id", ""))
+        anterior_id = int(request.GET.get("matriz_anterior_id", ""))
+        offset = max(0, int(request.GET.get("offset", "0")))
+        dados = candidatos_equivalencia_celula(
+            matriz, item_id, anterior_id, request.GET.get("q", ""), offset,
+        )
+    except (ValueError, TypeError, ValidationError) as erro:
+        mensagem = " ".join(erro.messages) if isinstance(erro, ValidationError) else "Parâmetros de busca inválidos."
+        return JsonResponse({"erro": mensagem}, status=400)
+    return JsonResponse(dados)
+
+
+@login_required
+@require_POST
+def previa_equivalencias_matriz(request, matriz_id):
+    matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    try:
+        payload = json.loads(request.body)
+        pares = payload.get("pares", [])
+        if not isinstance(pares, list):
+            raise ValueError
+    except (json.JSONDecodeError, AttributeError, ValueError):
+        return JsonResponse({"erro": "Seleção de equivalências inválida."}, status=400)
+    dados = previsualizar_equivalencias_matriz(matriz, pares)
+    html = render_to_string("ppc/equivalencias/_previa.html", dados, request=request)
+    return JsonResponse({"html": html, "erro": dados.get("erro", "")})
 
 
 @login_required
@@ -519,6 +588,7 @@ def detalhe_componente_existente_matriz_referencia(request, matriz_id, component
     return render(request, "ppc/matrizes_referencia/detalhe_componente_existente.html", {
         "matriz": matriz,
         "componente": componente,
+        "grupos_licenciatura": ComponenteNaMatrizReferencia.GRUPO_LICENCIATURA_CHOICES,
     })
 
 @staff_member_required
@@ -792,6 +862,8 @@ def duplicar_matriz_referencia(request, matriz_id):
             curso=original.curso,
             nome=f"{original.nome or original.identificador_origem or 'Matriz'} (cópia)",
             numero_periodos=original.numero_periodos,
+            grau_academico=original.grau_academico,
+            matriz_anterior=original if request.POST.get("nova_edicao") == "1" else None,
         )
         total_itens = 0
         mapa_itens = {}
@@ -816,7 +888,7 @@ def duplicar_matriz_referencia(request, matriz_id):
             relacoes_ignoradas = copiar_relacoes_entre_matrizes(original, copia)
 
     registrar_evento(
-        "matriz_duplicada", usuario=request.user, curso=original.curso,
+        "matriz_edicao_criada" if request.POST.get("nova_edicao") == "1" else "matriz_duplicada", usuario=request.user, curso=original.curso,
         origem_id=original.id, matriz_id=copia.id, itens=total_itens,
     )
     if relacoes_ignoradas:
@@ -864,10 +936,13 @@ def adicionar_componente_existente_matriz_referencia(request, matriz_id):
     except (TypeError, ValueError):
         periodo = 1
     natureza = request.POST.get("natureza", "obrigatoria")
+    grupo = request.POST.get("grupo_licenciatura") or None
+    if grupo and grupo not in {str(valor) for valor, _ in ComponenteNaMatrizReferencia.GRUPO_LICENCIATURA_CHOICES}:
+        return JsonResponse({"erro": "Grupo de licenciatura inválido."}, status=400)
 
     ComponenteNaMatrizReferencia.objects.get_or_create(
         matriz=matriz, componente=componente,
-        defaults={"periodo": periodo, "natureza": natureza},
+        defaults={"periodo": periodo, "natureza": natureza, "grupo_licenciatura": grupo},
     )
     return redirect("matriz_referencia_detalhe", matriz_id=matriz.id)
 
@@ -875,7 +950,7 @@ def adicionar_componente_existente_matriz_referencia(request, matriz_id):
 @login_required
 def criar_componente_matriz_referencia(request, matriz_id):
     matriz = get_object_or_404(MatrizReferenciaCurricular, id=matriz_id)
-    form = ComponenteMatrizReferenciaForm(request.POST or None)
+    form = ComponenteMatrizReferenciaForm(request.POST or None, matriz=matriz)
     if request.method == 'POST' and form.is_valid():
         form.salvar_na_matriz(matriz, request.user)
         messages.success(request, "Componente criado e adicionado à matriz.")
@@ -963,6 +1038,14 @@ def _montar_preview_aplicacao(ppc, matriz):
     preview["bibliografias_diferencas"] = grupos
     preview["bibliografias_identicas"] = identicas
     preview["bibliografias_total_operacoes"] = sum(len(g["operacoes"]) for g in grupos)
+    preview["graus_divergentes"] = ppc.grau_academico != matriz.grau_academico
+    preview["grupos_licenciatura_divergentes"] = [
+        {"referencia": item, "atual": existentes[item.componente_id]}
+        for item in itens_referencia
+        if ppc.grau_academico == "licenciatura"
+        and item.componente_id in existentes
+        and existentes[item.componente_id].grupo_licenciatura != item.grupo_licenciatura
+    ]
     return preview
 
 
@@ -1086,8 +1169,7 @@ def painel_institucional(request):
     })
 
 
-@_bloquear_nde_em_detalhes_staff
-@staff_member_required
+@login_required
 def detalhe_pendencias_bibliografia_ppc(request, ppc_id):
     ppc = get_object_or_404(PPC.objects.select_related("curso"), pk=ppc_id)
     pagina = Paginator(queryset_componentes_pendentes_ppc(ppc.pk).order_by("periodo", "componente__nome"), 25).get_page(request.GET.get("page"))
@@ -1097,8 +1179,8 @@ def detalhe_pendencias_bibliografia_ppc(request, ppc_id):
     })
 
 
+@login_required
 @_bloquear_nde_em_detalhes_staff
-@staff_member_required
 def detalhe_pendencias_bibliografia_matriz(request, matriz_id):
     matriz = get_object_or_404(MatrizReferenciaCurricular.objects.select_related("curso"), pk=matriz_id)
     pagina = Paginator(queryset_componentes_pendentes_matriz(matriz.pk).order_by("periodo", "componente__nome"), 25).get_page(request.GET.get("page"))
@@ -1108,8 +1190,7 @@ def detalhe_pendencias_bibliografia_matriz(request, matriz_id):
     })
 
 
-@_bloquear_nde_em_detalhes_staff
-@staff_member_required
+@login_required
 def detalhe_relacoes_invalidas(request):
     pagina = Paginator(relacoes_invalidas(), 25).get_page(request.GET.get("page"))
     return render(request, "ppc/painel/detalhe_relacoes_invalidas.html", {
@@ -1222,6 +1303,8 @@ def preview_aplicar_matriz_referencia(request, ppc_id, matriz_id):
                 vinculo = ComponenteNaMatriz(
                     ppc=ppc, componente=item.componente,
                     periodo=item.periodo, natureza=item.natureza,
+                    nucleo=item.nucleo,
+                    grupo_licenciatura=(item.grupo_licenciatura if ppc.grau_academico == "licenciatura" else None),
                 )
                 vinculo.save(validar_limite_periodo=False)
                 vinculos_destino[item.pk] = vinculo
@@ -1336,12 +1419,22 @@ def lista_matrizes_referencia(request):
 @login_required
 def matriz_referencia_detalhe(request, matriz_id):
     matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
-    itens = (
+    return render(request, "ppc/matrizes_referencia/detalhe.html", _contexto_detalhe_matriz(matriz))
+
+
+def _contexto_detalhe_matriz(matriz):
+    itens = list(
         matriz.componentes
         .select_related("componente")
         .prefetch_related("bibliografias")
         .order_by("periodo", "ordem")
     )
+    pendencias = resumo_pendencias_matriz(matriz)
+    horas = calcular_horas_semanais(itens)
+    for item in itens:
+        item.pendencia_bibliografia = pendencias["pendencias_por_item"].get(item.pk, "")
+        item.horas_semanais = horas[item.pk]
+        item.carga_total_segura = _carga_total_legada_segura(item.componente)
 
     periodos = {n: [] for n in range(1, matriz.numero_periodos + 1)}
     for item in itens:
@@ -1354,8 +1447,76 @@ def matriz_referencia_detalhe(request, matriz_id):
         "matriz": matriz,
         "periodos": sorted(periodos.items()),
         "cursos": Curso.objects.order_by("nome"),
+        "matrizes_do_mesmo_curso": MatrizReferenciaCurricular.objects.filter(curso_id=matriz.curso_id).exclude(pk=matriz.pk).order_by("nome") if matriz.curso_id else MatrizReferenciaCurricular.objects.none(),
+        "resumo_pendencias_matriz": pendencias,
+        "detalhe_pendencias_url": reverse("detalhe_pendencias_bibliografia_matriz", args=[matriz.pk]),
+        "resumo_periodos": _resumo_periodos_matriz(periodos),
+        "tem_acex": any((item.componente.carga_horaria_acex or 0) for item in itens),
     }
-    return render(request, "ppc/matrizes_referencia/detalhe.html", context)
+    return context
+
+
+def _resumo_periodos_matriz(periodos):
+    resumo = []
+    for periodo, itens in sorted(periodos.items()):
+        obrigatorias = [i for i in itens if i.natureza == "obrigatoria"]
+        optativas = [i for i in itens if i.natureza == "optativa"]
+        semanal = calcular_horas_semanais(itens)
+        resumo.append({
+            "periodo": periodo, "componentes": len(itens),
+            "obrigatorias": len(obrigatorias), "optativas": len(optativas),
+            "obrig_h_sem": sum(semanal[i.pk]["total"] for i in obrigatorias),
+            "opt_h_sem": sum(semanal[i.pk]["total"] for i in optativas),
+            "teorica": sum(i.componente.carga_horaria_teorica or 0 for i in itens if i.componente.tipo != "atividade"),
+            "pratica": sum(i.componente.carga_horaria_pratica or 0 for i in itens if i.componente.tipo != "atividade"),
+            "ch_total": sum(_carga_total_legada_segura(i.componente) for i in itens),
+            "acex": sum(i.componente.carga_horaria_acex or 0 for i in itens),
+            "obrig_h_sem_texto": formatar_horas_semanais_valor(sum(semanal[i.pk]["total"] for i in obrigatorias)),
+            "opt_h_sem_texto": formatar_horas_semanais_valor(sum(semanal[i.pk]["total"] for i in optativas)),
+        })
+    return resumo
+
+
+def _carga_total_legada_segura(componente):
+    try:
+        return componente.carga_horaria_computada_total or 0
+    except (TypeError, ValueError):
+        return 0
+
+
+@login_required
+@require_POST
+def editar_item_matriz_referencia(request, item_id):
+    item = get_object_or_404(ComponenteNaMatrizReferencia.objects.select_related("matriz", "componente"), pk=item_id)
+    try:
+        dados = json.loads(request.body)
+        if not isinstance(dados, dict):
+            raise ValueError("O corpo da requisição deve ser um objeto JSON.")
+        # Campos alheios ao vínculo (inclusive catálogo) são ignorados.
+        grupo = (dados.get("grupo_licenciatura") or None) if "grupo_licenciatura" in dados else item.grupo_licenciatura
+        if item.matriz.grau_academico != "licenciatura":
+            grupo = None
+        if grupo and str(grupo) not in {str(v) for v, _ in ComponenteNaMatrizReferencia.GRUPO_LICENCIATURA_CHOICES}:
+            raise ValueError("Grupo de licenciatura inválido.")
+        item.nucleo = dados.get("nucleo", item.nucleo)
+        item.natureza = dados.get("natureza", item.natureza)
+        item.grupo_licenciatura = grupo
+        item.full_clean()
+        with transaction.atomic():
+            item.save()
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError, ValidationError) as exc:
+        erro = "; ".join(exc.messages) if isinstance(exc, ValidationError) else str(exc)
+        return JsonResponse({"erro": erro or "Dados inválidos."}, status=400)
+    semanal = calcular_horas_semanais([item])[item.pk]
+    return JsonResponse({
+        "ok": True, "natureza": item.natureza,
+        "nucleo": item.nucleo, "grupo_licenciatura": item.grupo_licenciatura,
+        "horas_semanais": semanal["total"], "horas_semanais_texto": semanal["texto"],
+        "horas_semanais_detalhe": semanal["detalhe"],
+        "horas_semanais_teoricas": semanal["teorica"],
+        "horas_semanais_praticas": semanal["pratica"],
+        "atividade": semanal["atividade"],
+    })
 
 
 @login_required
@@ -1521,11 +1682,53 @@ def vincular_curso_matriz_referencia(request, matriz_id):
     except (TypeError, ValueError):
         numero_periodos = matriz.numero_periodos  # ignora valor inválido, mantém o que já tinha
 
-    matriz.curso = get_object_or_404(Curso, pk=curso_id) if curso_id else None
-    matriz.nome = nome
-    matriz.numero_periodos = numero_periodos
+    grau = request.POST.get("grau_academico") or None
+    matriz_anterior_id = request.POST.get("matriz_anterior_id") or None
+    matriz_anterior = None
+    if matriz_anterior_id:
+        matriz_anterior = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_anterior_id)
+        curso_destino_id = curso_id or None
+        if not curso_destino_id or matriz_anterior.curso_id != int(curso_destino_id):
+            messages.error(request, "A matriz anterior deve estar vinculada ao mesmo curso.")
+            return redirect("matriz_referencia_detalhe", matriz_id=matriz.pk)
+    if grau not in {valor for valor, _ in PPC.GRAU_CHOICES} and grau is not None:
+        grau = matriz.grau_academico
+    grupos_para_limpar = 0
+    if matriz.grau_academico == "licenciatura" and grau != "licenciatura":
+        grupos_para_limpar = matriz.componentes.filter(grupo_licenciatura__isnull=False).count()
+        if grupos_para_limpar and request.POST.get("confirmar_limpeza_grupos") != "1":
+            return render(request, "ppc/matrizes_referencia/detalhe.html", {
+                **_contexto_detalhe_matriz(matriz),
+                "confirmacao_limpeza_grupos": {
+                    "quantidade": grupos_para_limpar,
+                    "nome": nome,
+                    "curso_id": curso_id or "",
+                    "numero_periodos": numero_periodos,
+                    "grau_academico": grau or "",
+                    "matriz_anterior_id": matriz_anterior.pk if matriz_anterior else "",
+                },
+            })
 
-    matriz.save()
+    with transaction.atomic():
+        matriz.curso = get_object_or_404(Curso, pk=curso_id) if curso_id else None
+        matriz.nome = nome
+        matriz.numero_periodos = numero_periodos
+        matriz.grau_academico = grau
+        matriz.matriz_anterior = matriz_anterior
+        try:
+            matriz.save()
+        except ValidationError as erro:
+            messages.error(request, " ".join(erro.messages))
+            return redirect("matriz_referencia_detalhe", matriz_id=matriz.pk)
+        if grupos_para_limpar:
+            with suspender_eventos_edicao():
+                for item in matriz.componentes.filter(grupo_licenciatura__isnull=False):
+                    item.grupo_licenciatura = None
+                    item.save(update_fields=["grupo_licenciatura"])
+            registrar_evento(
+                "grupos_licenciatura_matriz_limpos", usuario=request.user,
+                curso=matriz.curso, matriz_id=matriz.pk, grupos=grupos_para_limpar,
+            )
     return redirect("matriz_referencia_detalhe", matriz_id=matriz.id)
 
 

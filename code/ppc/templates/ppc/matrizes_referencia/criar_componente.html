@@ -13,6 +13,7 @@
   {{ form.natureza.as_field_group }}
   <span class="ajuda-campo" id="ajuda-natureza-nc" style="display:none;">Núcleo Comum é sempre de natureza obrigatória.</span>
   {{ form.periodo.as_field_group }}
+  {% if form.grupo_licenciatura %}{{ form.grupo_licenciatura.as_field_group }}{% endif %}
   {{ form.ccu.as_field_group }}
 
   <div id="grupo-carga-padrao" class="grupo-campos">

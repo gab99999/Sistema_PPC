@@ -1,0 +1,8 @@
+<section class="card card-corpo">
+  <strong>{{ titulo|default:"Pendências de bibliografia" }}</strong>
+  <span>{{ resumo.componentes_com_pendencia }} de {{ resumo.total_componentes }} componentes com pendência de bibliografia</span>
+  {% if resumo.relacoes_periodo_invalidas %}
+    <span class="status-badge status-pendente">{{ resumo.relacoes_periodo_invalidas }} relação(ões) com período inválido</span>
+  {% endif %}
+  {% if request.user.is_staff %}<a href="{{ detalhe_url }}" class="btn btn-secundario">Ver detalhes</a>{% endif %}
+</section>

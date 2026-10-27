@@ -1345,3 +1345,53 @@ h3 {
     min-width: 600px;
     margin: 0;
 }
+
+/* Matriz de referência: períodos com largura limitada e conteúdo quebrável. */
+:root { --largura-coluna-periodo: 280px; --largura-coluna-equivalencia: 260px; }
+#colunas-periodos { width: 100%; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+.coluna-periodo { width: var(--largura-coluna-periodo); min-width: var(--largura-coluna-periodo); max-width: var(--largura-coluna-periodo); flex: 0 0 var(--largura-coluna-periodo); min-height: 0; }
+.coluna-periodo-cabecalho { display: block; min-width: 0; }
+.periodo-titulo { display: flex; align-items: center; justify-content: space-between; gap: .5rem; min-width: 0; }
+.periodo-titulo h3 { margin: 0; overflow-wrap: anywhere; }
+.coluna-periodo-total { flex: 0 0 auto; border-radius: 1rem; padding: .08rem .45rem; background: var(--cor-fundo); }
+.periodo-horas { margin-top: .2rem; color: var(--cor-texto-suave); font-size: .74rem; line-height: 1.3; overflow-wrap: anywhere; }
+.item-componente, .item-nome, .item-codigo { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.catalogo-leitura { margin-top: .4rem; color: var(--cor-texto-suave); font-size: .78rem; }
+.catalogo-leitura dl { display: grid; grid-template-columns: minmax(6rem, auto) minmax(0, 1fr); gap: .15rem .45rem; margin: .4rem 0; }
+.catalogo-leitura dd { margin: 0; color: var(--cor-texto); overflow-wrap: anywhere; }
+.catalogo-leitura dt { font-weight: 600; }
+.resumo-periodos { margin: 1rem 0; }
+.resumo-periodos summary { cursor: pointer; font-weight: 600; }
+.resumo-periodos .tabela { min-width: 680px; }
+.badge-grupo-licenciatura { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+
+/* Quadro de equivalências: rolagem local, cabeçalhos fixos e células compactas. */
+.barra-equivalencias { position: sticky; top: .5rem; z-index: 20; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; padding: .7rem; }
+.barra-equivalencias input[type="search"] { flex: 1 1 12rem; min-width: 9rem; }
+.barra-equivalencias select { flex: 0 1 12rem; min-width: 8rem; }
+.eq-tabela-rolagem { width: 100%; max-width: 100%; max-height: 70vh; overflow: auto; overscroll-behavior: contain; border: 1px solid var(--cor-borda); }
+.eq-tabela { width: max-content; min-width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; margin: 0; }
+.eq-tabela th, .eq-tabela td { width: var(--largura-coluna-equivalencia); min-width: var(--largura-coluna-equivalencia); max-width: var(--largura-coluna-equivalencia); white-space: normal; overflow-wrap: anywhere; }
+.eq-tabela thead th { position: sticky; top: 0; z-index: 5; background: var(--cor-fundo); }
+.eq-tabela .eq-primeira-coluna { position: sticky; left: 0; z-index: 4; background: var(--cor-superficie); }
+.eq-tabela thead .eq-primeira-coluna { z-index: 8; background: var(--cor-fundo); }
+.eq-tabela small { display: block; color: var(--cor-texto-suave); font-weight: 400; }
+.eq-sem-equivalencia { background: rgba(178, 58, 72, .07); }
+.eq-separador-periodo th { position: static !important; background: #f1f3f6; }
+.eq-toggle-periodo { border: 0; background: transparent; padding: .2rem; color: inherit; font: inherit; cursor: pointer; }
+.eq-chip { display: inline-block; max-width: 100%; margin: .1rem .15rem .1rem 0; padding: .08rem .35rem; border: 1px solid var(--cor-borda); border-radius: 1rem; background: var(--cor-superficie); font-size: .72rem; overflow-wrap: anywhere; }
+.eq-chip-auto { background: rgba(63, 125, 88, .12); border-color: rgba(63, 125, 88, .35); }
+.eq-chip-manual { background: rgba(192, 138, 46, .12); border-color: rgba(192, 138, 46, .35); }
+.eq-sugestao { display: block; color: var(--cor-destaque); font-size: .7rem; }
+.eq-vazio { color: var(--cor-texto-suave); }
+.eq-celula .btn { display: block; margin-top: .3rem; font-size: .75rem; padding: .2rem .4rem; }
+.eq-dialog { width: min(54rem, calc(100% - 2rem)); max-height: 88vh; }
+.eq-candidatos { max-height: 58vh; overflow: auto; }
+.eq-candidato { padding: .5rem 0; border-bottom: 1px solid var(--cor-borda); overflow-wrap: anywhere; }
+.eq-candidato label { display: flex; align-items: flex-start; gap: .5rem; }
+.eq-candidato input { flex: 0 0 auto; }
+.eq-candidato small { display: block; }
+.eq-editor-acoes { display: flex; justify-content: flex-end; gap: .5rem; flex-wrap: wrap; padding: .75rem; }
+#eq-previa-conteudo { max-height: 65vh; overflow: auto; }
+.eq-previa-table { min-width: 720px; }
+@media (max-width: 700px) { .barra-equivalencias { top: 0; } .eq-tabela-rolagem { max-height: 68vh; } }

@@ -40,8 +40,15 @@ class Command(BaseCommand):
         vinculadas = 0
         sem_correspondencia = []
         ambiguas = []
+        duplicatas = []
         pendentes = []
         for modelo in (Bibliografia, BibliografiaReferencia):
+            campo_item = "componente_na_matriz_id" if modelo is Bibliografia else "componente_na_matriz_referencia_id"
+            ids_referencias = {ref_id for refs in indice.values() for ref_id, _ in refs}
+            pares_existentes = set(modelo.objects.filter(
+                referencia_id__in=ids_referencias,
+            ).values_list(campo_item, "referencia_id"))
+            pares_planejados = set()
             qs = modelo.objects.filter(referencia__isnull=True).select_related(
                 "componente_na_matriz__componente" if modelo is Bibliografia
                 else "componente_na_matriz_referencia__componente"
@@ -63,6 +70,11 @@ class Command(BaseCommand):
                     ambiguas.append(f"{identificador} — {len(candidatos)} correspondências")
                     continue
                 ref_id = candidatos[0][0]
+                par = (getattr(bib, campo_item), ref_id)
+                if par in pares_existentes or par in pares_planejados:
+                    duplicatas.append(f"{identificador} — obra já vinculada ao componente")
+                    continue
+                pares_planejados.add(par)
                 pendentes.append((bib, ref_id))
 
         if not dry_run:
@@ -84,4 +96,7 @@ class Command(BaseCommand):
         self.stdout.write(f"Ambíguas: {len(ambiguas)}")
         for linha in ambiguas:
             self.stdout.write(f"  AMBÍGUA — {linha}")
+        self.stdout.write(f"Duplicatas no componente: {len(duplicatas)}")
+        for linha in duplicatas:
+            self.stdout.write(f"  DUPLICATA NO COMPONENTE — {linha}")
 

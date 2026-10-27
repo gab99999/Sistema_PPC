@@ -523,6 +523,11 @@ class MembroNDE(models.Model):
 
 
 class MatrizReferenciaCurricular(models.Model):
+    GRAU_CHOICES = PPC.GRAU_CHOICES
+    matriz_anterior = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.PROTECT,
+        related_name="edicoes", verbose_name="Matriz anterior",
+    )
     curso = models.ForeignKey(
         Curso,
         on_delete=models.CASCADE,
@@ -540,6 +545,10 @@ class MatrizReferenciaCurricular(models.Model):
         help_text="Identificador original da planilha (ex: 'FIS-LN-2C'), para rastreio antes/depois de vincular a um Curso.",
     )
     nome = models.CharField(max_length=200, blank=True)
+    grau_academico = models.CharField(
+        max_length=20, choices=GRAU_CHOICES, null=True, blank=True,
+        verbose_name="Grau acadêmico da matriz",
+    )
 
     numero_periodos = models.PositiveSmallIntegerField(
         default=8,
@@ -550,6 +559,22 @@ class MatrizReferenciaCurricular(models.Model):
     atualizado_em = models.DateTimeField(auto_now=True)
 
     history = HistoricalRecords()
+
+    def save(self, *args, **kwargs):
+        if self.matriz_anterior_id:
+            if not self.curso_id:
+                raise ValidationError({"matriz_anterior": "Vincule a matriz a um curso antes de definir sua matriz anterior."})
+            curso_anterior = type(self).objects.filter(pk=self.matriz_anterior_id).values_list("curso_id", flat=True).first()
+            if curso_anterior is None or curso_anterior != self.curso_id:
+                raise ValidationError({"matriz_anterior": "A matriz anterior deve pertencer ao mesmo curso."})
+            visitados = {self.pk} if self.pk else set()
+            cursor_id = self.matriz_anterior_id
+            while cursor_id:
+                if cursor_id in visitados:
+                    raise ValidationError({"matriz_anterior": "A cadeia de edições não pode formar um ciclo."})
+                visitados.add(cursor_id)
+                cursor_id = type(self).objects.filter(pk=cursor_id).values_list("matriz_anterior_id", flat=True).first()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         if self.curso:
@@ -622,6 +647,10 @@ class ComponenteNaMatrizReferencia(models.Model):
         ordering = ["periodo", "ordem"]
 
     def save(self, *args, **kwargs):
+        if self.matriz_id and self.matriz.grau_academico != "licenciatura":
+            self.grupo_licenciatura = None
+            if kwargs.get("update_fields") is not None:
+                kwargs["update_fields"] = set(kwargs["update_fields"]) | {"grupo_licenciatura"}
         if self.periodo is None or self.periodo < 1:
             raise ValidationError({"periodo": "O período deve ser maior que zero."})
         if self.pk:
@@ -835,14 +864,63 @@ class ItemEquivalencia(models.Model):
 
     def clean(self):
         super().clean()
-        tem_acex = bool(self.item_matriz.componente.carga_horaria_acex)
-        outros = self.grupo.itens.exclude(pk=self.pk).select_related('item_matriz__componente')
-        for outro in outros:
-            if bool(outro.item_matriz.componente.carga_horaria_acex) != tem_acex:
-                raise ValidationError(
-                    "Componentes com carga horária de ACEx só podem ser equivalentes a "
-                    "outros componentes que também tenham ACEx."
-                )
+        # A regra vigente segue a referência do Apps Script: ACEx não restringe equivalência.
+
+
+class EquivalenciaMatriz(models.Model):
+    """Par direcionado: componente da edição atual e sua equivalência anterior."""
+    item_novo = models.ForeignKey(
+        ComponenteNaMatrizReferencia, on_delete=models.PROTECT,
+        related_name="equivalencias_como_novo",
+    )
+    item_anterior = models.ForeignKey(
+        ComponenteNaMatrizReferencia, on_delete=models.PROTECT,
+        related_name="equivalencias_como_anterior",
+    )
+    criado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="equivalencias_matriz_criadas",
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(
+            fields=["item_novo", "item_anterior"], name="uniq_equivalencia_matriz_par",
+        )]
+        ordering = ["item_novo__matriz_id", "item_novo_id", "item_anterior_id"]
+
+    def clean(self):
+        super().clean()
+        if not self.item_novo_id or not self.item_anterior_id:
+            return
+        novo = self.item_novo.matriz
+        anterior = self.item_anterior.matriz
+        if novo.pk == anterior.pk:
+            raise ValidationError("A equivalência precisa ligar matrizes diferentes.")
+        if not novo.curso_id or novo.curso_id != anterior.curso_id:
+            raise ValidationError("As matrizes precisam estar vinculadas ao mesmo curso.")
+        ancestrais = set()
+        cursor_id = novo.matriz_anterior_id
+        while cursor_id and cursor_id not in ancestrais:
+            ancestrais.add(cursor_id)
+            cursor_id = MatrizReferenciaCurricular.objects.filter(
+                pk=cursor_id,
+            ).values_list("matriz_anterior_id", flat=True).first()
+        if anterior.pk not in ancestrais:
+            raise ValidationError("A matriz de destino precisa estar na linhagem de edições anteriores.")
+        try:
+            ch_anterior = self.item_anterior.componente.carga_horaria_computada_total
+            ch_nova = self.item_novo.componente.carga_horaria_computada_total
+        except (TypeError, ValueError):
+            raise ValidationError("A carga horária de um dos componentes está incompleta ou inválida.")
+        if ch_anterior < ch_nova:
+            raise ValidationError("A CH da matriz anterior deve ser igual ou superior à da matriz nova.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    history = HistoricalRecords()
 
 class ResumoCargaHorariaPPC(models.Model):
     ppc = models.OneToOneField(PPC, on_delete=models.CASCADE, related_name="resumo_carga_horaria")

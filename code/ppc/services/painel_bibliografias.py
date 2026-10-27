@@ -103,6 +103,50 @@ def queryset_componentes_pendentes_matriz(matriz_id):
     return _queryset_pendentes(ComponenteNaMatrizReferencia.objects.filter(matriz_id=matriz_id).select_related("componente"))
 
 
+def resumo_pendencias_matriz(matriz):
+    """Agrega pendências bibliográficas por componente de uma matriz de referência."""
+    from ppc.models import RelacaoComponenteReferencia
+    from ppc.services.regras_matriz import periodo_relacao_invalido
+
+    linhas = list(_linhas_itens(
+        ComponenteNaMatrizReferencia.objects.filter(matriz_id=matriz.pk),
+        ("componente__nome", "componente__codigo", "periodo"),
+    ))
+    por_id = {linha["pk"]: linha for linha in linhas}
+    componentes = ComponenteNaMatrizReferencia.objects.filter(
+        pk__in=por_id
+    ).select_related("componente").order_by("periodo", "ordem")
+    pendencias = {}
+    for item in componentes:
+        linha = por_id[item.pk]
+        falta_basicas = max(0, 3 - linha["basicas"])
+        falta_complementares = max(0, 5 - linha["complementares"])
+        if falta_basicas or falta_complementares or linha["fora"]:
+            def quantidade(valor, singular, plural):
+                return f"{valor} {singular if valor == 1 else plural}"
+
+            faltantes = []
+            if falta_basicas:
+                faltantes.append(quantidade(falta_basicas, "básica", "básicas"))
+            if falta_complementares:
+                faltantes.append(quantidade(falta_complementares, "complementar", "complementares"))
+            partes = [f"Faltam {' e '.join(faltantes)}"] if faltantes else []
+            if linha["fora"]:
+                partes.append(f"{linha['fora']} fora da biblioteca")
+            pendencias[item.pk] = "; ".join(partes)
+
+    relacoes = RelacaoComponenteReferencia.objects.filter(
+        item__matriz_id=matriz.pk
+    ).select_related("item", "item_relacionado")
+    invalidas = sum(1 for relacao in relacoes if periodo_relacao_invalido(relacao))
+    return {
+        "componentes_com_pendencia": len(pendencias),
+        "total_componentes": len(linhas),
+        "pendencias_por_item": pendencias,
+        "relacoes_periodo_invalidas": invalidas,
+    }
+
+
 def _queryset_pendentes(queryset):
     anotado = queryset.annotate(
         basicas=Count("bibliografias__referencia_id", filter=Q(

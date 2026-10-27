@@ -34,6 +34,14 @@
             <option value="optativa">Optativa</option>
         </select>
     </label>
+    {% if matriz.grau_academico == 'licenciatura' %}
+    <label>Grupo da licenciatura
+        <select name="grupo_licenciatura">
+            <option value="">—</option>
+            {% for valor, rotulo in grupos_licenciatura %}<option value="{{ valor }}">{{ rotulo }}</option>{% endfor %}
+        </select>
+    </label>
+    {% endif %}
     <button type="submit" class="btn btn-primario">Adicionar</button>
 </form>
 {% endblock %}

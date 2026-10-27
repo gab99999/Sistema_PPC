@@ -4,17 +4,18 @@ import io
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import Http404, HttpResponse
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 
 from .forms_relatorios import FiltroRelatorioForm
 from .services.relatorios import RELATORIOS, agrupados
 
 
-@staff_member_required
+@login_required
 def indice_relatorios(request):
     return render(request, "ppc/relatorios/indice.html", {"grupos": agrupados()})
 
 
-@staff_member_required
+@login_required
 def ver_relatorio(request, chave):
     rel = RELATORIOS.get(chave)
     if rel is None:
