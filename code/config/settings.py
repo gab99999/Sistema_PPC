@@ -133,6 +133,7 @@ STATIC_URL = 'static/'
 
 CKEDITOR_5_CONFIGS = {
     'default': {
+        'language': 'pt-br',
         'toolbar': [
             'heading', '|',
             'bold', 'italic', 'underline', '|',
