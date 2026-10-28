@@ -14,7 +14,7 @@ from .models import (
     RelacaoComponente, MatrizReferenciaCurricular,
     ComponenteNaMatrizReferencia, RelacaoComponenteReferencia,
     ReferenciaBibliografica, Bibliografia, BibliografiaReferencia,
-    ImportacaoPendencia, EquivalenciaMatriz, GrupoEquivalenciaComponentes, ItemEquivalencia,
+    ImportacaoPendencia, EquivalenciaMatriz, EquivalenciaPPC, GrupoEquivalenciaComponentes, ItemEquivalencia,
 )
 from .services.comparacao_bibliografias import calcular_operacoes_bibliografia
 from .services.painel_bibliografias import resumo_pendencias_bibliograficas
@@ -149,6 +149,64 @@ class EquivalenciasEntreEdicoesTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertFalse(EquivalenciaMatriz.objects.exists())
 
+
+class EquivalenciasPPCInterfaceTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user("equiv-ppc-user", password="x")
+        self.curso = Curso.objects.create(nome="Curso PPC eq", unidade_academica="UA", area_conhecimento="Área")
+        base = dict(curso=self.curso, modalidade="presencial", grau_academico="bacharelado", turno_funcionamento="Integral", numero_vagas_anuais=30, duracao_minima_semestres=4, duracao_media_semestres=6, duracao_maxima_semestres=8, diretor="D", vice_diretor="VD", coordenador_curso="C", vice_coordenador_curso="VC", tipo_ppc="novo")
+        self.anterior = PPC.objects.create(**base)
+        self.novo = PPC.objects.create(**{**base, "tipo_ppc": "reformulacao", "ppc_anterior": self.anterior})
+        def comp(nome, ch, ementa=""):
+            return ComponenteCurricular.objects.create(nome=nome, codigo=nome[:4], tipo="disciplina", carga_horaria_teorica=ch, carga_horaria_pratica=0, carga_horaria_estudante=0, carga_horaria_acex=0, unidade_academica_componente="UA", ementa=ementa)
+        self.antigo = ComponenteNaMatriz.objects.create(ppc=self.anterior, componente=comp("Antigo", 64, "Comum"), periodo=1, natureza="obrigatoria")
+        self.atual = ComponenteNaMatriz.objects.create(ppc=self.novo, componente=comp("Atual", 64, "Comum"), periodo=1, natureza="obrigatoria")
+        self.client.force_login(self.user)
+
+    def test_editor_ppc_compacto_sem_candidatos_no_html(self):
+        response = self.client.get(reverse("equivalencias_ppc", args=[self.novo.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Antigo —")
+        self.assertContains(response, "Salvar equivalências")
+
+    def test_candidatos_e_previa_validam_ch_sem_gravar(self):
+        baixo_comp = ComponenteCurricular.objects.create(nome="Abaixo", codigo="LOW", tipo="disciplina", carga_horaria_teorica=32, carga_horaria_pratica=0, carga_horaria_estudante=0, carga_horaria_acex=0, unidade_academica_componente="UA", ementa="")
+        baixo = ComponenteNaMatriz.objects.create(ppc=self.anterior, componente=baixo_comp, periodo=1, natureza="obrigatoria")
+        response = self.client.get(reverse("candidatos_equivalencia_ppc", args=[self.novo.pk]), {"item_id": self.atual.pk, "matriz_anterior_id": self.anterior.pk})
+        self.assertEqual(response.status_code, 200)
+        candidatos = {i["id"]: i for i in response.json()["candidatos"]}
+        self.assertTrue(candidatos[self.antigo.pk]["elegivel"])
+        self.assertFalse(candidatos[baixo.pk]["elegivel"])
+        self.assertIn("menor", candidatos[baixo.pk]["motivo"])
+        preview = self.client.post(reverse("equivalencias_ppc", args=[self.novo.pk]), data=__import__("json").dumps({"pares": [[self.atual.pk, baixo.pk]], "preview": True}), content_type="application/json")
+        self.assertEqual(preview.status_code, 200)
+        self.assertContains(preview, "Quadro de", html=False)
+        self.assertIn("Pares rejeitados", preview.json()["html"])
+        self.assertFalse(EquivalenciaPPC.objects.exists())
+
+    def test_salvar_ppc_registra_par_validado_e_usuario_logado_tem_acesso(self):
+        response = self.client.post(reverse("equivalencias_ppc", args=[self.novo.pk]), data=__import__("json").dumps({"pares": [[self.atual.pk, self.antigo.pk]]}), content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(EquivalenciaPPC.objects.filter(item_novo=self.atual, item_anterior=self.antigo).exists())
+
+    def test_pdf_renderiza_tabela_de_equivalencias_especifica_do_ppc(self):
+        EquivalenciaPPC.objects.create(item_novo=self.atual, item_anterior=self.antigo, criado_por=self.user)
+        from django.template.loader import render_to_string
+        html = render_to_string("ppc/pdf/ppc_documento.html", {
+            "ppc": self.novo,
+            "equivalencia_ppcs_anteriores": [self.anterior],
+            "equivalencia_linhas": [{"item": self.atual, "celulas": [{"ppc": self.anterior, "itens": [self.antigo]}]}],
+        })
+        self.assertIn("Quadro de equivalência da estrutura curricular deste PPC", html)
+        self.assertIn("Equivalente — Curso PPC eq", html)
+        self.assertIn("Antigo", html)
+
+    def test_ppc_anterior_de_outro_curso_nao_e_aceito(self):
+        outro = Curso.objects.create(nome="Outro", unidade_academica="UA", area_conhecimento="Área")
+        dados = dict(curso=outro, modalidade="presencial", grau_academico="bacharelado", turno_funcionamento="Integral", numero_vagas_anuais=30, duracao_minima_semestres=4, duracao_media_semestres=6, duracao_maxima_semestres=8, diretor="D", vice_diretor="VD", coordenador_curso="C", vice_coordenador_curso="VC", tipo_ppc="novo")
+        externo = PPC.objects.create(**dados)
+        self.novo.ppc_anterior = externo
+        with self.assertRaises(ValidationError): self.novo.save()
 
 class EdicaoVinculoMatrizReferenciaTests(TestCase):
     def setUp(self):
@@ -378,7 +436,7 @@ class RegrasMatrizRegressaoTests(TestCase):
         })
         self.assertGreaterEqual(Bibliografia.history.filter(id__in=[antiga_tipo.pk, extra.pk, manual.pk], history_type="-").count(), 3)
 
-    def test_contagens_do_painel_batem_com_total_dos_detalhes_e_paginas_exigem_staff(self):
+    def test_contagens_do_painel_batem_com_total_dos_detalhes_com_acesso_por_curso(self):
         ppc = self.criar_ppc()
         matriz = MatrizReferenciaCurricular.objects.create(curso=self.curso, nome="Com pendência")
         componente_ppc = self.criar_componente("PPC completo")
@@ -412,8 +470,10 @@ class RegrasMatrizRegressaoTests(TestCase):
         self.assertEqual(detalhe_ppc.context["pagina"].paginator.count, 1)
         self.assertEqual(detalhe_matriz.context["pagina"].paginator.count, 1)
         self.client.force_login(self.user)
-        self.assertEqual(self.client.get(reverse("detalhe_pendencias_bibliografia_ppc", args=[ppc.pk])).status_code, 403)
-        self.assertEqual(self.client.get(reverse("detalhe_pendencias_bibliografia_matriz", args=[matriz.pk])).status_code, 403)
+        from .models import VinculoUsuarioCurso
+        VinculoUsuarioCurso.objects.get_or_create(usuario=self.user, curso=self.curso)
+        self.assertEqual(self.client.get(reverse("detalhe_pendencias_bibliografia_ppc", args=[ppc.pk])).status_code, 200)
+        self.assertEqual(self.client.get(reverse("detalhe_pendencias_bibliografia_matriz", args=[matriz.pk])).status_code, 200)
 
     def test_relacoes_ppc_e_referencia_validam_periodos(self):
         ppc = self.criar_ppc()
@@ -577,7 +637,7 @@ class RegrasMatrizRegressaoTests(TestCase):
         bib.refresh_from_db()
         self.assertIsNone(bib.referencia_id)
 
-    def test_pendencias_na_matriz_mostram_contadores_e_link_somente_staff(self):
+    def test_pendencias_na_matriz_mostram_contadores_e_link_para_nde(self):
         matriz = MatrizReferenciaCurricular.objects.create(curso=self.curso, nome="Matriz")
         componente = self.criar_componente("Pendente")
         item = ComponenteNaMatrizReferencia.objects.create(matriz=matriz, componente=componente, periodo=1, natureza="obrigatoria")
@@ -591,8 +651,8 @@ class RegrasMatrizRegressaoTests(TestCase):
         self.assertContains(resposta_nde, "Pendência bibliográfica")
         self.assertContains(resposta_nde, "Faltam 3 básicas e 5 complementares")
         self.assertContains(resposta_nde, "1 relação(ões) com período inválido")
-        self.assertNotContains(resposta_nde, reverse("detalhe_pendencias_bibliografia_matriz", args=[matriz.pk]))
-        self.assertEqual(self.client.get(reverse("detalhe_pendencias_bibliografia_matriz", args=[matriz.pk])).status_code, 403)
+        self.assertContains(resposta_nde, reverse("detalhe_pendencias_bibliografia_matriz", args=[matriz.pk]))
+        self.assertEqual(self.client.get(reverse("detalhe_pendencias_bibliografia_matriz", args=[matriz.pk])).status_code, 200)
         self.client.force_login(self.staff)
         resposta_staff = self.client.get(url)
         self.assertContains(resposta_staff, reverse("detalhe_pendencias_bibliografia_matriz", args=[matriz.pk]))

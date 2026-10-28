@@ -57,6 +57,13 @@ class AcessoPorCursoMiddleware:
         if not user.is_authenticated or user.is_staff:
             return None
 
+        # As telas de equivalência, como a tela das matrizes de referência,
+        # são abertas a qualquer usuário autenticado.
+        if request.resolver_match and request.resolver_match.url_name in {
+            "equivalencias_ppc", "candidatos_equivalencia_ppc",
+        }:
+            return None
+
         for nome, resolver in RESOLVEDORES.items():
             if nome in view_kwargs:
                 curso_id = resolver(view_kwargs[nome])

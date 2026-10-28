@@ -78,6 +78,7 @@ from ppc.services.equivalencias_matrizes import (
     preparar_editor_equivalencias, candidatos_equivalencia_celula,
     previsualizar_equivalencias_matriz,
 )
+from ppc.services.equivalencias_ppc import preparar_editor_ppc, candidatos_ppc, salvar_ppc as salvar_equivalencias_ppc
 
 
 def _bloquear_nde_em_detalhes_staff(view_func):
@@ -515,6 +516,56 @@ def previa_equivalencias_matriz(request, matriz_id):
     dados = previsualizar_equivalencias_matriz(matriz, pares)
     html = render_to_string("ppc/equivalencias/_previa.html", dados, request=request)
     return JsonResponse({"html": html, "erro": dados.get("erro", "")})
+
+
+@login_required
+def equivalencias_ppc(request, ppc_id):
+    ppc = get_object_or_404(PPC.objects.select_related("curso"), pk=ppc_id)
+    dados = preparar_editor_ppc(ppc)
+    if request.method == "POST":
+        try:
+            payload = json.loads(request.body)
+            pares = [(int(p[0]), int(p[1])) for p in payload.get("pares", [])]
+            if payload.get("preview"):
+                from ppc.models import ComponenteNaMatriz
+                from ppc.services.equivalencias_ppc import cadeia_ppc
+                from ppc.services.equivalencias_matrizes import carga_equivalencia
+                anteriores, erro = cadeia_ppc(ppc)
+                antigos = {i.pk: i for i in ComponenteNaMatriz.objects.filter(ppc_id__in=[a.pk for a in anteriores]).select_related("componente", "ppc")}
+                novos = {i.pk: i for i in ppc.matriz_componentes.select_related("componente")}
+                rejeitados, validos, escolhidos = [], [], set()
+                for novo_id, antigo_id in pares:
+                    n, a = novos.get(novo_id), antigos.get(antigo_id)
+                    motivo = "Componente não encontrado no PPC atual." if not n else "Componente anterior fora da linhagem." if not a else ""
+                    if not motivo:
+                        cn, ca = carga_equivalencia(n), carga_equivalencia(a)
+                        if cn is None or ca is None: motivo = "Carga horária inválida."
+                        elif ca < cn: motivo = f"CH anterior ({ca} h) menor que a CH nova ({cn} h)."
+                    if motivo: rejeitados.append({"novo": novo_id, "antigo": antigo_id, "motivo": motivo})
+                    else: escolhidos.add((novo_id, antigo_id))
+                for n in sorted(novos.values(), key=lambda x: (x.periodo, x.componente.nome)):
+                    celulas_preview = [{"ppc": ant, "pares": [antigos[a] for nn,a in escolhidos if nn == n.pk and antigos[a].ppc_id == ant.pk]} for ant in anteriores]
+                    validos.append({"item": n, "celulas": celulas_preview, "has_equivalencia": any(c["pares"] for c in celulas_preview)})
+                html = render_to_string("ppc/equivalencias/_previa_ppc.html", {"ppc": ppc, "ppcs_anteriores": anteriores, "linhas": validos, "rejeitados": rejeitados}, request=request)
+                return JsonResponse({"html": html, "erro": erro})
+            resumo = salvar_equivalencias_ppc(ppc.pk, pares, request.user)
+            return JsonResponse({"ok": True, "resumo": resumo})
+        except (ValueError, TypeError, KeyError, json.JSONDecodeError, ValidationError) as erro:
+            msg = " ".join(erro.messages) if isinstance(erro, ValidationError) else "Seleção de equivalências inválida."
+            return JsonResponse({"erro": msg}, status=400)
+    dados["matriz"] = ppc
+    return render(request, "ppc/equivalencias/ppc.html", dados)
+
+
+@login_required
+@require_GET
+def candidatos_equivalencia_ppc(request, ppc_id):
+    ppc = get_object_or_404(PPC, pk=ppc_id)
+    try:
+        data = candidatos_ppc(ppc, int(request.GET.get("item_id", "")), int(request.GET.get("matriz_anterior_id", "")), request.GET.get("q", ""), max(0, int(request.GET.get("offset", "0"))))
+        return JsonResponse(data)
+    except (ValueError, TypeError, ValidationError) as erro:
+        return JsonResponse({"erro": " ".join(erro.messages) if isinstance(erro, ValidationError) else "Busca inválida."}, status=400)
 
 
 @login_required
@@ -1180,7 +1231,6 @@ def detalhe_pendencias_bibliografia_ppc(request, ppc_id):
 
 
 @login_required
-@_bloquear_nde_em_detalhes_staff
 def detalhe_pendencias_bibliografia_matriz(request, matriz_id):
     matriz = get_object_or_404(MatrizReferenciaCurricular.objects.select_related("curso"), pk=matriz_id)
     pagina = Paginator(queryset_componentes_pendentes_matriz(matriz.pk).order_by("periodo", "componente__nome"), 25).get_page(request.GET.get("page"))
@@ -2357,6 +2407,18 @@ def adicionar_componente_existente(request, ppc_id, componente_id):
 def lista_componentes(request, ppc_id):
     ppc = get_object_or_404(PPC, id=ppc_id)
 
+    if request.method == "POST" and "salvar_ppc_anterior" in request.POST:
+        anterior_id = request.POST.get("ppc_anterior") or None
+        anterior = get_object_or_404(PPC, pk=anterior_id, curso_id=ppc.curso_id) if anterior_id else None
+        ppc.ppc_anterior = anterior
+        try:
+            ppc.save(update_fields=["ppc_anterior", "atualizado_em"])
+        except ValidationError as erro:
+            messages.error(request, " ".join(erro.messages))
+        else:
+            messages.success(request, "PPC anterior atualizado.")
+            return redirect("lista_componentes", ppc_id=ppc.pk)
+
     if request.method == 'POST' and 'salvar_descricao' in request.POST:
         form = EstruturaCurricularForm(request.POST, instance=ppc)
         if form.is_valid():
@@ -2392,6 +2454,7 @@ def lista_componentes(request, ppc_id):
         'soma_componentes': soma_componentes,
         'diferenca_carga_horaria': diferenca_carga_horaria,
         'resumo': resumo,
+        'ppcs_anteriores': PPC.objects.filter(curso_id=ppc.curso_id).exclude(pk=ppc.pk).order_by('-ano_vigencia', '-pk'),
     })
 
 

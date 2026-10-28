@@ -4,5 +4,5 @@
   {% if resumo.relacoes_periodo_invalidas %}
     <span class="status-badge status-pendente">{{ resumo.relacoes_periodo_invalidas }} relação(ões) com período inválido</span>
   {% endif %}
-  {% if request.user.is_staff %}<a href="{{ detalhe_url }}" class="btn btn-secundario">Ver detalhes</a>{% endif %}
+  <a href="{{ detalhe_url }}" class="btn btn-secundario">Ver detalhes</a>
 </section>

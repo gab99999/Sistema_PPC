@@ -10,11 +10,11 @@ from .models import (
     PPC,
     ComponenteNaMatriz,
     RelacaoComponente,
-    GrupoEquivalenciaComponentes,
-    ItemEquivalencia,
+    EquivalenciaPPC,
 )
 
 from .services.carga_horaria import calcular_resumo_carga_horaria
+from .services.equivalencias_ppc import cadeia_ppc
 
 
 def gerar_pdf_ppc(request, ppc_id):
@@ -284,74 +284,22 @@ def gerar_pdf_ppc(request, ppc_id):
     # QUADRO DE EQUIVALÊNCIA
     # =========================================================
 
-    itens_equivalencia_qs = (
-        ItemEquivalencia.objects
-        .filter(
-            item_matriz__matriz__curso=ppc.curso
-        )
-        .select_related(
-            "item_matriz__componente",
-            "item_matriz__matriz",
-        )
-        .order_by("ordem", "id")
+    equivalencias_ppc = list(
+        EquivalenciaPPC.objects.filter(item_novo__ppc=ppc)
+        .select_related("item_novo__componente", "item_anterior__componente", "item_anterior__ppc")
+        .order_by("item_novo__periodo", "item_novo__componente__nome", "item_anterior__componente__nome")
     )
-
-    grupos_equivalencia = list(
-        GrupoEquivalenciaComponentes.objects
-        .filter(
-            itens__item_matriz__matriz__curso=ppc.curso
-        )
-        .distinct()
-        .prefetch_related(
-            Prefetch(
-                "itens",
-                queryset=itens_equivalencia_qs,
-                to_attr="itens_pdf",
-            )
-        )
-        .order_by("id")
-    )
-
-    # Maior posição de ordem existente em qualquer grupo.
-    equivalencia_max_ordem = max(
-        (
-            item.ordem
-            for grupo in grupos_equivalencia
-            for item in getattr(grupo, "itens_pdf", [])
-        ),
-        default=0,
-    )
-
-    equivalencia_colunas_lista = list(
-        range(1, equivalencia_max_ordem + 1)
-    )
-
+    equivalencias_por_novo = {}
+    for par in equivalencias_ppc:
+        equivalencias_por_novo.setdefault(par.item_novo_id, []).append(par.item_anterior)
+    ppcs_anteriores, _erro_cadeia = cadeia_ppc(ppc)
     equivalencia_linhas = []
-
-    for grupo in grupos_equivalencia:
-        # Começa todas as células vazias.
-        linha = ["—"] * equivalencia_max_ordem
-
-        for item in getattr(grupo, "itens_pdf", []):
-            ordem = item.ordem
-
-            if ordem < 1:
-                continue
-
-            codigo = (
-                item.item_matriz
-                .componente
-                .codigo
-            )
-
-            codigo = codigo or "—"
-
-            # ordem=1 -> índice 0
-            # ordem=2 -> índice 1
-            # etc.
-            linha[ordem - 1] = codigo
-
-        equivalencia_linhas.append(linha)
+    for item in ppc.matriz_componentes.select_related("componente").filter(componente__status="aprovado").order_by("periodo", "componente__nome", "pk"):
+        pares_item = equivalencias_por_novo.get(item.pk, [])
+        equivalencia_linhas.append({
+            "item": item,
+            "celulas": [{"ppc": anterior, "itens": [par for par in pares_item if par.ppc_id == anterior.pk]} for anterior in ppcs_anteriores],
+        })
 
     # =========================================================
     # CONTEXTO
@@ -373,9 +321,8 @@ def gerar_pdf_ppc(request, ppc_id):
         "resumo_carga_horaria": resumo_carga_horaria,
 
         # Equivalência
-        "equivalencia_colunas": equivalencia_max_ordem,
-        "equivalencia_colunas_lista": equivalencia_colunas_lista,
         "equivalencia_linhas": equivalencia_linhas,
+        "equivalencia_ppcs_anteriores": ppcs_anteriores,
 
         # Fluxograma
         "fluxograma": montar_fluxograma_ppc(ppc),

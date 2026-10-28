@@ -12,6 +12,15 @@
     <br><br>
 
     <h3>Componentes Curriculares</h3>
+    <section class="card card-corpo">
+      <h3>Equivalências desta estrutura curricular</h3>
+      <form method="post" class="form-empilhado">
+        {% csrf_token %}<label for="ppc-anterior">PPC anterior do mesmo curso</label>
+        <select id="ppc-anterior" name="ppc_anterior"><option value="">Selecione</option>{% for anterior in ppcs_anteriores %}<option value="{{ anterior.pk }}" {% if ppc.ppc_anterior_id == anterior.pk %}selected{% endif %}>{{ anterior.curso.nome }} — {% if anterior.ano_vigencia %}{{ anterior.periodo_vigencia }}{% else %}PPC {{ anterior.pk }}{% endif %}</option>{% endfor %}</select>
+        <button class="btn btn-secundario" name="salvar_ppc_anterior" value="1">Salvar PPC anterior</button>
+      </form>
+      {% if ppc.ppc_anterior_id %}<p><a class="btn btn-primario" href="{% url 'equivalencias_ppc' ppc.pk %}">Editar equivalências deste PPC</a></p>{% else %}<p class="ajuda-campo">Selecione o PPC anterior para consultar equivalências.</p>{% endif %}
+    </section>
     {% if componentes_rascunho %}
         <div class="alerta alerta-info">Componentes abaixo pertencem ao rascunho de importação e ainda não foram salvos.</div>
         <table class="tabela-dados">
@@ -77,12 +86,11 @@
 {% endif %}
 
     <div class="btn-group">
-        <a href="{% url 'criar_componente' ppc.id %}" class="btn btn-primario">+ Novo Componente</a>
-        <a href="{% url 'buscar_componente_existente' ppc.id %}" class="btn btn-secundario">+ Usar Componente Existente</a>
+        <a href="{% url 'criar_componente' ppc.id %}" class="btn btn-secundario">+ Novo Componente</a>
+        <a href="{% url 'buscar_componente_existente' ppc.id %}" class="btn btn-primario">+ Usar Componente Existente</a>
         <a href="{% url 'selecionar_matriz_referencia_para_ppc' ppc.id %}" class="btn btn-secundario">
           Aplicar Matriz de Referência
         </a>
-        <a href="{% url 'lista_equivalencias' %}" class="btn btn-primario">Equivalências entre Matrizes</a>
         <a href="{% url 'fluxograma_ppc' ppc.id %}" class="btn btn-secundario">Fluxograma</a>
     </div>
     <br>

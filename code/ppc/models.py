@@ -68,6 +68,10 @@ class PPC(models.Model):
     ]
 
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='ppcs')
+    ppc_anterior = models.ForeignKey(
+        'self', null=True, blank=True, on_delete=models.PROTECT,
+        related_name='edicoes', verbose_name='PPC anterior',
+    )
 
     # -- Informações Gerais --
     modalidade = models.CharField(max_length=20, choices=MODALIDADE_CHOICES)
@@ -135,6 +139,19 @@ class PPC(models.Model):
     def save(self, *args, **kwargs):
         update_fields = kwargs.get("update_fields")
         self._validar_transicao_duracoes(update_fields)
+        if self.ppc_anterior_id:
+            if self.ppc_anterior_id == self.pk:
+                raise ValidationError({"ppc_anterior": "Um PPC não pode ser anterior a si mesmo."})
+            curso_anterior = type(self).objects.filter(pk=self.ppc_anterior_id).values_list("curso_id", flat=True).first()
+            if curso_anterior != self.curso_id:
+                raise ValidationError({"ppc_anterior": "O PPC anterior deve pertencer ao mesmo curso."})
+            visitados = {self.pk} if self.pk else set()
+            cursor_id = self.ppc_anterior_id
+            while cursor_id:
+                if cursor_id in visitados:
+                    raise ValidationError({"ppc_anterior": "A cadeia de PPCs não pode formar um ciclo."})
+                visitados.add(cursor_id)
+                cursor_id = type(self).objects.filter(pk=cursor_id).values_list("ppc_anterior_id", flat=True).first()
         super().save(*args, **kwargs)
 
     # -- Campos condicionais (só para EAD) --
@@ -915,6 +932,45 @@ class EquivalenciaMatriz(models.Model):
             raise ValidationError("A carga horária de um dos componentes está incompleta ou inválida.")
         if ch_anterior < ch_nova:
             raise ValidationError("A CH da matriz anterior deve ser igual ou superior à da matriz nova.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    history = HistoricalRecords()
+
+
+class EquivalenciaPPC(models.Model):
+    """Par entre vínculo curricular atual e vínculo do PPC predecessor."""
+    item_novo = models.ForeignKey(ComponenteNaMatriz, on_delete=models.PROTECT, related_name="equivalencias_ppc_como_novo")
+    item_anterior = models.ForeignKey(ComponenteNaMatriz, on_delete=models.PROTECT, related_name="equivalencias_ppc_como_anterior")
+    criado_por = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="equivalencias_ppc_criadas")
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["item_novo", "item_anterior"], name="uniq_equivalencia_ppc_par")]
+        ordering = ["item_novo__ppc_id", "item_novo_id", "item_anterior_id"]
+
+    def clean(self):
+        super().clean()
+        if not self.item_novo_id or not self.item_anterior_id:
+            return
+        novo, antigo = self.item_novo, self.item_anterior
+        if novo.ppc_id == antigo.ppc_id:
+            raise ValidationError("A equivalência precisa ligar PPCs diferentes.")
+        if novo.ppc.curso_id != antigo.ppc.curso_id:
+            raise ValidationError("Os PPCs precisam pertencer ao mesmo curso.")
+        ancestrais, cursor = set(), novo.ppc.ppc_anterior_id
+        while cursor and cursor not in ancestrais:
+            ancestrais.add(cursor)
+            cursor = PPC.objects.filter(pk=cursor).values_list("ppc_anterior_id", flat=True).first()
+        if antigo.ppc_id not in ancestrais:
+            raise ValidationError("O PPC anterior precisa estar na cadeia de edições anteriores.")
+        try:
+            if antigo.componente.carga_horaria_computada_total < novo.componente.carga_horaria_computada_total:
+                raise ValidationError("A CH do PPC anterior deve ser igual ou superior à CH do PPC novo.")
+        except (TypeError, ValueError):
+            raise ValidationError("A carga horária de um dos componentes está incompleta ou inválida.")
 
     def save(self, *args, **kwargs):
         self.full_clean()

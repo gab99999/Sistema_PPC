@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<h2>Equivalências do PPC</h2>
+{% if erro %}<div class="alerta alerta-info">{{ erro }}</div>{% else %}
+<div class="card barra-equivalencias" id="barra-equivalencias">
+  <div><strong>PPC atual:</strong> {{ ppc.curso.nome }}{% if ppc.ano_vigencia %} — {{ ppc.periodo_vigencia }}{% else %} — PPC {{ ppc.pk }}{% endif %}</div>
+  <span class="status-badge status-resolvido" id="eq-contador">0 de {{ linhas|length }} com equivalência</span>
+  <input id="eq-busca" type="search" placeholder="Buscar por código ou nome" aria-label="Buscar por código ou nome">
+  <select id="eq-filtro" aria-label="Filtrar componentes"><option value="todos">Todos</option><option value="sem">Sem equivalência</option><option value="sugestao">Com sugestão automática</option><option value="com">Com equivalência</option></select>
+  <button type="button" class="btn btn-secundario" id="eq-restaurar">Restaurar automáticas</button>
+  <button type="button" class="btn btn-secundario" id="eq-previa">▤ Verificar Equivalências</button>
+  <button type="button" class="btn btn-primario" id="eq-salvar">Salvar equivalências</button>
+  <span class="ajuda-campo" id="eq-dirty" aria-live="polite">Salvo</span>
+</div>
+<p class="ajuda-campo">Automáticas: ementa idêntica e CH total do PPC anterior igual ou superior. Manuais: CH total do PPC anterior igual ou superior.</p>
+<div class="eq-tabela-rolagem"><table class="tabela eq-tabela" id="eq-tabela">
+<thead><tr><th class="eq-primeira-coluna">{{ ppc.curso.nome }}{% if ppc.ano_vigencia %} — {{ ppc.periodo_vigencia }}{% else %} — PPC {{ ppc.pk }}{% endif %}<small>PPC atual</small></th>{% for anterior in matrizes_anteriores %}<th>{{ anterior.curso.nome }}{% if anterior.ano_vigencia %} — {{ anterior.periodo_vigencia }}{% else %} — PPC {{ anterior.pk }}{% endif %}<small>PPC anterior</small></th>{% endfor %}</tr></thead>
+{% regroup linhas by item.periodo as grupos_periodo %}
+{% for grupo in grupos_periodo %}<tbody data-period-body="{{ grupo.grouper }}"><tr class="eq-separador-periodo"><th colspan="{{ matrizes_anteriores|length|add:1 }}"><button type="button" class="eq-toggle-periodo" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">{% if forloop.first %}▾{% else %}▸{% endif %} {{ grupo.grouper }}º período — PPC atual</button></th></tr>
+{% for linha in grupo.list %}<tr class="eq-linha" data-item-id="{{ linha.item.id }}" data-periodo="{{ linha.item.periodo }}" data-nome="{{ linha.item.componente.nome|lower }}" data-codigo="{{ linha.item.componente.codigo|default:''|lower }}">
+<td class="eq-primeira-coluna"><strong>{{ linha.item.componente.nome|default:"Componente sem nome" }}</strong><small>{{ linha.item.componente.codigo|default:linha.item.id }} · {{ linha.item.periodo }}º período · {{ linha.carga|default_if_none:"—" }} h</small><details class="eq-ementa"><summary>Ver ementa</summary><p>{{ linha.item.componente.ementa|default:"Ementa não cadastrada." }}</p></details></td>
+{% for celula in linha.matrizes %}<td class="eq-celula" data-novo="{{ linha.item.id }}" data-anterior="{{ celula.matriz.id }}" data-anterior-nome="{{ celula.matriz.nome|default:celula.matriz }}" data-sugestoes="{{ celula.sugestoes }}" data-sugestao-ids="{{ celula.sugestao_ids }}" data-selecionados="{% for selecao in celula.selecionados %}{{ selecao.item.id }}{% if not forloop.last %},{% endif %}{% endfor %}">
+<div class="eq-selecionados">{% for selecao in celula.selecionados %}<span class="eq-chip {% if selecao.automatica %}eq-chip-auto{% else %}eq-chip-manual{% endif %}" data-item-id="{{ selecao.item.id }}" title="{% if selecao.automatica %}Automática{% else %}Manual{% endif %}">{{ selecao.item.componente.codigo|default:selecao.item.id }} · {{ selecao.carga|default_if_none:"—" }} h</span>{% empty %}<span class="eq-vazio">—</span>{% endfor %}</div>
+{% if celula.sugestoes %}<span class="eq-sugestao" title="Há sugestão automática para esta célula" {% if not celula.sugestoes_pendentes %}hidden{% endif %}>Sugestão automática · não aceita</span>{% endif %}<button type="button" class="btn btn-secundario eq-editar-celula">{% if celula.selecionados %}Editar equivalência{% else %}Selecionar equivalência{% endif %}</button></td>{% endfor %}</tr>{% endfor %}</tbody>{% empty %}<tbody><tr><td colspan="{{ matrizes_anteriores|length|add:1 }}">A matriz não possui componentes.</td></tr></tbody>{% endfor %}
+</table></div>
+{{ pares_iniciais|json_script:"eq-pares-iniciais" }}{{ automaticas|json_script:"eq-automaticas" }}
+<dialog id="eq-editor" class="painel-ajuda eq-dialog"><div class="painel-ajuda-cabecalho"><h2 id="eq-editor-titulo">Editar equivalência</h2><button type="button" class="btn btn-secundario" data-fechar="eq-editor">Fechar</button></div><div class="painel-ajuda-conteudo"><input type="search" id="eq-candidato-busca" class="search" placeholder="Filtrar componentes..." aria-label="Filtrar componentes"><div id="eq-candidatos" class="eq-candidatos" aria-live="polite"></div><button type="button" id="eq-mais" class="btn btn-secundario" hidden>Carregar mais</button><div class="eq-editor-acoes"><button type="button" id="eq-concluir" class="btn btn-primario">Concluir</button><button type="button" id="eq-restaurar-celula" class="btn btn-secundario">Restaurar automáticas</button></div></div></dialog>
+<dialog id="eq-previa-dialog" class="painel-ajuda eq-dialog"><div class="painel-ajuda-cabecalho"><h2>Quadro de Equivalências Curriculares</h2><button type="button" class="btn btn-secundario" data-fechar="eq-previa-dialog">Fechar</button></div><div class="painel-ajuda-conteudo" id="eq-previa-conteudo"></div><div class="eq-editor-acoes"><button type="button" class="btn btn-secundario" data-fechar="eq-previa-dialog">Voltar e editar</button><button type="button" class="btn btn-secundario" id="eq-imprimir">Imprimir / Salvar em PDF</button><button type="button" class="btn btn-primario" id="eq-salvar-previa">Salvar equivalências</button></div></dialog>
+<script id="eq-config" type="application/json">{"candidatos":"{% url 'candidatos_equivalencia_ppc' matriz.id %}","previa":"{% url 'equivalencias_ppc' matriz.id %}","salvar":"{% url 'equivalencias_ppc' matriz.id %}"}</script>
+<script src="{% static 'ppc/js/equivalencias_ppc.js' %}" defer></script>
+{% endif %}
+{% endblock %}
