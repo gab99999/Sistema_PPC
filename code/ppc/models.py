@@ -94,7 +94,7 @@ class PPC(models.Model):
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='rascunho')
-    numero_resolucao = models.CharField(max_length=100, blank=True, verbose_name="Número da Resolução de Aprovação")
+    numero_resolucao = models.CharField(max_length=100, blank=True, verbose_name="Número da Resolução de Aprovação (Pode ficar em branco durante o processo de produção)")
     numero_processo_eletronico = models.CharField(max_length=100, blank=True, verbose_name="Número do processo eletrônico")
     data_aprovacao = models.DateField(null=True, blank=True)
     data_resolucao = models.DateField(null=True, blank=True)
