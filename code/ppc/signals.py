@@ -28,11 +28,12 @@ def registrar_falha_login(sender, credentials, request=None, **kwargs):
 
 @receiver(post_create_historical_record)
 def registrar_edicao(sender, instance, history_instance, **kwargs):
-    if edicao_suspensa() or sender not in registro_edicao():
+    modelo = type(instance)
+    if edicao_suspensa() or modelo not in registro_edicao():
         return
     try:
         anterior = history_instance.prev_record if history_instance.history_type == "~" else None
-        evento = montar_evento(sender, history_instance, anterior)
+        evento = montar_evento(modelo, history_instance, anterior)
         if evento:
             with transaction.atomic():
                 evento.save()

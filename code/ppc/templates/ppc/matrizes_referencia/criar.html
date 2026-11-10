@@ -4,12 +4,20 @@
 <h1>Nova Matriz de Referência</h1>
 <form method="post" class="form-vinculo-matriz">
   {% csrf_token %}
-  <label>Nome
-    <input type="text" name="nome" required>
+  <label>Importar de outra matriz (opcional)
+    <select name="importar_de">
+      <option value="">— começar vazia —</option>
+      {% for m in matrizes_origem %}
+        <option value="{{ m.id }}">{{ m.nome|default:m.identificador_origem|default:"Matriz" }}{% if m.curso %} — {{ m.curso.nome }}{% endif %}</option>
+      {% endfor %}
+    </select>
   </label>
-  <label>Curso (opcional)
-    <select name="curso_id">
-      <option value="">— sem curso —</option>
+  <label>Nome
+    <input type="text" name="nome" {% if not user.is_staff %}required{% endif %}>
+  </label>
+  <label>Curso{% if user.is_staff %} (opcional){% endif %}
+    <select name="curso_id" {% if not user.is_staff %}required{% endif %}>
+      {% if user.is_staff %}<option value="">— sem curso —</option>{% endif %}
       {% for curso in cursos %}<option value="{{ curso.id }}">{{ curso.nome }}</option>{% endfor %}
     </select>
   </label>
@@ -18,5 +26,6 @@
   </label>
   <button type="submit" class="btn btn-primario">Criar</button>
 </form>
+<p class="ajuda-campo">A matriz nasce "Em mudança". Ao importar, copiam-se componentes, bibliografias e relações; o número de períodos da matriz de origem é mantido e a original não é alterada.</p>
 {% endblock %}
-{% block ajuda %}<p>Crie uma matriz de referência para organizar uma estrutura curricular reutilizável. Vincule-a ao curso somente quando essa referência realmente lhe corresponder.</p>{% endblock %}
+{% block ajuda %}<p>Crie uma matriz de referência para organizar uma estrutura curricular reutilizável. Para partir de uma matriz que já existe, escolha-a em "Importar de outra matriz". Vincule-a ao curso somente quando essa referência realmente lhe corresponder.</p>{% endblock %}

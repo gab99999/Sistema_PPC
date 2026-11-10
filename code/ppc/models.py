@@ -566,6 +566,15 @@ class MatrizReferenciaCurricular(models.Model):
         max_length=20, choices=GRAU_CHOICES, null=True, blank=True,
         verbose_name="Grau acadêmico da matriz",
     )
+    STATUS_APROVADA = "aprovada"
+    STATUS_EM_MUDANCA = "em_mudanca"
+    STATUS_CHOICES = [
+        (STATUS_APROVADA, "Aprovada"),
+        (STATUS_EM_MUDANCA, "Em mudança"),
+    ]
+    status = models.CharField(
+        "Estado", max_length=12, choices=STATUS_CHOICES, default=STATUS_APROVADA
+    )
 
     numero_periodos = models.PositiveSmallIntegerField(
         default=8,

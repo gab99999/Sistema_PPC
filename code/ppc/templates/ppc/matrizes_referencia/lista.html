@@ -3,13 +3,15 @@
 {% block content %}
 <h1>Matrizes de Referência</h1>
 
+{% if pode_criar_matriz %}
 <a href="{% url 'criar_matriz_referencia' %}" class="btn btn-primario" style="margin-bottom:1rem; display:inline-block;">+ Nova Matriz</a>
+{% endif %}
 {% if user.is_staff %}
   <a href="{% url 'lista_pendencias_por_matriz' %}">Pendências de Matrizes</a>
 {% endif %}
 <table class="tabela-dados">
   <thead>
-    <tr><th>Identificador de origem</th><th>Nome</th><th>Curso</th><th></th></tr>
+    <tr><th>Identificador de origem</th><th>Nome</th><th>Curso</th><th>Estado</th><th></th></tr>
   </thead>
   <tbody>
     {% for matriz in matrizes %}
@@ -19,6 +21,9 @@
       <td>
         {% if matriz.curso %}{{ matriz.curso.nome }}
         {% else %}<span class="aviso-sem-curso">sem curso vinculado</span>{% endif %}
+      </td>
+      <td>
+        <span class="selo-matriz selo-matriz-{{ matriz.status }}">{{ matriz.get_status_display }}</span>
       </td>
       <td><a href="{% url 'matriz_referencia_detalhe' matriz.id %}">Gerenciar</a></td>
     </tr>

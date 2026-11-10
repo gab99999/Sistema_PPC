@@ -161,6 +161,7 @@ urlpatterns = [
     path('ppc/<int:ppc_id>/revisao/confirmar/', views.confirmar_revisao_secao, name='confirmar_revisao_secao'),
     path("relatorios/", views_relatorios.indice_relatorios, name="relatorios"),
     path("relatorios/<slug:chave>/", views_relatorios.ver_relatorio, name="ver_relatorio"),
+    path("matrizes-referencia/<int:matriz_id>/estado/", views.alterar_estado_matriz_referencia, name="alterar_estado_matriz_referencia"),
 ]
 
 if settings.DEBUG:

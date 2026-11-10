@@ -1394,4 +1394,7 @@ h3 {
 .eq-editor-acoes { display: flex; justify-content: flex-end; gap: .5rem; flex-wrap: wrap; padding: .75rem; }
 #eq-previa-conteudo { max-height: 65vh; overflow: auto; }
 .eq-previa-table { min-width: 720px; }
+.selo-matriz { display:inline-block; padding:.1rem .5rem; border-radius:999px; font-size:.8rem; }
+.selo-matriz-aprovada { background:#e3f1e6; color:#1f5a2c; }
+.selo-matriz-em_mudanca { background:#fff3d6; color:#7a5200; }
 @media (max-width: 700px) { .barra-equivalencias { top: 0; } .eq-tabela-rolagem { max-height: 68vh; } }

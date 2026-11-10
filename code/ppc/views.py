@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.template.loader import render_to_string
 from django.db.models import Prefetch, F
 from django.utils.text import slugify
-from .permissions import exigir_acesso_ao_curso 
+from .permissions import exigir_acesso_ao_curso, exigir_edicao_matriz, exigir_acesso_ao_vinculo, exigir_acesso_ao_ppc
 from weasyprint import HTML
 from django.http import HttpResponseForbidden, Http404
 from .permissions import cursos_do_usuario
@@ -79,6 +79,86 @@ from ppc.services.equivalencias_matrizes import (
     previsualizar_equivalencias_matriz,
 )
 from ppc.services.equivalencias_ppc import preparar_editor_ppc, candidatos_ppc, salvar_ppc as salvar_equivalencias_ppc
+from django.db.models import F, Max, Q
+from django.core.exceptions import PermissionDenied
+from .permissions import pode_criar_edicao, pode_editar_matriz
+from .services.copia_matriz_referencia import copiar_matriz_referencia
+from .permissions import cursos_do_usuario, _tem_vinculo
+from django.http import HttpResponseBadRequest
+from django.db.models import F, OuterRef, Subquery
+from .models import EventoEdicao
+
+
+@login_required
+@require_POST
+def alterar_estado_matriz_referencia(request, matriz_id):
+    if not request.user.is_staff:
+        raise PermissionDenied
+    matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    novo = request.POST.get("status")
+    if novo not in dict(MatrizReferenciaCurricular.STATUS_CHOICES):
+        return HttpResponseBadRequest("Estado inválido.")
+    if novo != matriz.status:
+        matriz.status = novo
+        matriz.save()  # grava history e EventoEdicao como qualquer edição da matriz
+        messages.success(request, f"Matriz marcada como {matriz.get_status_display().lower()}.")
+    return redirect("matriz_referencia_detalhe", matriz_id=matriz.id)
+
+def _cursos_permitidos(user):
+    if user.is_staff:
+        return Curso.objects.order_by("nome")
+    return cursos_do_usuario(user).order_by("nome")
+
+
+@login_required
+def criar_matriz_referencia(request):
+    cursos = _cursos_permitidos(request.user)
+
+    if request.method == "POST":
+        nome = request.POST.get("nome", "").strip()
+        curso_id = request.POST.get("curso_id")
+        origem_id = request.POST.get("importar_de")
+        try:
+            numero_periodos = int(request.POST.get("numero_periodos", 8))
+        except (TypeError, ValueError):
+            numero_periodos = 8
+
+        origem = get_object_or_404(MatrizReferenciaCurricular, pk=origem_id) if origem_id else None
+        curso = get_object_or_404(Curso, pk=curso_id) if curso_id else None
+        if curso is None and origem is not None and origem.curso_id:
+            curso = origem.curso
+
+        # servidor: não staff só cria com curso ao qual tem vínculo
+        if not request.user.is_staff and not (curso and _tem_vinculo(request.user, curso.id)):
+            raise PermissionDenied
+
+        if origem:
+            copia, total_itens, relacoes_ignoradas = copiar_matriz_referencia(
+                origem,
+                nome=nome or f"{origem.nome or origem.identificador_origem or 'Matriz'} (cópia)",
+                curso=curso,
+            )
+            registrar_evento(
+                "matriz_duplicada", usuario=request.user, curso=curso,
+                origem_id=origem.id, matriz_id=copia.id, itens=total_itens, via="importacao",
+            )
+            if relacoes_ignoradas:
+                messages.warning(request, f"{len(relacoes_ignoradas)} relação(ões) legada(s) inválida(s) foram copiadas.")
+            messages.success(request, f"Matriz criada com {total_itens} componente(s) importado(s).")
+        else:
+            copia = MatrizReferenciaCurricular.objects.create(
+                nome=nome, curso=curso, numero_periodos=numero_periodos,
+                status=MatrizReferenciaCurricular.STATUS_EM_MUDANCA,
+            )
+        return redirect("matriz_referencia_detalhe", matriz_id=copia.id)
+
+    return render(request, "ppc/matrizes_referencia/criar.html", {
+        "cursos": cursos,
+        "matrizes_origem": (
+            MatrizReferenciaCurricular.objects.select_related("curso")
+            .order_by("curso__nome", "nome")
+        ),
+    })
 
 
 def _bloquear_nde_em_detalhes_staff(view_func):
@@ -174,6 +254,11 @@ def fluxograma_matriz_referencia(request, matriz_id):
 @login_required
 def relacoes_matriz_referencia(request, matriz_id):
     matriz = get_object_or_404(MatrizReferenciaCurricular, id=matriz_id)
+    pode_editar = pode_editar_matriz(request.user, matriz)
+
+    if request.method == 'POST':
+        exigir_edicao_matriz(request.user, matriz)  # 403 antes de validar qualquer coisa
+
     form = RelacaoComponenteReferenciaForm(request.POST or None, matriz=matriz)
     if request.method == 'POST' and form.is_valid():
         try:
@@ -186,7 +271,7 @@ def relacoes_matriz_referencia(request, matriz_id):
         item__matriz=matriz
     ).select_related('item__componente', 'item_relacionado__componente')
     return render(request, 'ppc/relacoes_matriz_referencia.html', {
-        'matriz': matriz, 'form': form, 'relacoes': relacoes,
+        'matriz': matriz, 'form': form, 'relacoes': relacoes, 'pode_editar': pode_editar,
     })
 
 
@@ -194,6 +279,7 @@ def relacoes_matriz_referencia(request, matriz_id):
 @require_POST
 def remover_relacao_referencia(request, relacao_referencia_id):
     relacao = get_object_or_404(RelacaoComponenteReferencia, id=relacao_referencia_id)
+    exigir_edicao_matriz(request.user, relacao.item.matriz)
     matriz_id = relacao.item.matriz_id
     relacao.delete()
     messages.success(request, "Relação removida.")
@@ -380,6 +466,7 @@ def vincular_bibliografia_ppc(request, componente_na_matriz_id):
 @require_POST
 def vincular_bibliografia_referencia(request, item_id):
     item = get_object_or_404(ComponenteNaMatrizReferencia, pk=item_id)
+    exigir_edicao_matriz(request.user, item.matriz)
     obra = get_object_or_404(ReferenciaBibliografica, pk=request.POST.get("referencia_id"))
     tipo = request.POST.get("tipo")
     if tipo not in {"basica", "complementar"}:
@@ -410,6 +497,7 @@ def vincular_bibliografia_referencia(request, item_id):
 @require_POST
 def adicionar_bibliografia_manual_referencia(request, item_id):
     item = get_object_or_404(ComponenteNaMatrizReferencia, pk=item_id)
+    exigir_edicao_matriz(request.user, item.matriz)
     form = BibliografiaReferenciaForm(request.POST)
     if form.is_valid():
         bib = form.save(commit=False)
@@ -425,6 +513,7 @@ def adicionar_bibliografia_manual_referencia(request, item_id):
 @require_POST
 def excluir_bibliografia_referencia(request, bibliografia_referencia_id):
     bib = get_object_or_404(BibliografiaReferencia, pk=bibliografia_referencia_id)
+    exigir_edicao_matriz(request.user, bib.componente_na_matriz_referencia.matriz)
     matriz_id = bib.componente_na_matriz_referencia.matriz_id
     bib.delete()
     messages.success(request, "Referência removida do componente.")
@@ -880,66 +969,27 @@ def reverter_ppc(request, ppc_id, history_id):
         "ppc": ppc, "registro": registro, "campos_diferentes": campos_diferentes,
     })
 
-@login_required
-def criar_matriz_referencia(request):
-    if request.method == "POST":
-        nome = request.POST.get("nome", "").strip()
-        curso_id = request.POST.get("curso_id")
-        try:
-            numero_periodos = int(request.POST.get("numero_periodos", 8))
-        except (TypeError, ValueError):
-            numero_periodos = 8
 
-        matriz = MatrizReferenciaCurricular.objects.create(
-            nome=nome,
-            curso=get_object_or_404(Curso, pk=curso_id) if curso_id else None,
-            numero_periodos=numero_periodos,
-        )
-        return redirect("matriz_referencia_detalhe", matriz_id=matriz.id)
-
-    return render(request, "ppc/matrizes_referencia/criar.html", {
-        "cursos": Curso.objects.order_by("nome"),
-    })
 
 
 @login_required
 @require_POST
 def duplicar_matriz_referencia(request, matriz_id):
     original = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    if not pode_criar_edicao(request.user, original):
+        raise PermissionDenied
 
-    relacoes_ignoradas = []
-    with transaction.atomic():
-        copia = MatrizReferenciaCurricular.objects.create(
-            curso=original.curso,
-            nome=f"{original.nome or original.identificador_origem or 'Matriz'} (cópia)",
-            numero_periodos=original.numero_periodos,
-            grau_academico=original.grau_academico,
-            matriz_anterior=original if request.POST.get("nova_edicao") == "1" else None,
-        )
-        total_itens = 0
-        mapa_itens = {}
-        # create() (e não bulk_create) para o history de cada item ser gravado;
-        # o EventoEdicao por item fica suspenso e entra um único evento-resumo abaixo
-        with suspender_eventos_edicao():
-            for item in original.componentes.all():
-                novo_item = ComponenteNaMatrizReferencia.objects.create(
-                    matriz=copia, componente_id=item.componente_id,
-                    periodo=item.periodo, natureza=item.natureza, ordem=item.ordem,
-                    nucleo=item.nucleo, grupo_licenciatura=item.grupo_licenciatura,
-                )
-                mapa_itens[item.pk] = novo_item
-                total_itens += 1
-                for bib in item.bibliografias.all():
-                    BibliografiaReferencia.objects.create(
-                        componente_na_matriz_referencia=novo_item,
-                        referencia_id=bib.referencia_id, tipo=bib.tipo,
-                        titulo=bib.titulo, autores=bib.autores,
-                        editora=bib.editora, cidade=bib.cidade, ano=bib.ano,
-                    )
-            relacoes_ignoradas = copiar_relacoes_entre_matrizes(original, copia)
+    nova_edicao = request.POST.get("nova_edicao") == "1"
+    copia, total_itens, relacoes_ignoradas = copiar_matriz_referencia(
+        original,
+        nome=f"{original.nome or original.identificador_origem or 'Matriz'} (cópia)",
+        curso=original.curso,
+        nova_edicao=nova_edicao,
+    )
 
     registrar_evento(
-        "matriz_edicao_criada" if request.POST.get("nova_edicao") == "1" else "matriz_duplicada", usuario=request.user, curso=original.curso,
+        "matriz_edicao_criada" if nova_edicao else "matriz_duplicada",
+        usuario=request.user, curso=original.curso,
         origem_id=original.id, matriz_id=copia.id, itens=total_itens,
     )
     if relacoes_ignoradas:
@@ -949,6 +999,7 @@ def duplicar_matriz_referencia(request, matriz_id):
         )
         messages.warning(request, f"{len(relacoes_ignoradas)} relação(ões) legada(s) inválida(s) foram copiadas. {detalhes}")
     return redirect("matriz_referencia_detalhe", matriz_id=copia.id)
+
 
 @login_required
 def buscar_componente_existente_matriz_referencia(request, matriz_id):
@@ -980,6 +1031,7 @@ def buscar_componente_existente_matriz_referencia(request, matriz_id):
 @require_POST
 def adicionar_componente_existente_matriz_referencia(request, matriz_id):
     matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    exigir_edicao_matriz(request.user, matriz)
     componente = get_object_or_404(ComponenteCurricular, pk=request.POST.get("componente_id"))
 
     try:
@@ -1000,7 +1052,8 @@ def adicionar_componente_existente_matriz_referencia(request, matriz_id):
 
 @login_required
 def criar_componente_matriz_referencia(request, matriz_id):
-    matriz = get_object_or_404(MatrizReferenciaCurricular, id=matriz_id)
+    matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    exigir_edicao_matriz(request.user, matriz)
     form = ComponenteMatrizReferenciaForm(request.POST or None, matriz=matriz)
     if request.method == 'POST' and form.is_valid():
         form.salvar_na_matriz(matriz, request.user)
@@ -1015,6 +1068,7 @@ def criar_componente_matriz_referencia(request, matriz_id):
 @require_POST
 def remover_componente_matriz_referencia(request, item_id):
     item = get_object_or_404(ComponenteNaMatrizReferencia, pk=item_id)
+    exigir_edicao_matriz(request.user, item.matriz)
     matriz_id = item.matriz_id
     item.delete()  # remove só o vínculo — o PROTECT protege o ComponenteCurricular do catálogo, não este link
     return redirect("matriz_referencia_detalhe", matriz_id=matriz_id)
@@ -1458,21 +1512,32 @@ def revisar_pendencias_matriz(request, identificador_origem):
 
 @login_required
 def lista_matrizes_referencia(request):
+    ultima_edicao_do_usuario = (
+        EventoEdicao.objects
+        .filter(matriz=OuterRef("pk"), usuario=request.user)
+        .order_by("-ocorreu_em")
+        .values("ocorreu_em")[:1]
+    )
+    
     matrizes = (
         MatrizReferenciaCurricular.objects
         .select_related("curso")
-        .order_by("curso__nome", "nome")
+        .annotate(minha_ultima_edicao=Subquery(ultima_edicao_do_usuario))
+        .order_by(F("minha_ultima_edicao").desc(nulls_last=True), "curso__nome", "nome")
     )
-    return render(request, "ppc/matrizes_referencia/lista.html", {"matrizes": matrizes})
-
+    pode_criar = request.user.is_staff or cursos_do_usuario(request.user).exists()
+    return render(request, "ppc/matrizes_referencia/lista.html", {
+        "matrizes": matrizes,
+        "pode_criar_matriz": pode_criar,
+    })
 
 @login_required
 def matriz_referencia_detalhe(request, matriz_id):
     matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
-    return render(request, "ppc/matrizes_referencia/detalhe.html", _contexto_detalhe_matriz(matriz))
+    return render(request, "ppc/matrizes_referencia/detalhe.html", _contexto_detalhe_matriz(matriz, request))
 
 
-def _contexto_detalhe_matriz(matriz):
+def _contexto_detalhe_matriz(matriz, request):
     itens = list(
         matriz.componentes
         .select_related("componente")
@@ -1502,6 +1567,8 @@ def _contexto_detalhe_matriz(matriz):
         "detalhe_pendencias_url": reverse("detalhe_pendencias_bibliografia_matriz", args=[matriz.pk]),
         "resumo_periodos": _resumo_periodos_matriz(periodos),
         "tem_acex": any((item.componente.carga_horaria_acex or 0) for item in itens),
+        "pode_editar": pode_editar_matriz(request.user, matriz),
+        "pode_criar_edicao": pode_criar_edicao(request.user, matriz),
     }
     return context
 
@@ -1537,7 +1604,10 @@ def _carga_total_legada_segura(componente):
 @login_required
 @require_POST
 def editar_item_matriz_referencia(request, item_id):
-    item = get_object_or_404(ComponenteNaMatrizReferencia.objects.select_related("matriz", "componente"), pk=item_id)
+    item = get_object_or_404(ComponenteNaMatrizReferencia, pk=item_id)
+    if not pode_editar_matriz(request.user, item.matriz):
+        return JsonResponse({"erro": "Você não tem permissão para alterar esta matriz."}, status=403)
+    exigir_edicao_matriz(request.user, item.matriz)
     try:
         dados = json.loads(request.body)
         if not isinstance(dados, dict):
@@ -1721,8 +1791,9 @@ def exportar_matriz_referencia_xlsx(request, matriz_id):
 @require_POST
 def vincular_curso_matriz_referencia(request, matriz_id):
     matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    exigir_edicao_matriz(request.user, matriz)
 
-    curso_id = request.POST.get("curso_id")
+    curso_id = request.POST.get("curso_id") if request.user.is_staff else matriz.curso_id
     nome = request.POST.get("nome", "").strip()
 
     try:
@@ -1748,7 +1819,7 @@ def vincular_curso_matriz_referencia(request, matriz_id):
         grupos_para_limpar = matriz.componentes.filter(grupo_licenciatura__isnull=False).count()
         if grupos_para_limpar and request.POST.get("confirmar_limpeza_grupos") != "1":
             return render(request, "ppc/matrizes_referencia/detalhe.html", {
-                **_contexto_detalhe_matriz(matriz),
+                **_contexto_detalhe_matriz(matriz, request),
                 "confirmacao_limpeza_grupos": {
                     "quantidade": grupos_para_limpar,
                     "nome": nome,
@@ -1795,6 +1866,9 @@ def mover_item_matriz_referencia(request, item_id):
         return JsonResponse({"erro": "Dados inválidos."}, status=400)
 
     item = get_object_or_404(ComponenteNaMatrizReferencia, pk=item_id)
+    if not pode_editar_matriz(request.user, item.matriz):
+        return JsonResponse({"erro": "Você não tem permissão para alterar esta matriz."}, status=403)
+    exigir_edicao_matriz(request.user, item.matriz)
 
     try:
         with transaction.atomic():

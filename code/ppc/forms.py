@@ -72,7 +72,7 @@ class ComponenteMatrizReferenciaForm(forms.ModelForm):
         widgets = {'ementa': forms.Textarea(attrs={'rows': 4})}
 
     field_order = [
-        'codigo', 'nome', 'tipo', 'nucleo', 'natureza', 'periodo', 'grupo_licenciatura', 'ccu',
+        'codigo', 'nome', 'tipo', 'nucleo', 'natureza', 'periodo', 'grupo_licenciatura',
         'carga_horaria_teorica', 'carga_horaria_pratica',
         'carga_horaria_estudante', 'carga_horaria_professor',
         'carga_horaria_acex', 'ementa',
@@ -210,7 +210,7 @@ class ComponenteCurricularForm(forms.ModelForm):
     class Meta:
         model = ComponenteCurricular
         fields = [
-            'nome', 'tipo', 'ccu',
+            'nome', 'tipo',
             'carga_horaria_teorica', 'carga_horaria_pratica', 
             'carga_horaria_estudante', 'carga_horaria_professor', 'carga_horaria_acex',
             'unidade_academica_componente', 'ementa',
