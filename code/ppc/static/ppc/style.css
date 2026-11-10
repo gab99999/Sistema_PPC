@@ -1347,7 +1347,7 @@ h3 {
 }
 
 /* Matriz de referência: períodos com largura limitada e conteúdo quebrável. */
-:root { --largura-coluna-periodo: 280px; --largura-coluna-equivalencia: 260px; }
+:root { --largura-coluna-periodo: 325px; --largura-coluna-equivalencia: 260px; }
 #colunas-periodos { width: 100%; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
 .coluna-periodo { width: var(--largura-coluna-periodo); min-width: var(--largura-coluna-periodo); max-width: var(--largura-coluna-periodo); flex: 0 0 var(--largura-coluna-periodo); min-height: 0; }
 .coluna-periodo-cabecalho { display: block; min-width: 0; }

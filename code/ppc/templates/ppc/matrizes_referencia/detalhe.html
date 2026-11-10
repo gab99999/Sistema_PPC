@@ -29,10 +29,7 @@
 
 
 <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
-  {% if pode_editar %}
-  <a href="{% url 'criar_componente_matriz_referencia' matriz.id %}" class="btn btn-secundario">+ Novo Componente</a>
-  <button type="button" class="btn btn-secundario" id="botao-buscar-existente">+ Usar Componente Existente</button>
-  {% endif %}
+
   <a href="{% url 'fluxograma_matriz_referencia' matriz.id %}" class="btn btn-secundario">Fluxograma</a>
   <a href="{% url 'exportar_matriz_referencia_xlsx' matriz.id %}" class="btn btn-secundario">Exportar Excel</a>
   <a href="{% url 'relacoes_matriz_referencia' matriz.id %}" class="btn btn-secundario">Pré/co-requisitos</a>
@@ -101,12 +98,15 @@
   <button type="submit" class="btn btn-primario">Salvar</button>
 </form>
 {% endif %}
-{% if matriz.curso_id %}<p><a class="btn btn-secundario" href="{% url 'equivalencias_matriz' matriz.id %}">Equivalências desta edição</a></p>{% else %}<p class="alerta alerta-info">Vincule esta matriz a um curso para consultar equivalências.</p>{% endif %}
 
 <span id="status-salvamento-matriz"></span>
 
 <p class="alerta alerta-info">Mínimo por componente: 3 obras básicas e 5 complementares vinculadas à Biblioteca. Referências manuais aparecem como pendência e não completam a quantidade.</p>
-
+{% if pode_editar %}
+  {% if matriz.curso_id %}<p><a class="btn btn-secundario" href="{% url 'equivalencias_matriz' matriz.id %}">Equivalências desta edição</a></p>{% else %}<p class="alerta alerta-info">Vincule esta matriz a um curso para consultar equivalências.</p>{% endif %}
+  <a href="{% url 'criar_componente_matriz_referencia' matriz.id %}" class="btn btn-secundario">+ Novo Componente</a>
+  <button type="button" class="btn btn-secundario" id="botao-buscar-existente">+ Componente Existente</button>
+{% endif %}
 <details class="card resumo-periodos">
   <summary>Resumo por período</summary>
   <div class="tabela-rolagem"><table class="tabela" id="tabela-resumo-periodos"><thead><tr><th>Período</th><th>Componentes</th><th>Obrig. h/sem</th><th>Optat. h/sem</th><th>Teórica (h)</th><th>Prática (h)</th><th>CH total (h)</th>{% if tem_acex %}<th>ACEx (h)</th>{% endif %}</tr></thead><tbody>
