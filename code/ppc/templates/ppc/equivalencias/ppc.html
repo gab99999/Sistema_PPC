@@ -14,6 +14,7 @@
   <span class="ajuda-campo" id="eq-dirty" aria-live="polite">Salvo</span>
 </div>
 <p class="ajuda-campo">Automáticas: ementa idêntica e CH total do PPC anterior igual ou superior. Manuais: CH total do PPC anterior igual ou superior.</p>
+{% if legadas_invalidas %}<div class="alerta alerta-warning">{{ legadas_invalidas|length }} equivalência(s) salva(s) violam as regras atuais; foram mantidas. <ul>{% for item in legadas_invalidas %}<li>{{ item.par.item_novo.componente.nome }} → {{ item.par.item_anterior.componente.nome }}: {{ item.motivo }}</li>{% endfor %}</ul></div>{% endif %}
 <div class="eq-tabela-rolagem"><table class="tabela eq-tabela" id="eq-tabela">
 <thead><tr><th class="eq-primeira-coluna">{{ ppc.curso.nome }}{% if ppc.ano_vigencia %} — {{ ppc.periodo_vigencia }}{% else %} — PPC {{ ppc.pk }}{% endif %}<small>PPC atual</small></th>{% for anterior in matrizes_anteriores %}<th>{{ anterior.curso.nome }}{% if anterior.ano_vigencia %} — {{ anterior.periodo_vigencia }}{% else %} — PPC {{ anterior.pk }}{% endif %}<small>PPC anterior</small></th>{% endfor %}</tr></thead>
 {% regroup linhas by item.periodo as grupos_periodo %}

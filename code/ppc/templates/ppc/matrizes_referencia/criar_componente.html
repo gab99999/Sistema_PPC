@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
 <h1>Novo componente — {{ matriz }}</h1>
 
@@ -6,15 +7,19 @@
   {% csrf_token %}
   {{ form.non_field_errors }}
 
-  
   {{ form.nome.as_field_group }} 
+  <div id="sugestoes-componente" class="alerta alerta-info" hidden
+       data-url="{% url 'sugerir_componentes_matriz_referencia' matriz.id %}"
+       data-url-adicionar="{% url 'adicionar_componente_existente_matriz_referencia' matriz.id %}">
+    <p id="sugestoes-componente-titulo">Já existem componentes parecidos. Confira antes de criar um novo:</p>
+    <ul id="sugestoes-componente-lista"></ul>
+  </div>
   {{ form.tipo.as_field_group }}
   {{ form.nucleo.as_field_group }}
   {{ form.natureza.as_field_group }}
   <span class="ajuda-campo" id="ajuda-natureza-nc" style="display:none;">Núcleo Comum é sempre de natureza obrigatória.</span>
   {{ form.periodo.as_field_group }}
   {% if form.grupo_licenciatura %}{{ form.grupo_licenciatura.as_field_group }}{% endif %}
-  {{ form.ccu.as_field_group }}
 
   <div id="grupo-carga-padrao" class="grupo-campos">
     {{ form.carga_horaria_teorica.as_field_group }}
@@ -62,5 +67,6 @@ campoNucleo.addEventListener("change", atualizarNatureza);
 atualizarGrupos();
 atualizarNatureza();
 </script>
+<script src="{% static 'ppc/js/sugestoes_componente_matriz.js' %}" defer></script>
 {% endblock %}
 {% block ajuda %}<p>Cadastre um componente para a matriz de referência. Informe carga, núcleo, natureza e período com cuidado: a matriz curricular deve especificar esses elementos (RGCG, art. 20, II).</p>{% endblock %}

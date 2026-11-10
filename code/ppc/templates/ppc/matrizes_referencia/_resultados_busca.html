@@ -1,6 +1,6 @@
 {% for componente in resultados %}
 <div class="card" style="margin-bottom:0.5rem;">
-  <strong>{{ componente.codigo }}</strong> — {{ componente.nome }}<br>
+  <strong>{{ componente.codigo }}</strong> — {{ componente.nome }}{% if componente.status == 'pendente' %} <span class="status-badge status-pendente">Aguardando aprovação</span>{% endif %}<br>
   {{ componente.get_tipo_display }} ·{% if componente.ccu %}<span class="badge-ccu">CCU</span>{% endif %} <br>
   {% if componente.tipo == 'atividade' %}
     {{ componente.carga_horaria_estudante }}h estudante

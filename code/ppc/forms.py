@@ -6,6 +6,7 @@ from django.forms import modelformset_factory
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.forms import BaseFormSet
+from ppc.services.codigos_componentes import normalizar_codigo_componente, validar_codigo_componente
 
 
 class CodigoComponenteForm(forms.Form):
@@ -16,13 +17,10 @@ class CodigoComponenteForm(forms.Form):
     )
 
     def clean_codigo(self):
-        codigo = (self.cleaned_data.get('codigo') or '').strip().upper()
-        if not codigo:
-            return ''
+        codigo = (self.cleaned_data.get('codigo') or '').strip()
         pk = self.cleaned_data.get('componente_id')
-        existente = ComponenteCurricular.objects.filter(codigo__iexact=codigo).exclude(pk=pk).first()
-        if existente:
-            raise ValidationError(f"Já usado por: {existente.nome}")
+        instancia = ComponenteCurricular.objects.filter(pk=pk).first() if pk else None
+        validar_codigo_componente(codigo, instancia)
         return codigo
 
 
@@ -32,7 +30,7 @@ class CodigoComponenteFormSet(BaseFormSet):
             return
         vistos = set()
         for form in self.forms:
-            codigo = form.cleaned_data.get('codigo')
+            codigo = normalizar_codigo_componente(form.cleaned_data.get('codigo'))
             if not codigo:
                 continue
             if codigo in vistos:
@@ -56,13 +54,12 @@ class ComponenteMatrizReferenciaForm(forms.ModelForm):
     class Meta:
         model = ComponenteCurricular
         fields = [
-            'codigo', 'nome', 'tipo', 'ccu',
+            'nome', 'tipo',
             'carga_horaria_teorica', 'carga_horaria_pratica',
             'carga_horaria_estudante', 'carga_horaria_professor',
             'carga_horaria_acex', 'ementa',
         ]
         labels = {
-            'codigo': 'Código',
             'carga_horaria_teorica': 'Carga horária teórica',
             'carga_horaria_pratica': 'Carga horária prática',
             'carga_horaria_estudante': 'Carga horária do estudante',
@@ -72,7 +69,7 @@ class ComponenteMatrizReferenciaForm(forms.ModelForm):
         widgets = {'ementa': forms.Textarea(attrs={'rows': 4})}
 
     field_order = [
-        'codigo', 'nome', 'tipo', 'nucleo', 'natureza', 'periodo', 'grupo_licenciatura',
+        'nome', 'tipo', 'nucleo', 'natureza', 'periodo', 'grupo_licenciatura',
         'carga_horaria_teorica', 'carga_horaria_pratica',
         'carga_horaria_estudante', 'carga_horaria_professor',
         'carga_horaria_acex', 'ementa',
@@ -90,7 +87,6 @@ class ComponenteMatrizReferenciaForm(forms.ModelForm):
                      'carga_horaria_acex'):
             self.fields[nome].required = False
             self.fields[nome].initial = 0
-        self.fields['ccu'].initial = True   # mesmo padrão do formulário antigo (Sim)
 
     def clean(self):
         cleaned = super().clean()
@@ -114,6 +110,7 @@ class ComponenteMatrizReferenciaForm(forms.ModelForm):
     def salvar_na_matriz(self, matriz, usuario):
         componente = self.save(commit=False)
         componente.criado_por = usuario
+        componente.status = "aprovado" if usuario.is_staff else "pendente"
         componente.save()
         return ComponenteNaMatrizReferencia.objects.create(
             matriz=matriz,

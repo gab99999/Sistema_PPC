@@ -1,3 +1,4 @@
+import ast
 import re
 from io import StringIO
 from pathlib import Path
@@ -15,10 +16,471 @@ from .models import (
     ComponenteNaMatrizReferencia, RelacaoComponenteReferencia,
     ReferenciaBibliografica, Bibliografia, BibliografiaReferencia,
     ImportacaoPendencia, EquivalenciaMatriz, EquivalenciaPPC, GrupoEquivalenciaComponentes, ItemEquivalencia,
+    VinculoUsuarioCurso,
 )
 from .services.comparacao_bibliografias import calcular_operacoes_bibliografia
 from .services.painel_bibliografias import resumo_pendencias_bibliograficas
-from .services.equivalencias_matrizes import consultar_equivalencias_matriz, salvar_equivalencias_matriz
+from .services.equivalencias_matrizes import consultar_equivalencias_matriz, salvar_equivalencias_matriz, preparar_editor_equivalencias
+from .services.regras_equivalencia import avaliar_equivalencia, carga_total_segura
+
+
+class RegraCentralEquivalenciaTests(TestCase):
+    def setUp(self):
+        self.curso = Curso.objects.create(nome="Curso regra", unidade_academica="UA", area_conhecimento="Área")
+        self.matriz_antiga = MatrizReferenciaCurricular.objects.create(curso=self.curso, nome="Antiga")
+        self.matriz_nova = MatrizReferenciaCurricular.objects.create(curso=self.curso, nome="Nova", matriz_anterior=self.matriz_antiga)
+
+    def item(self, matriz, nome, *, acex=0, ementa="Texto", tipo="disciplina", estudante=None, teoria=64):
+        componente = ComponenteCurricular.objects.create(
+            nome=nome, codigo="", tipo=tipo, carga_horaria_teorica=teoria,
+            carga_horaria_pratica=0, carga_horaria_estudante=estudante,
+            carga_horaria_professor=0, carga_horaria_acex=acex, ementa=ementa,
+        )
+        return ComponenteNaMatrizReferencia.objects.create(
+            matriz=matriz, componente=componente, periodo=1, natureza="obrigatoria",
+        )
+
+    def test_acex_insuficiente_rejeita_e_ementa_nao_e_condicao_de_validade(self):
+        anterior = self.item(self.matriz_antiga, "Antiga", acex=8, ementa="Ementa diferente")
+        nova = self.item(self.matriz_nova, "Nova", acex=16, ementa="Outra ementa")
+        resultado = avaliar_equivalencia(anterior, nova)
+        self.assertFalse(resultado["elegivel"])
+        self.assertIn("ACEx insuficiente", " ".join(resultado["motivos"]))
+        nova.componente.carga_horaria_acex = 8
+        nova.componente.save()
+        resultado = avaliar_equivalencia(anterior, nova)
+        self.assertTrue(resultado["elegivel"])
+        self.assertFalse(resultado["sugestao_automatica"])
+
+    def test_ementa_normalizada_sugere_e_acex_zero_aceita_anterior_sem_acex(self):
+        anterior = self.item(self.matriz_antiga, "Antiga", acex=None, ementa="cafe\u0301   com leite")
+        nova = self.item(self.matriz_nova, "Nova", acex=0, ementa="café com leite")
+        resultado = avaliar_equivalencia(anterior, nova)
+        self.assertTrue(resultado["elegivel"])
+        self.assertTrue(resultado["sugestao_automatica"])
+
+    def test_atividade_sem_ch_estudante_e_incompleta_sem_lancar_typeerror(self):
+        componente = ComponenteCurricular.objects.create(
+            nome="Atividade sem estudante", tipo="atividade", carga_horaria_teorica=0,
+            carga_horaria_pratica=0, carga_horaria_estudante=None,
+            carga_horaria_professor=0, carga_horaria_acex=0, ementa="",
+        )
+        ch, motivo = carga_total_segura(componente)
+        self.assertIsNone(ch)
+        self.assertIn("Carga horária incompleta", motivo)
+
+    def test_clean_matriz_valida_acex_sem_exigir_ementa_e_alerta_par_legado(self):
+        anterior = self.item(self.matriz_antiga, "Antiga", acex=8, ementa="Ementa A")
+        nova = self.item(self.matriz_nova, "Nova", acex=8, ementa="Ementa B")
+        par = EquivalenciaMatriz(item_novo=nova, item_anterior=anterior)
+        par.clean()
+        par.save()
+        ComponenteCurricular.objects.filter(pk=nova.componente_id).update(carga_horaria_acex=16)
+        par_legado = EquivalenciaMatriz.objects.get(item_novo=nova, item_anterior=anterior)
+        dados = preparar_editor_equivalencias(self.matriz_nova)
+        self.assertEqual(len(dados["legadas_invalidas"]), 1)
+        self.assertIn("ACEx insuficiente", dados["legadas_invalidas"][0]["motivo"])
+
+    def test_clean_equivalencia_ppc_usa_regra_de_acex_e_preserva_validacao_de_cadeia(self):
+        anterior_ppc = PPC.objects.create(curso=self.curso, tipo_ppc="novo", modalidade="presencial", grau_academico="bacharelado", turno_funcionamento="Integral", numero_vagas_anuais=30, duracao_minima_semestres=4, duracao_media_semestres=6, duracao_maxima_semestres=8, diretor="D", vice_diretor="VD", coordenador_curso="C", vice_coordenador_curso="VC")
+        novo_ppc = PPC.objects.create(curso=self.curso, ppc_anterior=anterior_ppc, tipo_ppc="reformulacao", modalidade="presencial", grau_academico="bacharelado", turno_funcionamento="Integral", numero_vagas_anuais=30, duracao_minima_semestres=4, duracao_media_semestres=6, duracao_maxima_semestres=8, diretor="D", vice_diretor="VD", coordenador_curso="C", vice_coordenador_curso="VC")
+        velho_ref = self.item(self.matriz_antiga, "Velho", acex=8)
+        novo_ref = self.item(self.matriz_nova, "Novo", acex=16)
+        velho = ComponenteNaMatriz.objects.create(ppc=anterior_ppc, componente=velho_ref.componente, periodo=1, natureza="obrigatoria")
+        novo = ComponenteNaMatriz.objects.create(ppc=novo_ppc, componente=novo_ref.componente, periodo=1, natureza="obrigatoria")
+        with self.assertRaises(ValidationError) as erro:
+            EquivalenciaPPC(item_novo=novo, item_anterior=velho).clean()
+        self.assertIn("ACEx insuficiente", " ".join(erro.exception.messages))
+
+    def test_nomes_de_evento_nao_excedem_limite_do_campo(self):
+        import inspect
+        from ppc.services import eventos
+        from .models import EventoUso
+
+        def strings_da_expressao(expressao):
+            if isinstance(expressao, ast.Constant) and isinstance(expressao.value, str):
+                return [expressao.value]
+            if isinstance(expressao, ast.IfExp):
+                return strings_da_expressao(expressao.body) + strings_da_expressao(expressao.orelse)
+            return []
+
+        raiz = Path(inspect.getfile(eventos)).resolve().parents[1]
+        nomes = []
+        for arquivo in raiz.rglob("*.py"):
+            if "migrations" in arquivo.parts or "testes" in arquivo.parts or arquivo.name == "tests.py":
+                continue
+            arvore = ast.parse(arquivo.read_text(encoding="utf-8"))
+            for no in ast.walk(arvore):
+                if isinstance(no, ast.Call) and isinstance(no.func, ast.Name) and no.func.id == "registrar_evento" and no.args:
+                    nomes.extend(strings_da_expressao(no.args[0]))
+        limite = EventoUso._meta.get_field("tipo").max_length
+        excedidos = [nome for nome in nomes if len(nome) > limite]
+        self.assertTrue(nomes, "O teste não encontrou chamadas registrar_evento.")
+        self.assertEqual(excedidos, [])
+
+
+class ComponentesPendentesMatrizTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user("criador-matriz", password="x")
+        self.staff = User.objects.create_user("staff-matriz-a", password="x", is_staff=True)
+        self.curso = Curso.objects.create(nome="Curso pendentes", unidade_academica="UA", area_conhecimento="Área")
+        self.matriz = MatrizReferenciaCurricular.objects.create(
+            curso=self.curso, nome="Matriz pendentes", status=MatrizReferenciaCurricular.STATUS_EM_MUDANCA,
+        )
+        VinculoUsuarioCurso.objects.create(usuario=self.user, curso=self.curso)
+
+    def componente(self, nome, *, status="aprovado"):
+        return ComponenteCurricular.objects.create(
+            nome=nome, tipo="disciplina", carga_horaria_teorica=64,
+            carga_horaria_pratica=0, carga_horaria_estudante=0,
+            carga_horaria_professor=0, carga_horaria_acex=0, ementa="",
+            status=status,
+        )
+
+    def ppc(self):
+        return PPC.objects.create(
+            curso=self.curso, tipo_ppc="novo", modalidade="presencial", grau_academico="bacharelado",
+            turno_funcionamento="Integral", numero_vagas_anuais=30,
+            duracao_minima_semestres=4, duracao_media_semestres=6, duracao_maxima_semestres=8,
+            diretor="D", vice_diretor="VD", coordenador_curso="C", vice_coordenador_curso="VC",
+        )
+
+    def test_form_define_status_e_criador_no_servidor_e_nao_expoe_status(self):
+        from .forms import ComponenteMatrizReferenciaForm
+        form_vazio = ComponenteMatrizReferenciaForm(matriz=self.matriz)
+        self.assertNotIn("codigo", form_vazio.fields)
+        self.assertNotIn("ccu", form_vazio.fields)
+        dados = {
+            "codigo": "COD-ENVIADO", "nome": "Pendente novo", "tipo": "disciplina", "ccu": "True",
+            "carga_horaria_teorica": "64", "carga_horaria_pratica": "0",
+            "carga_horaria_estudante": "", "carga_horaria_professor": "", "carga_horaria_acex": "0",
+            "ementa": "Ementa teste", "nucleo": "NE", "natureza": "obrigatoria", "periodo": "1",
+            "grupo_licenciatura": "", "status": "aprovado",
+        }
+        form = ComponenteMatrizReferenciaForm(dados, matriz=self.matriz)
+        self.assertNotIn("status", form.fields)
+        self.assertTrue(form.is_valid(), form.errors)
+        form.salvar_na_matriz(self.matriz, self.user)
+        pendente = ComponenteCurricular.objects.get(nome="Pendente novo")
+        self.assertEqual(pendente.status, "pendente")
+        self.assertEqual(pendente.criado_por, self.user)
+        self.assertEqual(pendente.codigo, "")
+        self.assertIsNone(pendente.ccu)
+        dados["nome"] = "Aprovado staff"
+        form_staff = ComponenteMatrizReferenciaForm(dados, matriz=self.matriz)
+        self.assertTrue(form_staff.is_valid(), form_staff.errors)
+        form_staff.salvar_na_matriz(self.matriz, self.staff)
+        aprovado = ComponenteCurricular.objects.get(nome="Aprovado staff")
+        self.assertEqual(aprovado.status, "aprovado")
+        self.assertEqual(aprovado.criado_por, self.staff)
+
+    def test_post_matriz_ignora_codigo_e_ccu_enviados(self):
+        self.client.force_login(self.staff)
+        resposta = self.client.post(
+            reverse("criar_componente_matriz_referencia", args=[self.matriz.pk]),
+            {
+                "codigo": "COD-NAO-GRAVAR", "ccu": "True", "nome": "POST sem campos",
+                "tipo": "disciplina", "carga_horaria_teorica": "64",
+                "carga_horaria_pratica": "0", "carga_horaria_estudante": "",
+                "carga_horaria_professor": "", "carga_horaria_acex": "0", "ementa": "Ementa",
+                "nucleo": "NE", "natureza": "obrigatoria", "periodo": "1",
+            },
+        )
+        self.assertEqual(resposta.status_code, 302)
+        componente = ComponenteCurricular.objects.get(nome="POST sem campos")
+        self.assertEqual(componente.codigo, "")
+        self.assertIsNone(componente.ccu)
+        self.assertEqual(componente.status, "aprovado")
+        self.assertEqual(componente.criado_por, self.staff)
+
+    def test_busca_da_matriz_inclui_pendente_com_selo_e_ambas_as_filas(self):
+        pendente = self.componente("Pendente visível", status="pendente")
+        pendente.criado_por = self.user
+        pendente.save(update_fields=["criado_por"])
+        ComponenteNaMatrizReferencia.objects.create(
+            matriz=self.matriz, componente=pendente, periodo=1, natureza="obrigatoria",
+        )
+        busca_pendente = self.componente("Pendente busca", status="pendente")
+        busca_pendente.criado_por = self.user
+        busca_pendente.save(update_fields=["criado_por"])
+        self.client.force_login(self.staff)
+        busca = self.client.get(reverse("buscar_componente_existente_matriz_referencia", args=[self.matriz.pk]), {"q": "Pendente busca"})
+        self.assertContains(busca, "Aguardando aprovação")
+        self.assertContains(busca, "Pendente busca")
+        self.assertContains(self.client.get(reverse("matriz_referencia_detalhe", args=[self.matriz.pk])), "Status do catálogo")
+        self.assertContains(self.client.get(reverse("matriz_referencia_detalhe", args=[self.matriz.pk])), "Aguardando aprovação")
+        self.assertContains(self.client.get(reverse("fila_aprovacao_componentes")), "Pendente visível")
+        self.client.force_login(self.user)
+        self.assertContains(self.client.get(reverse("meus_componentes_pendentes")), "Pendente visível")
+        self.assertEqual(pendente.criado_por, self.user)
+
+    def test_aplicacao_lista_e_ignora_pendente_e_adicao_existente_ao_ppc_retorna_403(self):
+        ppc = self.ppc()
+        pendente = self.componente("Pendente na matriz", status="pendente")
+        ComponenteNaMatrizReferencia.objects.create(matriz=self.matriz, componente=pendente, periodo=1, natureza="obrigatoria")
+        self.client.force_login(self.staff)
+        url = reverse("preview_aplicar_matriz_referencia", args=[ppc.pk, self.matriz.pk])
+        preview = self.client.get(url)
+        self.assertContains(preview, "aguardando aprovação")
+        self.assertEqual(preview.context["preview"]["componentes_pendentes"][0].componente_id, pendente.pk)
+        self.assertFalse(preview.context["preview"]["novos"])
+        resultado = self.client.post(url)
+        self.assertContains(resultado, "não foram copiados")
+        self.assertFalse(ComponenteNaMatriz.objects.filter(ppc=ppc, componente=pendente).exists())
+        resposta = self.client.get(reverse("adicionar_componente_existente", args=[ppc.pk, pendente.pk]))
+        self.assertEqual(resposta.status_code, 403)
+        pendente.status = "aprovado"
+        pendente.save(update_fields=["status"])
+        preview = self.client.get(url)
+        item = preview.context["preview"]["novos"][0]
+        self.client.post(url, {f"aplicar_novo_{item.pk}": "on"})
+        self.assertTrue(ComponenteNaMatriz.objects.filter(ppc=ppc, componente=pendente).exists())
+
+
+class SugestoesComponentesMatrizTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user("sugestao-editor", password="x")
+        self.sem_acesso = User.objects.create_user("sugestao-leitor", password="x")
+        self.curso = Curso.objects.create(nome="Curso sugestões", unidade_academica="UA", area_conhecimento="Área")
+        self.matriz = MatrizReferenciaCurricular.objects.create(
+            curso=self.curso, nome="Matriz sugestões", status=MatrizReferenciaCurricular.STATUS_EM_MUDANCA,
+        )
+        VinculoUsuarioCurso.objects.create(usuario=self.user, curso=self.curso)
+        self.url = reverse("sugerir_componentes_matriz_referencia", args=[self.matriz.pk])
+
+    def componente(self, nome, *, codigo="", status="aprovado"):
+        return ComponenteCurricular.objects.create(
+            nome=nome, codigo=codigo, tipo="disciplina", carga_horaria_teorica=64,
+            carga_horaria_pratica=0, ementa="", status=status,
+        )
+
+    def test_endpoint_devolve_json_403_sem_permissao(self):
+        self.client.force_login(self.sem_acesso)
+        response = self.client.get(self.url, {"nome": "catalogo"})
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response["Content-Type"], "application/json")
+
+    def test_minimo_tres_caracteres_e_busca_sem_acento(self):
+        self.componente("Café Avançado")
+        self.client.force_login(self.user)
+        curta = self.client.get(self.url, {"nome": "ca"}).json()
+        self.assertTrue(curta["nome_minimo"])
+        self.assertEqual(curta["itens"], [])
+        completa = self.client.get(self.url, {"nome": "cafe avancado"}).json()
+        self.assertEqual(completa["itens"][0]["nome"], "Café Avançado")
+        from .forms import ComponenteMatrizReferenciaForm
+        form = ComponenteMatrizReferenciaForm({
+            "codigo": "", "nome": "Cafe avancado novo", "tipo": "disciplina", "ccu": "",
+            "carga_horaria_teorica": "64", "carga_horaria_pratica": "0",
+            "carga_horaria_estudante": "", "carga_horaria_professor": "", "carga_horaria_acex": "0",
+            "ementa": "Teste", "nucleo": "NE", "natureza": "obrigatoria", "periodo": "1",
+            "grupo_licenciatura": "",
+        }, matriz=self.matriz)
+        self.assertTrue(form.is_valid(), form.errors)  # sugestão não impede criação
+
+    def test_limite_cinco_pendente_com_status_e_codigo_igual(self):
+        for indice in range(7):
+            self.componente(f"Biologia Molecular {indice}", status="pendente" if indice == 0 else "aprovado")
+        existente = self.componente("Código já cadastrado", codigo=" AdAs ")
+        self.client.force_login(self.user)
+        response = self.client.get(self.url, {"nome": "biologia molecular", "codigo": "adas"}).json()
+        self.assertEqual(len(response["itens"]), 5)
+        self.assertTrue(response["codigo_igual"])
+        codigo_item = next(item for item in response["itens"] if item["id"] == existente.pk)
+        self.assertTrue(codigo_item["codigo_igual"])
+        pending = self.client.get(self.url, {"nome": "biologia molecular 0"}).json()
+        self.assertTrue(any(item["status"] == "pendente" for item in pending["itens"]))
+
+    def test_validacao_codigo_novo_duplicado_legado_inalterado_e_vazios(self):
+        existente = self.componente("Código existente", codigo=" AdAs ")
+        with self.assertRaises(ValidationError):
+            self.componente("Duplicado", codigo="adas")
+        # Simula duplicatas legadas pré-existentes sem passar pelo save validado.
+        legado = ComponenteCurricular(
+            nome="Legado 2", codigo="ADAS", tipo="disciplina", carga_horaria_teorica=64,
+            carga_horaria_pratica=0, ementa="",
+        )
+        ComponenteCurricular.objects.bulk_create([legado])
+        # MySQL pode não preencher o PK dos objetos passados a bulk_create.
+        legado = ComponenteCurricular.objects.get(nome="Legado 2")
+        legado.nome = "Legado editado"
+        legado.save()
+        legado.status = "pendente"
+        legado.save(update_fields=["status"])
+        self.client.force_login(User.objects.create_user("staff-aprovador", password="x", is_staff=True))
+        resposta = self.client.post(reverse("aprovar_componente", args=[legado.pk]))
+        self.assertEqual(resposta.status_code, 302)
+        legado.refresh_from_db()
+        self.assertEqual(legado.status, "aprovado")
+        vazio1 = self.componente("Sem código 1")
+        vazio2 = self.componente("Sem código 2")
+        self.assertEqual(vazio1.codigo, "")
+        self.assertEqual(vazio2.codigo, "")
+        from .forms import CodigoComponenteForm
+        form = CodigoComponenteForm({"componente_id": vazio1.pk, "codigo": "adas"})
+        self.assertFalse(form.is_valid())
+
+
+class AplicacaoEquivalenciasMatrizPpcTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user("aplicacao-equivalencias", password="x", is_staff=True)
+        self.curso = Curso.objects.create(nome="Curso aplicação equivalências", unidade_academica="UA", area_conhecimento="Área")
+        self.matriz_anterior = MatrizReferenciaCurricular.objects.create(curso=self.curso, nome="Matriz anterior")
+        self.matriz = MatrizReferenciaCurricular.objects.create(
+            curso=self.curso, nome="Matriz nova", matriz_anterior=self.matriz_anterior,
+        )
+        self.ppc_antigo = self.novo_ppc("PPC antigo")
+        self.ppc_anterior = self.novo_ppc("PPC anterior", ppc_anterior=self.ppc_antigo)
+        self.ppc = self.novo_ppc("PPC atual", ppc_anterior=self.ppc_anterior)
+
+    def novo_ppc(self, nome, ppc_anterior=None, curso=None):
+        curso = curso or self.curso
+        return PPC.objects.create(
+            curso=curso, ppc_anterior=ppc_anterior, tipo_ppc="novo", modalidade="presencial",
+            grau_academico="bacharelado", turno_funcionamento="Integral", numero_vagas_anuais=30,
+            duracao_minima_semestres=4, duracao_media_semestres=6, duracao_maxima_semestres=8,
+            diretor="D", vice_diretor="VD", coordenador_curso="C", vice_coordenador_curso="VC",
+        )
+
+    def componente(self, nome, *, acex=8, teoria=64, status="aprovado"):
+        return ComponenteCurricular.objects.create(
+            nome=nome, tipo="disciplina", carga_horaria_teorica=teoria,
+            carga_horaria_pratica=0, carga_horaria_acex=acex, ementa="",
+            status=status,
+        )
+
+    def par_matriz(self, nome, *, acex_novo=8, acex_antigo=8, ch_novo=64, ch_antigo=64, status="aprovado", legacy=False):
+        novo_comp = self.componente(f"Novo {nome}", acex=acex_novo, teoria=ch_novo, status=status)
+        antigo_comp = self.componente(f"Antigo {nome}", acex=acex_antigo, teoria=ch_antigo)
+        novo_ref = ComponenteNaMatrizReferencia.objects.create(
+            matriz=self.matriz, componente=novo_comp, periodo=1, natureza="obrigatoria",
+        )
+        antigo_ref = ComponenteNaMatrizReferencia.objects.create(
+            matriz=self.matriz_anterior, componente=antigo_comp, periodo=1, natureza="obrigatoria",
+        )
+        par = EquivalenciaMatriz(item_novo=novo_ref, item_anterior=antigo_ref)
+        if legacy:
+            EquivalenciaMatriz.objects.bulk_create([par])
+        else:
+            par.save()
+        return novo_ref, antigo_ref
+
+    def vinculo(self, ppc, componente):
+        return ComponenteNaMatriz.objects.create(
+            ppc=ppc, componente=componente, periodo=1, natureza="obrigatoria",
+        )
+
+    def test_aplicacao_cria_par_preserva_existente_e_registra_contagens(self):
+        novo_ref, antigo_ref = self.par_matriz("Novo")
+        antigo = self.vinculo(self.ppc_anterior, antigo_ref.componente)
+        self.vinculo(self.ppc_antigo, self.componente("Outro ancestral"))
+        self.client.force_login(self.user)
+        url = reverse("preview_aplicar_matriz_referencia", args=[self.ppc.pk, self.matriz.pk])
+        preview = self.client.get(url)
+        self.assertContains(preview, "Equivalências")
+        self.assertContains(preview, 'name="aplicar_equivalencias"')
+        self.assertContains(preview, "checked")
+        response = self.client.post(url, {f"aplicar_novo_{novo_ref.pk}": "on", "aplicar_equivalencias": "on"})
+        novo = ComponenteNaMatriz.objects.get(ppc=self.ppc, componente=novo_ref.componente)
+        equivalencia = EquivalenciaPPC.objects.get(item_novo=novo, item_anterior=antigo)
+        self.assertEqual(equivalencia.criado_por, self.user)
+        evento = __import__("ppc.models", fromlist=["EventoUso"]).EventoUso.objects.filter(tipo="matriz_aplicada", ppc=self.ppc).latest("pk")
+        self.assertEqual(evento.metadados["equivalencias_criadas"], 1)
+        self.assertContains(response, "1 novas")
+        # A reaplicação classifica o par como existente e não o substitui.
+        response = self.client.post(url, {"aplicar_equivalencias": "on"})
+        self.assertEqual(EquivalenciaPPC.objects.filter(item_novo=novo, item_anterior=antigo).count(), 1)
+        self.assertContains(response, "já existentes")
+
+    def test_caixa_desmarcada_nao_cria_e_post_recalcula_par_obsoleto(self):
+        novo_ref, antigo_ref = self.par_matriz("Desmarcado")
+        self.vinculo(self.ppc_anterior, antigo_ref.componente)
+        self.client.force_login(self.user)
+        url = reverse("preview_aplicar_matriz_referencia", args=[self.ppc.pk, self.matriz.pk])
+        self.client.get(url)
+        self.client.post(url, {f"aplicar_novo_{novo_ref.pk}": "on"})
+        self.assertFalse(EquivalenciaPPC.objects.exists())
+        EquivalenciaMatriz.objects.filter(item_novo=novo_ref).delete()
+        self.client.post(url, {f"aplicar_novo_{novo_ref.pk}": "on", "aplicar_equivalencias": "on"})
+        self.assertFalse(EquivalenciaPPC.objects.exists())
+
+    def test_service_lista_ch_acex_pendente_e_componente_anterior_fora_da_cadeia(self):
+        from ppc.services.aplicacao_equivalencias import traduzir_equivalencias_matriz_para_ppc
+        casos = (
+            ("ACEx", dict(acex_novo=16, acex_antigo=8, legacy=True), "ACEx insuficiente"),
+            ("CH", dict(ch_novo=80, ch_antigo=64, legacy=True), "CH total insuficiente"),
+            ("Pendente", dict(status="pendente"), "componente aguardando aprovação"),
+        )
+        for nome, args, motivo in casos:
+            novo_ref, antigo_ref = self.par_matriz(nome, **args)
+            self.vinculo(self.ppc_anterior, antigo_ref.componente)
+            resultado = traduzir_equivalencias_matriz_para_ppc(
+                self.matriz, self.ppc, componentes_planejados={novo_ref.pk},
+            )
+            self.assertTrue(any(motivo in item["motivo"] for item in resultado["nao_aplicaveis"]))
+        novo_ref, antigo_ref = self.par_matriz("Fora cadeia")
+        # O item anterior existe no catálogo, mas não em nenhum PPC ancestral.
+        resultado = traduzir_equivalencias_matriz_para_ppc(
+            self.matriz, self.ppc, componentes_planejados={novo_ref.pk},
+        )
+        self.assertTrue(any("não está na cadeia" in item["motivo"] for item in resultado["nao_aplicaveis"]))
+
+    def test_service_lista_sem_predecessor_matriz_sem_curso_curso_divergente_e_ambiguidade(self):
+        from ppc.services.aplicacao_equivalencias import traduzir_equivalencias_matriz_para_ppc
+        novo_ref, antigo_ref = self.par_matriz("Sem anterior PPC")
+        ppc_sem_anterior = self.novo_ppc("Sem anterior")
+        resultado = traduzir_equivalencias_matriz_para_ppc(
+            self.matriz, ppc_sem_anterior, componentes_planejados={novo_ref.pk},
+        )
+        self.assertTrue(any("PPC sem ppc_anterior" in item["motivo"] for item in resultado["nao_aplicaveis"]))
+
+        curso_outro = Curso.objects.create(nome="Curso divergente", unidade_academica="UA", area_conhecimento="Área")
+        matriz_sem_curso = MatrizReferenciaCurricular.objects.create(nome="Matriz sem curso")
+        novo = self.componente("Matriz sem curso novo")
+        velho = self.componente("Matriz sem curso velho")
+        item_novo = ComponenteNaMatrizReferencia.objects.create(matriz=matriz_sem_curso, componente=novo, periodo=1, natureza="obrigatoria")
+        item_velho = ComponenteNaMatrizReferencia.objects.create(matriz=self.matriz_anterior, componente=velho, periodo=1, natureza="obrigatoria")
+        EquivalenciaMatriz.objects.bulk_create([EquivalenciaMatriz(item_novo=item_novo, item_anterior=item_velho)])
+        resultado = traduzir_equivalencias_matriz_para_ppc(matriz_sem_curso, self.ppc)
+        self.assertIn("matriz sem curso", resultado["nao_aplicaveis"][0]["motivo"])
+
+        matriz_outro = MatrizReferenciaCurricular.objects.create(curso=curso_outro, nome="Matriz outro curso")
+        novo_outro = ComponenteNaMatrizReferencia.objects.create(matriz=matriz_outro, componente=self.componente("Novo curso divergente"), periodo=1, natureza="obrigatoria")
+        EquivalenciaMatriz.objects.bulk_create([EquivalenciaMatriz(item_novo=novo_outro, item_anterior=item_velho)])
+        resultado = traduzir_equivalencias_matriz_para_ppc(matriz_outro, self.ppc)
+        self.assertIn("não pertencem ao mesmo curso", resultado["nao_aplicaveis"][0]["motivo"])
+
+        novo_ref2, antigo_ref2 = self.par_matriz("Ambíguo")
+        self.vinculo(self.ppc_anterior, antigo_ref2.componente)
+        self.vinculo(self.ppc_antigo, antigo_ref2.componente)
+        resultado = traduzir_equivalencias_matriz_para_ppc(
+            self.matriz, self.ppc, componentes_planejados={novo_ref2.pk},
+        )
+        self.assertTrue(any("ambiguidade" in item["motivo"] for item in resultado["nao_aplicaveis"]))
+
+    def test_aplicacao_encontra_anterior_no_ancestral_e_sobe_atomicamente(self):
+        from django.db import transaction
+        from ppc.services.aplicacao_equivalencias import traduzir_equivalencias_matriz_para_ppc
+        novo_ref, antigo_ref = self.par_matriz("Ancestral")
+        antigo = self.vinculo(self.ppc_antigo, antigo_ref.componente)
+        resultado = traduzir_equivalencias_matriz_para_ppc(
+            self.matriz, self.ppc, componentes_planejados={novo_ref.pk},
+        )
+        self.assertEqual(len(resultado["criadas"]), 1)
+        novo = self.vinculo(self.ppc, novo_ref.componente)
+        original_create = EquivalenciaPPC.objects.create
+        chamadas = {"n": 0}
+        def falhar_depois_de_criar(*args, **kwargs):
+            chamadas["n"] += 1
+            criada = original_create(*args, **kwargs)
+            if chamadas["n"] == 1:
+                raise RuntimeError("falha simulada após inserir o par")
+            return criada
+        with self.assertRaises(RuntimeError):
+            with transaction.atomic():
+                with patch.object(EquivalenciaPPC.objects, "create", side_effect=falhar_depois_de_criar):
+                    traduzir_equivalencias_matriz_para_ppc(self.matriz, self.ppc, usuario=self.user, aplicar=True)
+        self.assertFalse(EquivalenciaPPC.objects.filter(item_novo=novo, item_anterior=antigo).exists())
 
 
 class EquivalenciasEntreEdicoesTests(TestCase):
@@ -101,8 +563,8 @@ class EquivalenciasEntreEdicoesTests(TestCase):
         EquivalenciaMatriz.objects.create(item_novo=novo, item_anterior=antigo, criado_por=self.user)
         self.client.force_login(self.user)
         resposta = self.client.get(reverse("equivalencias_matriz", args=[self.nova.pk]))
-        self.assertNotContains(resposta, "Equivalente visível")
-        self.assertContains(resposta, "1 · 64 h")
+        self.assertContains(resposta, "Equivalente visível")
+        self.assertContains(resposta, "64 h")
         self.assertContains(resposta, "eq-chip")
 
     def test_endpoint_candidatos_somente_matriz_anterior_do_curso_e_desabilita_ch_baixa(self):
@@ -122,7 +584,7 @@ class EquivalenciasEntreEdicoesTests(TestCase):
         itens = {c["id"]: c for c in response.json()["candidatos"]}
         self.assertTrue(itens[velho_ok.pk]["elegivel"])
         self.assertFalse(itens[velho_baixo.pk]["elegivel"])
-        self.assertIn("menor", itens[velho_baixo.pk]["motivo"])
+        self.assertIn("CH total insuficiente", itens[velho_baixo.pk]["motivo"])
         response_forjado = self.client.get(url, {"item_id": novo.pk, "matriz_anterior_id": matriz_estrangeira.pk})
         self.assertEqual(response_forjado.status_code, 400)
         self.assertNotIn(c_estrangeiro.pk, itens)
@@ -136,7 +598,7 @@ class EquivalenciasEntreEdicoesTests(TestCase):
         response = self.client.post(reverse("previa_equivalencias_matriz", args=[self.nova.pk]), data=__import__("json").dumps({"pares": [[novo.pk, velho.pk]]}), content_type="application/json")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Pares rejeitados", html=False)
-        self.assertIn("menor que a CH nova", response.json()["html"])
+        self.assertIn("CH total insuficiente", response.json()["html"])
         self.assertFalse(EquivalenciaMatriz.objects.exists())
 
     def test_salvar_endpoint_rejeita_par_forjado_de_matriz_alheia(self):
@@ -177,7 +639,7 @@ class EquivalenciasPPCInterfaceTests(TestCase):
         candidatos = {i["id"]: i for i in response.json()["candidatos"]}
         self.assertTrue(candidatos[self.antigo.pk]["elegivel"])
         self.assertFalse(candidatos[baixo.pk]["elegivel"])
-        self.assertIn("menor", candidatos[baixo.pk]["motivo"])
+        self.assertIn("CH total insuficiente", candidatos[baixo.pk]["motivo"])
         preview = self.client.post(reverse("equivalencias_ppc", args=[self.novo.pk]), data=__import__("json").dumps({"pares": [[self.atual.pk, baixo.pk]], "preview": True}), content_type="application/json")
         self.assertEqual(preview.status_code, 200)
         self.assertContains(preview, "Quadro de", html=False)
@@ -213,7 +675,8 @@ class EdicaoVinculoMatrizReferenciaTests(TestCase):
         self.user = User.objects.create_user("edicao-vinculo", password="x")
         self.staff = User.objects.create_user("edicao-vinculo-staff", password="x", is_staff=True)
         self.curso = Curso.objects.create(nome="Curso vínculo", unidade_academica="UA", area_conhecimento="Área")
-        self.matriz = MatrizReferenciaCurricular.objects.create(curso=self.curso, nome="Matriz vínculo", grau_academico="licenciatura")
+        self.matriz = MatrizReferenciaCurricular.objects.create(curso=self.curso, nome="Matriz vínculo", grau_academico="licenciatura", status=MatrizReferenciaCurricular.STATUS_EM_MUDANCA)
+        VinculoUsuarioCurso.objects.create(usuario=self.user, curso=self.curso)
         self.componente = ComponenteCurricular.objects.create(
             nome="Catálogo original", codigo="CAT-1", tipo="disciplina", carga_horaria_teorica=64,
             carga_horaria_pratica=0, carga_horaria_estudante=0, carga_horaria_professor=0,
@@ -667,7 +1130,7 @@ class RegrasMatrizRegressaoTests(TestCase):
         from .forms import ComponenteMatrizReferenciaForm
         self.assertIn("grupo_licenciatura", ComponenteMatrizReferenciaForm(matriz=matriz).fields)
         self.assertNotIn("grupo_licenciatura", ComponenteMatrizReferenciaForm(matriz=bacharel).fields)
-        self.client.force_login(self.user)
+        self.client.force_login(self.staff)
         self.assertContains(self.client.get(reverse("matriz_referencia_detalhe", args=[matriz.pk])), "Grupo 1")
         self.assertContains(self.client.get(reverse("criar_componente_matriz_referencia", args=[matriz.pk])), "Grupo (licenciatura)")
         self.assertNotContains(self.client.get(reverse("criar_componente_matriz_referencia", args=[bacharel.pk])), "Grupo (licenciatura)")
@@ -762,7 +1225,9 @@ class RegrasMatrizRegressaoTests(TestCase):
                 carga_horaria_pratica=0, ementa="",
             ), periodo=1, natureza="obrigatoria",
         )
-        self.client.force_login(self.user)
+        matriz.status = MatrizReferenciaCurricular.STATUS_EM_MUDANCA
+        matriz.save()
+        self.client.force_login(self.staff)
         resposta = self.client.post(
             reverse("editar_item_matriz_referencia", args=[item.pk]),
             data='{"nome":"Inline","nucleo":"NE","natureza":"obrigatoria","carga_horaria_teorica":"64","carga_horaria_pratica":"0","grupo_licenciatura":"2"}',

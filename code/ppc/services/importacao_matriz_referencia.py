@@ -1,5 +1,6 @@
 # ppc/services/importacao_matriz_referencia.py
 from django.db import transaction
+from django.core.exceptions import ValidationError
 from ppc.services.eventos import registrar_evento, suspender_eventos_edicao
 from ppc.models import (
     ComponenteCurricular,
@@ -54,37 +55,41 @@ def importar_linhas_normalizadas(linhas, dry_run=True):
                 identificador_origem=linha["identificador_origem"],
             )
 
-            if linha["codigo"]:
-                componente, criado = ComponenteCurricular.objects.get_or_create(
-                    codigo=linha["codigo"],
-                    defaults={
-                        "nome": linha["nome"],
-                        "tipo": "disciplina",
-                        "carga_horaria_teorica": linha["carga_horaria_teorica"],
-                        "carga_horaria_pratica": linha["carga_horaria_pratica"],
-                        "unidade_academica_componente": "",
-                        "ementa": linha.get("ementa", ""),
-                        "status": "aprovado",
-                    },
-                )
-            else:
-                item_existente = None
-                id_interno = linha.get("id_componente_interno")
-                if id_interno and str(id_interno).isdigit():
-                    item_existente = ComponenteNaMatrizReferencia.objects.filter(
-                        pk=int(id_interno), matriz=matriz
-                    ).select_related("componente").first()
-                if item_existente:
-                    componente, criado = item_existente.componente, False
-                else:
-                    componente = ComponenteCurricular.objects.create(
-                        codigo="", nome=linha["nome"], tipo="disciplina",
-                        carga_horaria_teorica=linha["carga_horaria_teorica"],
-                        carga_horaria_pratica=linha["carga_horaria_pratica"],
-                        unidade_academica_componente="",
-                        ementa=linha.get("ementa", ""), status="aprovado",
+            try:
+                if linha["codigo"]:
+                    componente, criado = ComponenteCurricular.objects.get_or_create(
+                        codigo=linha["codigo"],
+                        defaults={
+                            "nome": linha["nome"],
+                            "tipo": "disciplina",
+                            "carga_horaria_teorica": linha["carga_horaria_teorica"],
+                            "carga_horaria_pratica": linha["carga_horaria_pratica"],
+                            "unidade_academica_componente": "",
+                            "ementa": linha.get("ementa", ""),
+                            "status": "aprovado",
+                        },
                     )
-                    criado = True
+                else:
+                    item_existente = None
+                    id_interno = linha.get("id_componente_interno")
+                    if id_interno and str(id_interno).isdigit():
+                        item_existente = ComponenteNaMatrizReferencia.objects.filter(
+                            pk=int(id_interno), matriz=matriz
+                        ).select_related("componente").first()
+                    if item_existente:
+                        componente, criado = item_existente.componente, False
+                    else:
+                        componente = ComponenteCurricular.objects.create(
+                            codigo="", nome=linha["nome"], tipo="disciplina",
+                            carga_horaria_teorica=linha["carga_horaria_teorica"],
+                            carga_horaria_pratica=linha["carga_horaria_pratica"],
+                            unidade_academica_componente="",
+                            ementa=linha.get("ementa", ""), status="aprovado",
+                        )
+                        criado = True
+            except ValidationError as exc:
+                relatorio["erros"].append({"linha": linha, "erro": str(exc)})
+                continue
 
             if not criado and not componente.ementa and linha.get("ementa"):
                 componente.ementa = linha["ementa"]

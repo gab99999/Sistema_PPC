@@ -3,6 +3,12 @@
 {% block content %}
 <h1>Aplicação concluída</h1>
 <p>{{ aplicados }} componente(s) atualizados no PPC a partir de "{{ matriz }}".</p>
+{% if componentes_pendentes %}<div class="alerta alerta-warning">{{ componentes_pendentes|length }} componente(s) aguardando aprovação não foram copiados:<ul>{% for item in componentes_pendentes %}<li>{{ item.componente.codigo|default:"Sem código" }} — {{ item.componente.nome }}</li>{% endfor %}</ul></div>{% endif %}
+{% if resultado_equivalencias %}<details class="card" open><summary>Equivalências — {{ resultado_equivalencias.criadas|length }} novas · {{ resultado_equivalencias.existentes|length }} já existentes · {{ resultado_equivalencias.nao_aplicaveis|length }} não aplicáveis</summary><div class="card-corpo">
+  {% if resultado_equivalencias.criadas %}<h3>Novas</h3><ul>{% for item in resultado_equivalencias.criadas %}<li>{{ item.item_novo.componente.nome }} → {{ item.item_anterior.componente.nome }}</li>{% endfor %}</ul>{% endif %}
+  {% if resultado_equivalencias.existentes %}<h3>Já existentes</h3><ul>{% for item in resultado_equivalencias.existentes %}<li>{{ item.item_novo.componente.nome }} → {{ item.item_anterior.componente.nome }}</li>{% endfor %}</ul>{% endif %}
+  {% if resultado_equivalencias.nao_aplicaveis %}<h3>Não aplicáveis</h3><ul>{% for item in resultado_equivalencias.nao_aplicaveis %}<li>{{ item.item_novo.componente.nome }} → {{ item.item_anterior.componente.nome }}: {{ item.motivo }}</li>{% endfor %}</ul>{% endif %}
+</div></details>{% endif %}
 {% if resumo_bibliografias %}
 <section class="form-secao">
   <h2>Resumo das bibliografias</h2>

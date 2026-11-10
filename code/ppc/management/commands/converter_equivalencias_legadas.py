@@ -1,6 +1,7 @@
 """Converte grupos antigos sem removê-los; por padrão, apenas simula."""
 from django.core.management.base import BaseCommand
 from ppc.models import EquivalenciaMatriz, ItemEquivalencia
+from ppc.services.regras_equivalencia import avaliar_equivalencia
 
 
 class Command(BaseCommand):
@@ -33,14 +34,10 @@ class Command(BaseCommand):
                             cursor = cursor.matriz_anterior
                         if a.matriz_id not in ancestrais:
                             motivo = "matriz anterior não está na linhagem explícita"
-                        else:
-                            try:
-                                ch_antiga = a.componente.carga_horaria_computada_total
-                                ch_nova = n.componente.carga_horaria_computada_total
-                            except (TypeError, ValueError):
-                                motivo = "carga horária inválida em dado legado"
-                            if not motivo and ch_antiga < ch_nova:
-                                motivo = "CH da matriz anterior menor que a CH nova"
+                        if not motivo:
+                            regra = avaliar_equivalencia(a, n)
+                            if not regra["elegivel"]:
+                                motivo = "; ".join(regra["motivos"])
                     if motivo:
                         ignorados += 1
                         self.stdout.write(f"IGNORADO grupo={grupo_id} novo={n.pk} anterior={a.pk}: {motivo}")

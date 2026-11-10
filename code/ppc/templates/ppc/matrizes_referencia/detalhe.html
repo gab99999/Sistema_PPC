@@ -126,6 +126,7 @@
       <div class="item-componente" draggable="{{ pode_editar|yesno:'true,false' }}" data-item-id="{{ item.id }}" data-natureza="{{ item.natureza }}" data-horas-semanais="{{ item.horas_semanais.total|stringformat:'f' }}" data-horas-teoricas-semanais="{{ item.horas_semanais.teorica|stringformat:'f' }}" data-horas-praticas-semanais="{{ item.horas_semanais.pratica|stringformat:'f' }}" data-atividade="{{ item.horas_semanais.atividade|yesno:'true,false' }}" data-carga-total="{{ item.carga_total_segura }}" data-teorica-total="{{ item.componente.carga_horaria_teorica|default:0 }}" data-pratica-total="{{ item.componente.carga_horaria_pratica|default:0 }}" data-acex-total="{{ item.componente.carga_horaria_acex|default:0 }}">
         <div class="item-codigo">{{ item.componente.codigo|default:"Sem código" }}</div>
         <div class="item-nome">{{ item.componente.nome|default:"Componente sem nome" }}</div>
+        {% if item.componente.status == 'pendente' %}<span class="status-badge status-pendente">Aguardando aprovação</span>{% endif %}
         <span class="badge-natureza badge-{{ item.natureza }}">{{ item.get_natureza_display }}</span>
         <span class="badge-nucleo">{{ item.get_nucleo_display }}</span>
         {% if matriz.grau_academico == 'licenciatura' %}<span class="status-badge status-resolvido badge-grupo-licenciatura">{{ item.get_grupo_licenciatura_display|default:"—" }}</span>{% endif %}
@@ -133,11 +134,11 @@
         <div class="item-carga-horaria" title="{{ item.horas_semanais.detalhe }}">{{ item.horas_semanais.texto }}</div>
         <details class="catalogo-leitura"><summary>Dados do catálogo (somente leitura)</summary>
           <dl><dt>Código</dt><dd>{{ item.componente.codigo|default:"—" }}</dd><dt>Nome</dt><dd>{{ item.componente.nome|default:"—" }}</dd><dt>Tipo</dt><dd>{{ item.componente.get_tipo_display|default:item.componente.tipo|default:"—" }}</dd>
-            <dt>Carga teórica</dt><dd>{{ item.componente.carga_horaria_teorica|default:0 }} h</dd><dt>Carga prática</dt><dd>{{ item.componente.carga_horaria_pratica|default:0 }} h</dd><dt>Carga estudante</dt><dd>{{ item.componente.carga_horaria_estudante|default:"—" }} h</dd><dt>Carga professor</dt><dd>{{ item.componente.carga_horaria_professor|default:"—" }} h</dd><dt>ACEx</dt><dd>{{ item.componente.carga_horaria_acex|default:0 }} h</dd><dt>CCU</dt><dd>{{ item.componente.get_ccu_display|default:item.componente.ccu|default:"—" }}</dd><dt>Unidade</dt><dd>{{ item.componente.unidade_academica_componente|default:"—" }}</dd></dl>
+            <dt>Status do catálogo</dt><dd>{% if item.componente.status == 'pendente' %}<span class="status-badge status-pendente">Aguardando aprovação</span>{% else %}<span class="status-badge status-aprovado">Aprovado</span>{% endif %}</dd><dt>Carga teórica</dt><dd>{{ item.componente.carga_horaria_teorica|default:0 }} h</dd><dt>Carga prática</dt><dd>{{ item.componente.carga_horaria_pratica|default:0 }} h</dd><dt>Carga estudante</dt><dd>{{ item.componente.carga_horaria_estudante|default:"—" }} h</dd><dt>Carga professor</dt><dd>{{ item.componente.carga_horaria_professor|default:"—" }} h</dd><dt>ACEx</dt><dd>{{ item.componente.carga_horaria_acex|default:0 }} h</dd><dt>CCU</dt><dd>{{ item.componente.get_ccu_display|default:item.componente.ccu|default:"—" }}</dd><dt>Unidade</dt><dd>{{ item.componente.unidade_academica_componente|default:"—" }}</dd></dl>
           <details><summary>Ementa</summary><p>{{ item.componente.ementa|default:"Ementa não cadastrada." }}</p></details>
           {% if request.user.is_staff %}<a class="link-voltar" href="{% url 'editar_componente' item.componente_id %}?retorno={{ item.id }}">Editar no catálogo</a><p class="ajuda-campo">A alteração afeta todos os PPCs e matrizes que usam este componente.</p>{% endif %}
         </details>
-        <details class="card form-secao" style="margin-top:.75rem">
+        <details class="card form-secao bibliografias-matriz" style="margin-top:.75rem">
           <summary>Bibliografias ({{ item.bibliografias.count }})</summary>
           <ul class="lista-cursos">
             {% for bib in item.bibliografias.all %}
@@ -150,8 +151,8 @@
           </ul>
           {% if pode_editar %}
           <a class="btn btn-secundario" href="{% url 'buscar_bibliografia_referencia' item.id %}?tipo=basica">Buscar na Biblioteca</a>
-          <details><summary>Adicionar referência manual</summary>
-            <form method="post" action="{% url 'adicionar_bibliografia_manual_referencia' item.id %}" class="form-empilhado">
+          <details class="bibliografia-adicionar-manual"><summary>Adicionar referência manual</summary>
+            <form method="post" action="{% url 'adicionar_bibliografia_manual_referencia' item.id %}" class="form-empilhado formulario-bibliografia-manual">
               {% csrf_token %}
               <label>Tipo<select name="tipo"><option value="basica">Básica</option><option value="complementar">Complementar</option></select></label>
               <label>Título<input name="titulo" maxlength="300" required></label>

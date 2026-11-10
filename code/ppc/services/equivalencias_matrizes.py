@@ -1,17 +1,16 @@
 """Sugestões e validação das equivalências entre edições de uma matriz."""
 
-import unicodedata
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from ppc.models import ComponenteNaMatrizReferencia, EquivalenciaMatriz, MatrizReferenciaCurricular
 from ppc.services.eventos import registrar_evento, suspender_eventos_edicao
+from ppc.services.regras_equivalencia import avaliar_equivalencia, carga_item_segura, normalizar_ementa
 
 
 def normalizar_ementa_equivalencia(valor):
-    """Mesma regra do Apps Script: trim, espaços colapsados e Unicode NFC."""
-    return unicodedata.normalize("NFC", " ".join(str(valor or "").split()))
+    return normalizar_ementa(valor)
 
 
 def obter_matrizes_anteriores(matriz):
@@ -37,13 +36,7 @@ def obter_matrizes_anteriores(matriz):
 
 
 def carga_equivalencia(item):
-    """A CH vem do cálculo do componente, inclusive a regra de atividades."""
-    try:
-        return item.componente.carga_horaria_computada_total
-    except (TypeError, ValueError):
-        # Dados legados incompletos não devem derrubar a tela; ficam inelegíveis
-        # para comparação automática até serem corrigidos.
-        return None
+    return carga_item_segura(item)[0]
 
 
 def consultar_equivalencias_matriz(matriz):
@@ -72,11 +65,12 @@ def consultar_equivalencias_matriz(matriz):
                 if item_anterior.matriz_id != anterior.pk:
                     continue
                 ch_anterior = carga_equivalencia(item_anterior)
-                if ch_anterior is None or ch_nova is None or ch_anterior < ch_nova:
+                regra = avaliar_equivalencia(item_anterior, novo)
+                if not regra["elegivel"]:
                     continue
                 par = (novo.pk, item_anterior.pk)
                 ementa_anterior = normalizar_ementa_equivalencia(item_anterior.componente.ementa)
-                auto = bool(ementa_nova and ementa_anterior and ementa_nova == ementa_anterior)
+                auto = regra["sugestao_automatica"]
                 if auto:
                     automaticas.add(par)
                 candidatos.append({
@@ -114,8 +108,7 @@ def preparar_editor_equivalencias(matriz):
             selecionados = [i for i in antigas_por_matriz[anterior.pk] if (novo.pk, i.pk) in salvas_set]
             sugestoes = [i for i in antigas_por_matriz[anterior.pk]
                          if ch_nova is not None and carga_equivalencia(i) is not None
-                         and ch_nova <= carga_equivalencia(i) and ementa_nova
-                         and ementa_nova == normalizar_ementa_equivalencia(i.componente.ementa)]
+                         and avaliar_equivalencia(i, novo)["sugestao_automatica"]]
             sugestao_ids = {i.pk for i in sugestoes}
             automaticas.extend((novo.pk, anterior.pk, i.pk) for i in sugestoes)
             celulas.append({"matriz": anterior, "selecionados": [
@@ -126,8 +119,16 @@ def preparar_editor_equivalencias(matriz):
                             "sugestoes_pendentes": any((novo.pk, i.pk) not in salvas_set for i in sugestoes)})
         linhas.append({"item": novo, "carga": ch_nova, "matrizes": celulas})
     pares_iniciais = [[n, antigos_por_id[a].matriz_id, a] if a in antigos_por_id else [n, 0, a] for n, a in salvas]
+    legadas_invalidas = []
+    for par in EquivalenciaMatriz.objects.filter(item_novo__matriz=matriz).select_related(
+        "item_novo__componente", "item_novo__matriz", "item_anterior__componente", "item_anterior__matriz"
+    ):
+        regra = avaliar_equivalencia(par.item_anterior, par.item_novo)
+        if not regra["elegivel"]:
+            legadas_invalidas.append({"par": par, "motivo": "; ".join(regra["motivos"])})
     return {"matriz": matriz, "erro": "", "matrizes_anteriores": anteriores,
-            "linhas": linhas, "pares_iniciais": pares_iniciais, "automaticas": [list(p) for p in automaticas]}
+            "linhas": linhas, "pares_iniciais": pares_iniciais, "automaticas": [list(p) for p in automaticas],
+            "legadas_invalidas": legadas_invalidas}
 
 
 def candidatos_equivalencia_celula(matriz, item_novo_id, matriz_anterior_id, termo="", offset=0, limite=50):
@@ -161,10 +162,9 @@ def candidatos_equivalencia_celula(matriz, item_novo_id, matriz_anterior_id, ter
         resultado.append({
             "id": item.pk, "codigo": item.componente.codigo or "", "nome": item.componente.nome,
             "periodo": item.periodo, "carga": ch, "ementa": item.componente.ementa or "", "matriz_id": item.matriz_id,
-            "elegivel": ch is not None and ch_nova is not None and ch >= ch_nova,
-            "motivo": ("Carga horária inválida nos dados do componente." if ch is None or ch_nova is None
-                       else "" if ch >= ch_nova else f"CH anterior ({ch} h) menor que a CH nova ({ch_nova} h)."),
-            "automatica": bool(ch is not None and ch_nova is not None and ch >= ch_nova and ementa_nova and ementa and ementa_nova == ementa),
+            "elegivel": avaliar_equivalencia(item, novo)["elegivel"],
+            "motivo": "; ".join(avaliar_equivalencia(item, novo)["motivos"]),
+            "automatica": avaliar_equivalencia(item, novo)["sugestao_automatica"],
             "selecionada": item.pk in salvas,
         })
     return {"candidatos": resultado, "total": total, "mais": mais, "proximo_offset": offset + limite}
@@ -204,10 +204,10 @@ def previsualizar_equivalencias_matriz(matriz, pares):
             motivo = "A matriz do componente anterior não pertence ao mesmo curso."
         elif antigo.matriz_id not in ids_anteriores:
             motivo = "A matriz do componente não está na cadeia de edições anteriores."
-        elif carga_equivalencia(antigo) is None or carga_equivalencia(novo) is None:
-            motivo = "Carga horária inválida nos dados do componente."
-        elif carga_equivalencia(antigo) < carga_equivalencia(novo):
-            motivo = f"CH anterior ({carga_equivalencia(antigo)} h) menor que a CH nova ({carga_equivalencia(novo)} h)."
+        else:
+            regra = avaliar_equivalencia(antigo, novo)
+            if not regra["elegivel"]:
+                motivo = "; ".join(regra["motivos"])
         if motivo:
             rejeitados.append({"par": f"{novo_id} → {antigo_id}", "motivo": motivo})
         else:
@@ -232,9 +232,8 @@ def previsualizar_equivalencias_matriz(matriz, pares):
         if ch_nova is None or not ementa_nova:
             continue
         for antigo in antigos.values():
-            ch_antiga = carga_equivalencia(antigo)
-            ementa_antiga = normalizar_ementa_equivalencia(antigo.componente.ementa)
-            if ch_antiga is not None and ch_antiga >= ch_nova and ementa_antiga == ementa_nova:
+            regra = avaliar_equivalencia(antigo, novo)
+            if regra["sugestao_automatica"]:
                 pares_automaticos.add((novo.pk, antigo.pk))
     automaticas = manuais = pendentes = 0
     por_novo = {}
@@ -270,15 +269,18 @@ def salvar_equivalencias_matriz(matriz_id, pares_enviados, usuario):
             for candidato in celula["candidatos"]
         }
         selecionados = set(pares_enviados)
-        if not selecionados.issubset(permitidos):
-            raise ValidationError("Uma ou mais equivalências não são válidas para a linhagem e a CH atuais.")
-
         existentes = {
             (par.item_novo_id, par.item_anterior_id): par
             for par in EquivalenciaMatriz.objects.filter(item_novo__matriz=matriz)
         }
+        legadas_invalidas = {
+            chave for chave, par in existentes.items()
+            if not avaliar_equivalencia(par.item_anterior, par.item_novo)["elegivel"]
+        }
+        if not selecionados.issubset(permitidos | legadas_invalidas):
+            raise ValidationError("Uma ou mais equivalências não são válidas para a linhagem, CH total e ACEx atuais.")
         for chave, par in existentes.items():
-            if chave in selecionados:
+            if chave in selecionados or chave in legadas_invalidas:
                 resumo["mantidas"] += 1
             else:
                 par.delete()

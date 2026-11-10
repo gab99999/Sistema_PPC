@@ -306,6 +306,13 @@ class ComponenteCurricular(models.Model):
                 campo: f"A carga horária total do componente ({total}h) deve ser múltipla de 8."
             })
 
+    def save(self, *args, **kwargs):
+        update_fields = kwargs.get("update_fields")
+        if update_fields is None or "codigo" in update_fields:
+            from ppc.services.codigos_componentes import validar_codigo_componente
+            validar_codigo_componente(self.codigo, self)
+        super().save(*args, **kwargs)
+
     @property
     def carga_horaria_computada_total(self):
         acex = self.carga_horaria_acex if self.carga_horaria_acex != None else 0
@@ -919,28 +926,10 @@ class EquivalenciaMatriz(models.Model):
         super().clean()
         if not self.item_novo_id or not self.item_anterior_id:
             return
-        novo = self.item_novo.matriz
-        anterior = self.item_anterior.matriz
-        if novo.pk == anterior.pk:
-            raise ValidationError("A equivalência precisa ligar matrizes diferentes.")
-        if not novo.curso_id or novo.curso_id != anterior.curso_id:
-            raise ValidationError("As matrizes precisam estar vinculadas ao mesmo curso.")
-        ancestrais = set()
-        cursor_id = novo.matriz_anterior_id
-        while cursor_id and cursor_id not in ancestrais:
-            ancestrais.add(cursor_id)
-            cursor_id = MatrizReferenciaCurricular.objects.filter(
-                pk=cursor_id,
-            ).values_list("matriz_anterior_id", flat=True).first()
-        if anterior.pk not in ancestrais:
-            raise ValidationError("A matriz de destino precisa estar na linhagem de edições anteriores.")
-        try:
-            ch_anterior = self.item_anterior.componente.carga_horaria_computada_total
-            ch_nova = self.item_novo.componente.carga_horaria_computada_total
-        except (TypeError, ValueError):
-            raise ValidationError("A carga horária de um dos componentes está incompleta ou inválida.")
-        if ch_anterior < ch_nova:
-            raise ValidationError("A CH da matriz anterior deve ser igual ou superior à da matriz nova.")
+        from ppc.services.regras_equivalencia import avaliar_equivalencia
+        resultado = avaliar_equivalencia(self.item_anterior, self.item_novo)
+        if not resultado["elegivel"]:
+            raise ValidationError(resultado["motivos"])
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -964,22 +953,10 @@ class EquivalenciaPPC(models.Model):
         super().clean()
         if not self.item_novo_id or not self.item_anterior_id:
             return
-        novo, antigo = self.item_novo, self.item_anterior
-        if novo.ppc_id == antigo.ppc_id:
-            raise ValidationError("A equivalência precisa ligar PPCs diferentes.")
-        if novo.ppc.curso_id != antigo.ppc.curso_id:
-            raise ValidationError("Os PPCs precisam pertencer ao mesmo curso.")
-        ancestrais, cursor = set(), novo.ppc.ppc_anterior_id
-        while cursor and cursor not in ancestrais:
-            ancestrais.add(cursor)
-            cursor = PPC.objects.filter(pk=cursor).values_list("ppc_anterior_id", flat=True).first()
-        if antigo.ppc_id not in ancestrais:
-            raise ValidationError("O PPC anterior precisa estar na cadeia de edições anteriores.")
-        try:
-            if antigo.componente.carga_horaria_computada_total < novo.componente.carga_horaria_computada_total:
-                raise ValidationError("A CH do PPC anterior deve ser igual ou superior à CH do PPC novo.")
-        except (TypeError, ValueError):
-            raise ValidationError("A carga horária de um dos componentes está incompleta ou inválida.")
+        from ppc.services.regras_equivalencia import avaliar_equivalencia
+        resultado = avaliar_equivalencia(self.item_anterior, self.item_novo)
+        if not resultado["elegivel"]:
+            raise ValidationError(resultado["motivos"])
 
     def save(self, *args, **kwargs):
         self.full_clean()

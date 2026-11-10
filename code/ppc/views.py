@@ -79,6 +79,8 @@ from ppc.services.equivalencias_matrizes import (
     previsualizar_equivalencias_matriz,
 )
 from ppc.services.equivalencias_ppc import preparar_editor_ppc, candidatos_ppc, salvar_ppc as salvar_equivalencias_ppc
+from ppc.services.sugestoes_componentes import sugerir_componentes
+from ppc.services.aplicacao_equivalencias import traduzir_equivalencias_matriz_para_ppc
 from django.db.models import F, Max, Q
 from django.core.exceptions import PermissionDenied
 from .permissions import pode_criar_edicao, pode_editar_matriz
@@ -619,6 +621,7 @@ def equivalencias_ppc(request, ppc_id):
                 from ppc.models import ComponenteNaMatriz
                 from ppc.services.equivalencias_ppc import cadeia_ppc
                 from ppc.services.equivalencias_matrizes import carga_equivalencia
+                from ppc.services.regras_equivalencia import avaliar_equivalencia
                 anteriores, erro = cadeia_ppc(ppc)
                 antigos = {i.pk: i for i in ComponenteNaMatriz.objects.filter(ppc_id__in=[a.pk for a in anteriores]).select_related("componente", "ppc")}
                 novos = {i.pk: i for i in ppc.matriz_componentes.select_related("componente")}
@@ -627,9 +630,8 @@ def equivalencias_ppc(request, ppc_id):
                     n, a = novos.get(novo_id), antigos.get(antigo_id)
                     motivo = "Componente não encontrado no PPC atual." if not n else "Componente anterior fora da linhagem." if not a else ""
                     if not motivo:
-                        cn, ca = carga_equivalencia(n), carga_equivalencia(a)
-                        if cn is None or ca is None: motivo = "Carga horária inválida."
-                        elif ca < cn: motivo = f"CH anterior ({ca} h) menor que a CH nova ({cn} h)."
+                        regra = avaliar_equivalencia(a, n)
+                        if not regra["elegivel"]: motivo = "; ".join(regra["motivos"])
                     if motivo: rejeitados.append({"novo": novo_id, "antigo": antigo_id, "motivo": motivo})
                     else: escolhidos.add((novo_id, antigo_id))
                 for n in sorted(novos.values(), key=lambda x: (x.periodo, x.componente.nome)):
@@ -1004,13 +1006,14 @@ def duplicar_matriz_referencia(request, matriz_id):
 @login_required
 def buscar_componente_existente_matriz_referencia(request, matriz_id):
     matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    exigir_edicao_matriz(request.user, matriz)
     termo = request.GET.get("q", "").strip()
     resultados = []
     if termo:
         ja_usados = matriz.componentes.values_list("componente_id", flat=True)
         resultados = (
             ComponenteCurricular.objects
-            .filter(nome__icontains=termo, status="aprovado")
+            .filter(nome__icontains=termo)
             .exclude(id__in=ja_usados)
             .annotate(
                 prioridade_ccu=Case(
@@ -1064,6 +1067,20 @@ def criar_componente_matriz_referencia(request, matriz_id):
         'form': form,
     })
 
+
+@login_required
+@require_GET
+def sugerir_componentes_matriz_referencia(request, matriz_id):
+    matriz = get_object_or_404(MatrizReferenciaCurricular, pk=matriz_id)
+    try:
+        exigir_edicao_matriz(request.user, matriz)
+    except PermissionDenied:
+        return JsonResponse({"erro": "Você não tem permissão para editar esta matriz."}, status=403)
+    dados = sugerir_componentes(
+        matriz, nome=request.GET.get("nome", ""), codigo=request.GET.get("codigo", ""),
+    )
+    return JsonResponse(dados)
+
 @login_required
 @require_POST
 def remover_componente_matriz_referencia(request, item_id):
@@ -1104,9 +1121,11 @@ def selecionar_matriz_referencia_para_ppc(request, ppc_id):
 def _montar_preview_aplicacao(ppc, matriz):
     """Categoriza cada item da matriz de referência frente ao que já existe
     no PPC. Nunca decide sozinho — só classifica, para o humano decidir."""
-    itens_referencia = list(matriz.componentes.select_related("componente").prefetch_related(
+    todos_itens_referencia = list(matriz.componentes.select_related("componente").prefetch_related(
         Prefetch("bibliografias", queryset=BibliografiaReferencia.objects.select_related("referencia").order_by("pk"))
     ))
+    componentes_pendentes = [item for item in todos_itens_referencia if item.componente.status != "aprovado"]
+    itens_referencia = [item for item in todos_itens_referencia if item.componente.status == "aprovado"]
     existentes = {
         cm.componente_id: cm
         for cm in ComponenteNaMatriz.objects.filter(ppc=ppc).select_related("componente").prefetch_related(
@@ -1115,6 +1134,10 @@ def _montar_preview_aplicacao(ppc, matriz):
     }
 
     preview = _categorizar_componentes(itens_referencia, existentes)
+    preview["componentes_pendentes"] = componentes_pendentes
+    preview["equivalencias"] = traduzir_equivalencias_matriz_para_ppc(
+        matriz, ppc, componentes_planejados={item.pk for item in preview["novos"]},
+    )
     preview["periodos_acima_maximo"] = [
         item for item in itens_referencia
         if ppc.duracao_maxima_semestres and item.periodo > ppc.duracao_maxima_semestres
@@ -1445,6 +1468,17 @@ def preview_aplicar_matriz_referencia(request, ppc_id, matriz_id):
 
             resultado_relacoes = copiar_relacoes_referencia_para_ppc(matriz, ppc)
 
+            resultado_equivalencias = traduzir_equivalencias_matriz_para_ppc(
+                matriz, ppc, usuario=request.user,
+                aplicar=request.POST.get("aplicar_equivalencias") == "on",
+            )
+            if request.POST.get("aplicar_equivalencias") != "on" and resultado_equivalencias["criadas"]:
+                resultado_equivalencias["nao_aplicaveis"].extend(
+                    {**item, "motivo": "Aplicação de equivalências desmarcada"}
+                    for item in resultado_equivalencias["criadas"]
+                )
+                resultado_equivalencias["criadas"] = []
+
         registrar_evento(
             "matriz_aplicada", usuario=request.user, ppc=ppc,
             matriz_referencia_id=matriz.pk, componentes_aplicados=aplicados,
@@ -1455,10 +1489,15 @@ def preview_aplicar_matriz_referencia(request, ppc_id, matriz_id):
             bibliografias_ignoradas=resumo_bibliografias["ignoradas"],
             relacoes_copiadas=resultado_relacoes["criadas"],
             relacoes_ignoradas=len(resultado_relacoes["invalidas"]),
+            equivalencias_criadas=len(resultado_equivalencias["criadas"]),
+            equivalencias_existentes=len(resultado_equivalencias["existentes"]),
+            equivalencias_nao_aplicaveis=len(resultado_equivalencias["nao_aplicaveis"]),
         )
 
         return render(request, "ppc/matrizes_referencia/aplicacao_concluida.html", {
             "ppc": ppc, "matriz": matriz, "aplicados": aplicados,
+            "componentes_pendentes": preview["componentes_pendentes"],
+            "resultado_equivalencias": resultado_equivalencias,
             "relacoes_ignoradas": resultado_relacoes["invalidas"],
             "periodos_acima_maximo": periodos_acima_maximo,
             "componentes_nao_atualizados": componentes_nao_atualizados,
@@ -1847,7 +1886,7 @@ def vincular_curso_matriz_referencia(request, matriz_id):
                     item.grupo_licenciatura = None
                     item.save(update_fields=["grupo_licenciatura"])
             registrar_evento(
-                "grupos_licenciatura_matriz_limpos", usuario=request.user,
+                "grupos_licenciatura_limpos", usuario=request.user,
                 curso=matriz.curso, matriz_id=matriz.pk, grupos=grupos_para_limpar,
             )
     return redirect("matriz_referencia_detalhe", matriz_id=matriz.id)
@@ -2459,6 +2498,8 @@ def buscar_componente_existente(request, ppc_id):
 def adicionar_componente_existente(request, ppc_id, componente_id):
     ppc = get_object_or_404(PPC, id=ppc_id)
     componente = get_object_or_404(ComponenteCurricular, id=componente_id)
+    if componente.status != "aprovado":
+        return HttpResponseForbidden("Componentes aguardando aprovação não podem ser adicionados ao PPC.")
     if ComponenteNaMatriz.objects.filter(ppc=ppc, componente=componente).exists():
         messages.warning(request, "Este componente já está na matriz deste PPC.")
         return redirect('lista_componentes', ppc_id=ppc.id)

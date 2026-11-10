@@ -129,6 +129,7 @@ urlpatterns = [
     path("matrizes-referencia/<int:matriz_id>/buscar-componente/", buscar_componente_existente_matriz_referencia, name="buscar_componente_existente_matriz_referencia"),
     path("matrizes-referencia/item/<int:item_id>/historico/", historico_item_matriz_referencia, name="historico_item_matriz_referencia"),
     path("matrizes-referencia/<int:matriz_id>/novo-componente/", criar_componente_matriz_referencia, name="criar_componente_matriz_referencia"),
+    path("matrizes-referencia/<int:matriz_id>/sugestoes-componente/", views.sugerir_componentes_matriz_referencia, name="sugerir_componentes_matriz_referencia"),
     path("matrizes-referencia/<int:matriz_id>/historico/", historico_matriz_referencia, name="historico_matriz_referencia"),
     path("ppc/<int:ppc_id>/historico/", views.historico_ppc, name="historico_ppc"),
     path("ppc/<int:ppc_id>/historico/<int:history_id>/reverter/", views.reverter_ppc, name="reverter_ppc"),

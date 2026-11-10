@@ -6,6 +6,7 @@
 <div class="alerta alerta-info">
   {{ preview.novos|length }} novo(s) · {{ preview.existentes_iguais|length }} já iguais (nada a fazer) · {{ preview.conflitos|length }} em conflito
 </div>
+{% if preview.componentes_pendentes %}<details class="card"><summary>{{ preview.componentes_pendentes|length }} componente(s) aguardando aprovação — não serão copiados</summary><ul>{% for item in preview.componentes_pendentes %}<li>{{ item.componente.codigo|default:"Sem código" }} — {{ item.componente.nome }}</li>{% endfor %}</ul></details>{% endif %}
 {% if preview.periodos_acima_maximo %}
 <div class="alerta alerta-warning">
   A matriz tem {{ preview.periodos_acima_maximo|length }} componente(s) acima da duração máxima declarada do PPC. Eles podem ser aplicados, mas ficarão sinalizados para revisão.
@@ -20,6 +21,16 @@
 
 <form method="post">
   {% csrf_token %}
+
+  <details class="card" open>
+    <summary>Equivalências — {{ preview.equivalencias.criadas|length }} novas · {{ preview.equivalencias.existentes|length }} já existentes · {{ preview.equivalencias.nao_aplicaveis|length }} não aplicáveis</summary>
+    <div class="card-corpo">
+      <label><input type="checkbox" name="aplicar_equivalencias" value="on" checked> Aplicar equivalências elegíveis ao PPC</label>
+      {% if preview.equivalencias.criadas %}<h4>Novas</h4><ul>{% for item in preview.equivalencias.criadas %}<li>{{ item.item_novo.componente.nome }} → {{ item.item_anterior.componente.nome }}</li>{% endfor %}</ul>{% endif %}
+      {% if preview.equivalencias.existentes %}<h4>Já existentes</h4><ul>{% for item in preview.equivalencias.existentes %}<li>{{ item.item_novo.componente.nome }} → {{ item.item_anterior.componente.nome }}</li>{% endfor %}</ul>{% endif %}
+      {% if preview.equivalencias.nao_aplicaveis %}<h4>Não aplicáveis</h4><ul>{% for item in preview.equivalencias.nao_aplicaveis %}<li>{{ item.item_novo.componente.nome }} → {{ item.item_anterior.componente.nome }}: {{ item.motivo }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+  </details>
 
   {% if preview.novos %}
   <h3>Novos componentes</h3>

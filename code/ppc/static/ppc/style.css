@@ -1351,6 +1351,22 @@ h3 {
 #colunas-periodos { width: 100%; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
 .coluna-periodo { width: var(--largura-coluna-periodo); min-width: var(--largura-coluna-periodo); max-width: var(--largura-coluna-periodo); flex: 0 0 var(--largura-coluna-periodo); min-height: 0; }
 .coluna-periodo-cabecalho { display: block; min-width: 0; }
+.bibliografias-matriz,
+.bibliografias-matriz > .lista-cursos,
+.bibliografias-matriz > .lista-cursos > li,
+.bibliografias-matriz .card-corpo { min-width: 0; max-width: 100%; }
+.bibliografias-matriz > .lista-cursos { grid-template-columns: minmax(0, 1fr); }
+.bibliografias-matriz .card-corpo { overflow-wrap: anywhere; }
+.coluna-periodo .item-componente { padding: .75rem .85rem; }
+.coluna-periodo .bibliografias-matriz { padding: 1.4rem; }
+.coluna-periodo .bibliografias-matriz > .lista-cursos > li { padding: 1.4rem; }
+.bibliografia-adicionar-manual { margin-top: .9rem; padding-top: .75rem; border-top: 1px solid var(--cor-borda); }
+.bibliografia-adicionar-manual > summary { cursor: pointer; font-weight: 600; color: var(--cor-texto); }
+.bibliografias-matriz .formulario-bibliografia-manual { max-width: none; margin: .75rem 0 0; padding: 1.05rem; gap: .85rem; background: var(--cor-fundo); border: 1px solid var(--cor-borda); box-shadow: none; }
+.bibliografias-matriz .formulario-bibliografia-manual label { border: 0; padding: 0; margin: 0; letter-spacing: 0; text-transform: none; color: var(--cor-texto); }
+.bibliografias-matriz .formulario-bibliografia-manual input,
+.bibliografias-matriz .formulario-bibliografia-manual select { min-width: 0; }
+.bibliografias-matriz .formulario-bibliografia-manual .btn { align-self: stretch; }
 .periodo-titulo { display: flex; align-items: center; justify-content: space-between; gap: .5rem; min-width: 0; }
 .periodo-titulo h3 { margin: 0; overflow-wrap: anywhere; }
 .coluna-periodo-total { flex: 0 0 auto; border-radius: 1rem; padding: .08rem .45rem; background: var(--cor-fundo); }

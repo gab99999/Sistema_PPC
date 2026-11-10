@@ -4,6 +4,7 @@ from django.db import transaction
 from django.db.models import Q
 from ppc.models import PPC, ComponenteNaMatriz, EquivalenciaPPC
 from ppc.services.equivalencias_matrizes import carga_equivalencia, normalizar_ementa_equivalencia
+from ppc.services.regras_equivalencia import avaliar_equivalencia
 from ppc.services.eventos import registrar_evento, suspender_eventos_edicao
 
 
@@ -38,7 +39,7 @@ def preparar_editor_ppc(ppc):
             matches, sug_ids = [], []
             for antigo in (item for item in antigos if item.ppc_id == anterior_ppc.pk):
                 cha = carga_equivalencia(antigo)
-                same = bool(chn is not None and cha is not None and cha >= chn and normalizar_ementa_equivalencia(novo.componente.ementa) and normalizar_ementa_equivalencia(novo.componente.ementa) == normalizar_ementa_equivalencia(antigo.componente.ementa))
+                same = avaliar_equivalencia(antigo, novo)["sugestao_automatica"]
                 if same:
                     auto.append([novo.pk, antigo.ppc_id, antigo.pk]); sug_ids.append(str(antigo.pk))
                 if (novo.pk, antigo.pk) in salvas:
@@ -46,7 +47,15 @@ def preparar_editor_ppc(ppc):
             celulas.append({"matriz": anterior_ppc, "selecionados": matches, "sugestoes": len(sug_ids), "sugestao_ids": ",".join(sug_ids), "sugestoes_pendentes": any((novo.pk, int(i)) not in salvas for i in sug_ids)})
         linhas.append({"item": novo, "carga": chn, "matrizes": celulas})
     pairs = [[n, por_id[a].ppc_id, a] for n, a in salvas if a in por_id]
-    return {"ppc": ppc, "erro": "", "matrizes_anteriores": anteriores, "linhas": linhas, "pares_iniciais": pairs, "automaticas": auto}
+    legadas_invalidas = []
+    for par in EquivalenciaPPC.objects.filter(item_novo__ppc=ppc).select_related(
+        "item_novo__componente", "item_novo__ppc", "item_anterior__componente", "item_anterior__ppc"
+    ):
+        regra = avaliar_equivalencia(par.item_anterior, par.item_novo)
+        if not regra["elegivel"]:
+            legadas_invalidas.append({"par": par, "motivo": "; ".join(regra["motivos"])})
+    return {"ppc": ppc, "erro": "", "matrizes_anteriores": anteriores, "linhas": linhas,
+            "pares_iniciais": pairs, "automaticas": auto, "legadas_invalidas": legadas_invalidas}
 
 
 def candidatos_ppc(ppc, novo_id, anterior_id, termo="", offset=0, limite=50):
@@ -61,8 +70,8 @@ def candidatos_ppc(ppc, novo_id, anterior_id, termo="", offset=0, limite=50):
     chn=carga_equivalencia(novo); selected=set(EquivalenciaPPC.objects.filter(item_novo=novo).values_list("item_anterior_id",flat=True))
     out=[]
     for item in itens:
-        cha=carga_equivalencia(item); eleg=chn is not None and cha is not None and cha>=chn
-        out.append({"id":item.pk,"codigo":item.componente.codigo or "","nome":item.componente.nome,"periodo":item.periodo,"carga":cha,"ementa":item.componente.ementa or "","elegivel":eleg,"motivo":"" if eleg else ("Carga horária inválida." if cha is None or chn is None else f"CH anterior ({cha} h) menor que a CH nova ({chn} h)."),"automatica":bool(eleg and normalizar_ementa_equivalencia(item.componente.ementa) and normalizar_ementa_equivalencia(item.componente.ementa)==normalizar_ementa_equivalencia(novo.componente.ementa)),"selecionada":item.pk in selected})
+        cha=carga_equivalencia(item); regra=avaliar_equivalencia(item, novo)
+        out.append({"id":item.pk,"codigo":item.componente.codigo or "","nome":item.componente.nome,"periodo":item.periodo,"carga":cha,"ementa":item.componente.ementa or "","elegivel":regra["elegivel"],"motivo":"; ".join(regra["motivos"]),"automatica":regra["sugestao_automatica"],"selecionada":item.pk in selected})
     return {"candidatos":out,"total":total,"mais":mais,"proximo_offset":offset+limite}
 
 
@@ -76,12 +85,16 @@ def salvar_ppc(ppc_id, pares, usuario):
         for n,a in pares:
             novo,antigo=novos.get(int(n)),antigos.get(int(a))
             if not novo or not antigo or antigo.ppc_id not in {p.pk for p in anteriores}: raise ValidationError("Equivalência fora da linhagem de PPCs anteriores.")
-            chn,cha=carga_equivalencia(novo),carga_equivalencia(antigo)
-            if chn is None or cha is None or cha<chn: raise ValidationError("A CH do PPC anterior deve ser igual ou superior à CH do PPC novo.")
+            regra=avaliar_equivalencia(antigo, novo)
+            if not regra["elegivel"]:
+                if EquivalenciaPPC.objects.filter(item_novo=novo, item_anterior=antigo).exists():
+                    continue
+                raise ValidationError(regra["motivos"])
             chosen.add((novo.pk,antigo.pk))
         existing={(e.item_novo_id,e.item_anterior_id):e for e in EquivalenciaPPC.objects.filter(item_novo__ppc=ppc)}
+        invalid_existing={k for k,e in existing.items() if not avaliar_equivalencia(e.item_anterior, e.item_novo)["elegivel"]}
         for k,e in existing.items():
-            if k not in chosen: e.delete()
+            if k not in chosen and k not in invalid_existing: e.delete()
         for n,a in chosen-existing.keys(): EquivalenciaPPC(item_novo_id=n,item_anterior_id=a,criado_por=usuario).save()
     registrar_evento("equivalencias_ppc_salvas",usuario=usuario,ppc=ppc,identificador=str(ppc.pk),pares=len(chosen))
     return {"salvas":len(chosen)}

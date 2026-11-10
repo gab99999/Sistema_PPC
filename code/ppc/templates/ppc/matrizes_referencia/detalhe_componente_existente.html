@@ -4,7 +4,8 @@
 <h2>Adicionar componente à matriz</h2>
 <div class="card">
     <p class="card-corpo">
-        <strong>{{ componente.nome }}</strong>{% if componente.codigo %} ({{ componente.codigo }}){% endif %}<br>
+        <strong>{{ componente.nome }}</strong>{% if componente.codigo %} ({{ componente.codigo }}){% endif %}{% if componente.status == 'pendente' %} <span class="status-badge status-pendente">Aguardando aprovação</span>{% endif %}<br>
+        <strong>Status do catálogo:</strong> {{ componente.get_status_display }}<br>
         {{ componente.get_tipo_display }}<br>
         {% if componente.tipo == 'atividade' %}
             {{ componente.carga_horaria_estudante }}h estudante
