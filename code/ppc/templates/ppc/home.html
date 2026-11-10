@@ -16,31 +16,32 @@
             <span class="estatistica-rotulo">PPCs cadastrados</span>
         </div>
     </div>
-
-    <h2>Ações rápidas</h2>
-    <div class="btn-group">
-        <a href="{% url 'lista_cursos' %}" class="btn btn-primario">Ver Cursos</a>
-        {% if user.is_staff %}
-            <a href="{% url 'criar_curso' %}" class="btn btn-secundario">+ Novo Curso</a>
-            <a href="{% url 'gestao_usuarios' %}" class="btn btn-secundario">Gerenciar Usuários</a>
-            <a href="{% url 'chamados_lista' %}" class="btn-ver-chamados">Ver chamados</a>
-
-        {% endif %}
-    </div>
-    <br>
-
-    <h2>PPCs atualizados recentemente</h2>
-    <ul class="lista-cursos">
-        {% for ppc in ppcs_recentes %}
-            <li class="card">
-                <h3 class="card-titulo">{{ ppc.curso.nome }}</h3>
-                <p class="card-corpo">{{ ppc.get_tipo_ppc_display }} · {{ ppc.get_status_display }} · Atualizado em {{ ppc.atualizado_em|date:"d/m/Y" }}</p>
-                <a href="{% url 'editar_apresentacao' ppc.id %}" class="btn btn-secundario">Abrir</a>
-            </li>
-        {% empty %}
-            <li>Nenhum PPC cadastrado ainda.</li>
-        {% endfor %}
-    </ul>
+    {% if user.is_authenticated %}
+        <h2>Ações rápidas</h2>
+        <div class="btn-group">
+            <a href="{% url 'lista_cursos' %}" class="btn btn-primario">Ver Cursos</a>
+            {% if user.is_staff %}
+                <a href="{% url 'criar_curso' %}" class="btn btn-secundario">+ Novo Curso</a>
+                <a href="{% url 'gestao_usuarios' %}" class="btn btn-secundario">Gerenciar Usuários</a>
+                <a href="{% url 'chamados_lista' %}" class="btn-ver-chamados">Ver chamados</a>
+            {% endif %}
+        </div>
+        <br>
+    {% endif %}
+    {% if user.is_authenticated %}
+        <h2>PPCs atualizados recentemente</h2>
+        <ul class="lista-cursos">
+            {% for ppc in ppcs_recentes %}
+                <li class="card">
+                    <h3 class="card-titulo">{{ ppc.curso.nome }}</h3>
+                    <p class="card-corpo">{{ ppc.get_tipo_ppc_display }} · {{ ppc.get_status_display }} · Atualizado em {{ ppc.atualizado_em|date:"d/m/Y" }}</p>
+                    <a href="{% url 'editar_apresentacao' ppc.id %}" class="btn btn-secundario">Abrir</a>
+                </li>
+            {% empty %}
+                <li>Nenhum PPC cadastrado ainda.</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 
     <h2>Recursos Institucionais</h2>
     <div class="grade-recursos">
