@@ -897,7 +897,7 @@ class ItemEquivalencia(models.Model):
 
     def clean(self):
         super().clean()
-        # A regra vigente segue a referência do Apps Script: ACEx não restringe equivalência.
+        # Os grupos legados são preservados; pares explícitos passam pela regra central.
 
 
 class EquivalenciaMatriz(models.Model):

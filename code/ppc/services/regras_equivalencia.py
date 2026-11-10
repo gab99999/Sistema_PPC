@@ -63,19 +63,29 @@ def avaliar_equivalencia(anterior, nova):
     ch_ant, erro_ant = carga_item_segura(anterior)
     ch_nova, erro_nova = carga_item_segura(nova)
     motivos = []
+    motivo_ch = ""
+    motivo_acex = ""
+    motivo_incompleta = ""
     if not elegivel:
         motivos.append(motivo_cadeia)
     if erro_ant or erro_nova:
-        motivos.append(erro_ant or erro_nova)
+        motivo_incompleta = erro_ant or erro_nova
+        motivos.append(motivo_incompleta)
     elif ch_ant < ch_nova:
-        motivos.append(f"CH total insuficiente: anterior {ch_ant} h, nova {ch_nova} h.")
+        motivo_ch = f"CH total insuficiente: anterior {ch_ant} h, nova {ch_nova} h."
+        motivos.append(motivo_ch)
     acex_ant = comp_ant.carga_horaria_acex or 0
     acex_nova = comp_nova.carga_horaria_acex or 0
     if acex_ant < acex_nova:
-        motivos.append(f"ACEx insuficiente: anterior {acex_ant} h, nova {acex_nova} h.")
+        motivo_acex = f"ACEx insuficiente: anterior {acex_ant} h, nova {acex_nova} h."
+        motivos.append(motivo_acex)
     mesma_ementa = bool(normalizar_ementa(comp_nova.ementa) and normalizar_ementa(comp_nova.ementa) == normalizar_ementa(comp_ant.ementa))
     return {
         "elegivel": not motivos, "motivos": motivos,
+        "motivos_por_condicao": {
+            "ch_total": motivo_ch, "acex": motivo_acex,
+            "carga_incompleta": motivo_incompleta,
+        },
         "carga_anterior": ch_ant, "carga_nova": ch_nova,
         "acex_anterior": acex_ant, "acex_nova": acex_nova,
         "sugestao_automatica": not motivos and mesma_ementa,

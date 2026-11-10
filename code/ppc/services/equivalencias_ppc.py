@@ -53,7 +53,7 @@ def preparar_editor_ppc(ppc):
     ):
         regra = avaliar_equivalencia(par.item_anterior, par.item_novo)
         if not regra["elegivel"]:
-            legadas_invalidas.append({"par": par, "motivo": "; ".join(regra["motivos"])})
+            legadas_invalidas.append({"par": par, "motivo": "; ".join(regra["motivos"]), "regra": regra})
     return {"ppc": ppc, "erro": "", "matrizes_anteriores": anteriores, "linhas": linhas,
             "pares_iniciais": pairs, "automaticas": auto, "legadas_invalidas": legadas_invalidas}
 
@@ -71,7 +71,7 @@ def candidatos_ppc(ppc, novo_id, anterior_id, termo="", offset=0, limite=50):
     out=[]
     for item in itens:
         cha=carga_equivalencia(item); regra=avaliar_equivalencia(item, novo)
-        out.append({"id":item.pk,"codigo":item.componente.codigo or "","nome":item.componente.nome,"periodo":item.periodo,"carga":cha,"ementa":item.componente.ementa or "","elegivel":regra["elegivel"],"motivo":"; ".join(regra["motivos"]),"automatica":regra["sugestao_automatica"],"selecionada":item.pk in selected})
+        out.append({"id":item.pk,"codigo":item.componente.codigo or "","nome":item.componente.nome,"periodo":item.periodo,"carga":cha,"acex":regra["acex_anterior"],"acex_nova":regra["acex_nova"],"ementa":item.componente.ementa or "","elegivel":regra["elegivel"],"motivo":"; ".join(regra["motivos"]),"motivos_por_condicao":regra["motivos_por_condicao"],"automatica":regra["sugestao_automatica"],"selecionada":item.pk in selected})
     return {"candidatos":out,"total":total,"mais":mais,"proximo_offset":offset+limite}
 
 

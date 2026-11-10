@@ -7,7 +7,7 @@
 {% if resultado_equivalencias %}<details class="card" open><summary>Equivalências — {{ resultado_equivalencias.criadas|length }} novas · {{ resultado_equivalencias.existentes|length }} já existentes · {{ resultado_equivalencias.nao_aplicaveis|length }} não aplicáveis</summary><div class="card-corpo">
   {% if resultado_equivalencias.criadas %}<h3>Novas</h3><ul>{% for item in resultado_equivalencias.criadas %}<li>{{ item.item_novo.componente.nome }} → {{ item.item_anterior.componente.nome }}</li>{% endfor %}</ul>{% endif %}
   {% if resultado_equivalencias.existentes %}<h3>Já existentes</h3><ul>{% for item in resultado_equivalencias.existentes %}<li>{{ item.item_novo.componente.nome }} → {{ item.item_anterior.componente.nome }}</li>{% endfor %}</ul>{% endif %}
-  {% if resultado_equivalencias.nao_aplicaveis %}<h3>Não aplicáveis</h3><ul>{% for item in resultado_equivalencias.nao_aplicaveis %}<li>{{ item.item_novo.componente.nome }} → {{ item.item_anterior.componente.nome }}: {{ item.motivo }}</li>{% endfor %}</ul>{% endif %}
+  {% if resultado_equivalencias.nao_aplicaveis %}<details class="eq-rejeitados"><summary>{{ resultado_equivalencias.nao_aplicaveis|length }} par(es) não aplicável(is) — ver motivos</summary><ul>{% for item in resultado_equivalencias.nao_aplicaveis %}<li>{{ item.item_novo.componente.nome }} → {{ item.item_anterior.componente.nome }}: {{ item.motivo }}</li>{% endfor %}</ul></details>{% endif %}
 </div></details>{% endif %}
 {% if resumo_bibliografias %}
 <section class="form-secao">

@@ -36,7 +36,7 @@
       const info = cache.get(String(id));
       const chip = document.createElement('span'); chip.className = 'eq-chip'; chip.dataset.itemId = id;
       const old = oldChips.get(String(id));
-      chip.textContent = info ? `${info.codigo || id} · ${info.carga} h` : (old?.text || `${id}`);
+      chip.textContent = info ? `${info.codigo || id} · CH ${info.carga ?? '—'} h${Number(info.acex) > 0 ? ` · ACEx ${info.acex} h` : ''}` : (old?.text || `${id}`);
       const automatic = info ? info.automatica : Boolean(old?.automatic);
       chip.classList.add(automatic ? 'eq-chip-auto' : 'eq-chip-manual'); chip.title = automatic ? 'Automática' : 'Manual';
       box.append(chip);
@@ -72,7 +72,7 @@
       setDirty();
     });
     const text = document.createElement('span');
-    text.textContent = `${c.codigo || 'Sem código'} — ${c.nome} · ${c.carga ?? '—'} h · ${c.periodo}º período`;
+    text.textContent = `${c.codigo || 'Sem código'} — ${c.nome} · CH ${c.carga ?? '—'} h${Number(c.acex) > 0 ? ` · ACEx ${c.acex} h` : ''} · ${c.periodo}º período`;
     label.append(input, text); node.append(label);
     if (!c.elegivel) { const reason = document.createElement('small'); reason.className = 'ajuda-campo'; reason.textContent = c.motivo; node.append(reason); }
     const details = document.createElement('details'); const summary = document.createElement('summary'); summary.textContent = 'Ver ementa';

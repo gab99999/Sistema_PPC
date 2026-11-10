@@ -125,7 +125,7 @@ def preparar_editor_equivalencias(matriz):
     ):
         regra = avaliar_equivalencia(par.item_anterior, par.item_novo)
         if not regra["elegivel"]:
-            legadas_invalidas.append({"par": par, "motivo": "; ".join(regra["motivos"])})
+            legadas_invalidas.append({"par": par, "motivo": "; ".join(regra["motivos"]), "regra": regra})
     return {"matriz": matriz, "erro": "", "matrizes_anteriores": anteriores,
             "linhas": linhas, "pares_iniciais": pares_iniciais, "automaticas": [list(p) for p in automaticas],
             "legadas_invalidas": legadas_invalidas}
@@ -158,13 +158,15 @@ def candidatos_equivalencia_celula(matriz, item_novo_id, matriz_anterior_id, ter
     resultado = []
     for item in candidatos:
         ch = carga_equivalencia(item)
-        ementa = normalizar_ementa_equivalencia(item.componente.ementa)
+        regra = avaliar_equivalencia(item, novo)
         resultado.append({
             "id": item.pk, "codigo": item.componente.codigo or "", "nome": item.componente.nome,
             "periodo": item.periodo, "carga": ch, "ementa": item.componente.ementa or "", "matriz_id": item.matriz_id,
-            "elegivel": avaliar_equivalencia(item, novo)["elegivel"],
-            "motivo": "; ".join(avaliar_equivalencia(item, novo)["motivos"]),
-            "automatica": avaliar_equivalencia(item, novo)["sugestao_automatica"],
+            "elegivel": regra["elegivel"],
+            "motivo": "; ".join(regra["motivos"]),
+            "motivos_por_condicao": regra["motivos_por_condicao"],
+            "acex": regra["acex_anterior"], "acex_nova": regra["acex_nova"],
+            "automatica": regra["sugestao_automatica"],
             "selecionada": item.pk in salvas,
         })
     return {"candidatos": resultado, "total": total, "mais": mais, "proximo_offset": offset + limite}
@@ -196,6 +198,7 @@ def previsualizar_equivalencias_matriz(matriz, pares):
             continue
         novo, antigo = novos.get(novo_id), antigos_enviados.get(antigo_id)
         motivo = ""
+        regra = None
         if novo is None:
             motivo = "Componente não encontrado na matriz nova."
         elif antigo is None:
@@ -209,7 +212,10 @@ def previsualizar_equivalencias_matriz(matriz, pares):
             if not regra["elegivel"]:
                 motivo = "; ".join(regra["motivos"])
         if motivo:
-            rejeitados.append({"par": f"{novo_id} → {antigo_id}", "motivo": motivo})
+            rejeicao = {"par": f"{novo_id} → {antigo_id}", "motivo": motivo}
+            if novo is not None and antigo is not None and regra is not None:
+                rejeicao.update({"novo": novo, "anterior": antigo, "regra": regra})
+            rejeitados.append(rejeicao)
         else:
             aceitos.add((novo_id, antigo_id))
     linhas = []
@@ -218,10 +224,13 @@ def previsualizar_equivalencias_matriz(matriz, pares):
         for novo_id, antigo_id in aceitos:
             if novo_id == item.pk:
                 antigo = antigos[antigo_id]
-                equivalentes.append({"matriz": antigo.matriz, "item": antigo})
+                equivalentes.append({"matriz": antigo.matriz, "item": antigo,
+                                     "acex": antigo.componente.carga_horaria_acex or 0})
         celulas = [{"matriz": anterior, "equivalentes": [eq for eq in equivalentes if eq["matriz"].pk == anterior.pk]}
                    for anterior in anteriores]
-        linhas.append({"item": item, "carga_total": carga_equivalencia(item), "equivalentes": equivalentes, "celulas": celulas})
+        linhas.append({"item": item, "carga_total": carga_equivalencia(item),
+                       "acex": item.componente.carga_horaria_acex or 0,
+                       "equivalentes": equivalentes, "celulas": celulas})
         for eq in equivalentes:
             eq["carga_total"] = carga_equivalencia(eq["item"])
     com = sum(bool(row["equivalentes"]) for row in linhas)
@@ -277,8 +286,17 @@ def salvar_equivalencias_matriz(matriz_id, pares_enviados, usuario):
             chave for chave, par in existentes.items()
             if not avaliar_equivalencia(par.item_anterior, par.item_novo)["elegivel"]
         }
-        if not selecionados.issubset(permitidos | legadas_invalidas):
-            raise ValidationError("Uma ou mais equivalências não são válidas para a linhagem, CH total e ACEx atuais.")
+        invalidas_novas = selecionados - permitidos - legadas_invalidas
+        if invalidas_novas:
+            novos_por_id = {i.pk: i for i in matriz.componentes.select_related("componente").filter(pk__in=[p[0] for p in invalidas_novas])}
+            antigos_por_id = {i.pk: i for i in ComponenteNaMatrizReferencia.objects.filter(pk__in=[p[1] for p in invalidas_novas]).select_related("matriz", "componente")}
+            for novo_id, antigo_id in invalidas_novas:
+                novo, antigo = novos_por_id.get(novo_id), antigos_por_id.get(antigo_id)
+                if novo and antigo and antigo.matriz_id in {m.pk for m in dados["matrizes_anteriores"]}:
+                    regra = avaliar_equivalencia(antigo, novo)
+                    if not regra["elegivel"]:
+                        raise ValidationError(regra["motivos"])
+            raise ValidationError("Uma ou mais equivalências não são válidas para a linhagem da matriz.")
         for chave, par in existentes.items():
             if chave in selecionados or chave in legadas_invalidas:
                 resumo["mantidas"] += 1

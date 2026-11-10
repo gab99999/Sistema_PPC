@@ -400,6 +400,27 @@ class AplicacaoEquivalenciasMatrizPpcTests(TestCase):
         self.client.get(url)
         self.client.post(url, {f"aplicar_novo_{novo_ref.pk}": "on"})
         self.assertFalse(EquivalenciaPPC.objects.exists())
+
+    def test_preview_e_resultado_da_aplicacao_sinalizam_acex_insuficiente(self):
+        novo_ref, antigo_ref = self.par_matriz(
+            "ACEx legado", acex_novo=16, acex_antigo=8, ch_novo=64, ch_antigo=80, legacy=True,
+        )
+        self.vinculo(self.ppc_anterior, antigo_ref.componente)
+        self.client.force_login(self.user)
+        url = reverse("preview_aplicar_matriz_referencia", args=[self.ppc.pk, self.matriz.pk])
+        preview = self.client.get(url)
+        self.assertEqual(preview.status_code, 200)
+        self.assertContains(preview, "ACEx insuficiente: anterior 8 h, nova 16 h")
+        self.assertContains(preview, "não aplicável(is)")
+
+        resultado = self.client.post(url, {
+            f"aplicar_novo_{novo_ref.pk}": "on", "aplicar_equivalencias": "on",
+        })
+        self.assertEqual(resultado.status_code, 200)
+        self.assertContains(resultado, "ACEx insuficiente: anterior 8 h, nova 16 h")
+        novo_ppc = ComponenteNaMatriz.objects.get(ppc=self.ppc, componente=novo_ref.componente)
+        antigo_ppc = ComponenteNaMatriz.objects.get(ppc=self.ppc_anterior, componente=antigo_ref.componente)
+        self.assertFalse(EquivalenciaPPC.objects.filter(item_novo=novo_ppc, item_anterior=antigo_ppc).exists())
         EquivalenciaMatriz.objects.filter(item_novo=novo_ref).delete()
         self.client.post(url, {f"aplicar_novo_{novo_ref.pk}": "on", "aplicar_equivalencias": "on"})
         self.assertFalse(EquivalenciaPPC.objects.exists())
@@ -418,6 +439,18 @@ class AplicacaoEquivalenciasMatrizPpcTests(TestCase):
                 self.matriz, self.ppc, componentes_planejados={novo_ref.pk},
             )
             self.assertTrue(any(motivo in item["motivo"] for item in resultado["nao_aplicaveis"]))
+        novo_ref, antigo_ref = self.par_matriz(
+            "Par PPC legado já existente", acex_novo=16, acex_antigo=8,
+            ch_novo=64, ch_antigo=80, legacy=True,
+        )
+        novo_ppc = self.vinculo(self.ppc, novo_ref.componente)
+        antigo_ppc = self.vinculo(self.ppc_anterior, antigo_ref.componente)
+        EquivalenciaPPC.objects.bulk_create([
+            EquivalenciaPPC(item_novo=novo_ppc, item_anterior=antigo_ppc),
+        ])
+        resultado = traduzir_equivalencias_matriz_para_ppc(self.matriz, self.ppc)
+        self.assertTrue(any("ACEx insuficiente" in item["motivo"] for item in resultado["nao_aplicaveis"]))
+        self.assertTrue(EquivalenciaPPC.objects.filter(item_novo=novo_ppc, item_anterior=antigo_ppc).exists())
         novo_ref, antigo_ref = self.par_matriz("Fora cadeia")
         # O item anterior existe no catálogo, mas não em nenhum PPC ancestral.
         resultado = traduzir_equivalencias_matriz_para_ppc(
@@ -535,6 +568,60 @@ class EquivalenciasEntreEdicoesTests(TestCase):
         with self.assertRaises(ValidationError):
             salvar_equivalencias_matriz(self.nova.pk, [(novo.pk, antigo.pk)], self.user)
 
+    def test_acex_insuficiente_nao_sugere_previa_e_salvar_rejeita_com_valores(self):
+        antigo_comp = self.componente("Anterior ACEx baixo", ementa="Mesma ementa", teoria=80, acex=8)
+        novo_comp = self.componente("Novo ACEx alto", ementa="Mesma ementa", teoria=64, acex=16)
+        antigo = ComponenteNaMatrizReferencia.objects.create(matriz=self.anterior, componente=antigo_comp, periodo=1, natureza="obrigatoria")
+        novo = ComponenteNaMatrizReferencia.objects.create(matriz=self.nova, componente=novo_comp, periodo=1, natureza="obrigatoria")
+        self.client.force_login(self.user)
+
+        dados = consultar_equivalencias_matriz(self.nova)
+        linha = next(l for l in dados["linhas"] if l["item"].pk == novo.pk)
+        self.assertEqual(linha["matrizes"][0]["candidatos"], [])
+        endpoint = self.client.get(reverse("candidatos_equivalencia_matriz", args=[self.nova.pk]), {
+            "item_id": novo.pk, "matriz_anterior_id": self.anterior.pk,
+        }).json()
+        candidato = next(c for c in endpoint["candidatos"] if c["id"] == antigo.pk)
+        self.assertFalse(candidato["elegivel"])
+        self.assertEqual(candidato["acex"], 8)
+        self.assertIn("ACEx insuficiente: anterior 8 h, nova 16 h", candidato["motivos_por_condicao"]["acex"])
+        antigo_igual = ComponenteNaMatrizReferencia.objects.create(
+            matriz=self.anterior, componente=self.componente("Anterior ACEx igual", teoria=64, acex=16),
+            periodo=2, natureza="obrigatoria",
+        )
+        endpoint_atualizado = self.client.get(reverse("candidatos_equivalencia_matriz", args=[self.nova.pk]), {
+            "item_id": novo.pk, "matriz_anterior_id": self.anterior.pk,
+        }).json()
+        self.assertTrue(next(c for c in endpoint_atualizado["candidatos"] if c["id"] == antigo_igual.pk)["elegivel"])
+
+        previa = self.client.post(reverse("previa_equivalencias_matriz", args=[self.nova.pk]),
+                                  data=__import__("json").dumps({"pares": [[novo.pk, antigo.pk]]}),
+                                  content_type="application/json")
+        self.assertIn("ACEx insuficiente: anterior 8 h, nova 16 h", previa.json()["html"])
+        salvar = self.client.post(reverse("equivalencias_matriz", args=[self.nova.pk]),
+                                  data=__import__("json").dumps({"pares": [[novo.pk, antigo.pk]]}),
+                                  content_type="application/json")
+        self.assertEqual(salvar.status_code, 400)
+        self.assertIn("ACEx insuficiente: anterior 8 h, nova 16 h", salvar.json()["erro"])
+
+        zero = ComponenteNaMatrizReferencia.objects.create(
+            matriz=self.nova, componente=self.componente("Novo sem ACEx", ementa="", teoria=64, acex=0),
+            periodo=2, natureza="obrigatoria",
+        )
+        zero_candidatos = self.client.get(reverse("candidatos_equivalencia_matriz", args=[self.nova.pk]), {
+            "item_id": zero.pk, "matriz_anterior_id": self.anterior.pk,
+        }).json()["candidatos"]
+        self.assertTrue(next(c for c in zero_candidatos if c["id"] == antigo.pk)["elegivel"])
+
+        EquivalenciaMatriz.objects.bulk_create([EquivalenciaMatriz(item_novo=novo, item_anterior=antigo)])
+        tela = self.client.get(reverse("equivalencias_matriz", args=[self.nova.pk]))
+        self.assertEqual(tela.status_code, 200)
+        self.assertContains(tela, "1 par(es) fora da regra atual")
+        self.assertContains(tela, "ACEx 16 h")
+        self.assertContains(tela, "ACEx 8 h")
+        self.assertContains(tela, "ACEx insuficiente: anterior 8 h, nova 16 h")
+        self.assertTrue(EquivalenciaMatriz.objects.filter(item_novo=novo, item_anterior=antigo).exists())
+
     def test_conversao_legada_simula_sem_alterar_dados(self):
         grupo = GrupoEquivalenciaComponentes.objects.create()
         antigo = ComponenteNaMatrizReferencia.objects.create(matriz=self.anterior, componente=self.componente("Legado A"), periodo=1, natureza="obrigatoria")
@@ -545,6 +632,23 @@ class EquivalenciasEntreEdicoesTests(TestCase):
         call_command("converter_equivalencias_legadas", stdout=out)
         self.assertIn("seriam gravados: 1 pares", out.getvalue())
         self.assertEqual(grupo.itens.count(), 2)
+        self.assertEqual(EquivalenciaMatriz.objects.count(), 0)
+
+    def test_conversor_separa_motivo_de_acex(self):
+        grupo = GrupoEquivalenciaComponentes.objects.create()
+        antigo = ComponenteNaMatrizReferencia.objects.create(
+            matriz=self.anterior, componente=self.componente("Conversor anterior", teoria=80, acex=8),
+            periodo=1, natureza="obrigatoria",
+        )
+        novo = ComponenteNaMatrizReferencia.objects.create(
+            matriz=self.nova, componente=self.componente("Conversor novo", teoria=64, acex=16),
+            periodo=1, natureza="obrigatoria",
+        )
+        ItemEquivalencia.objects.create(grupo=grupo, item_matriz=antigo, ordem=1)
+        ItemEquivalencia.objects.create(grupo=grupo, item_matriz=novo, ordem=2)
+        out = StringIO()
+        call_command("converter_equivalencias_legadas", stdout=out)
+        self.assertIn("ACEx: ACEx insuficiente: anterior 8 h, nova 16 h", out.getvalue())
         self.assertEqual(EquivalenciaMatriz.objects.count(), 0)
 
     def test_html_editor_nao_renderiza_lista_global_de_candidatos_e_usuario_logado_acessa(self):
@@ -566,6 +670,7 @@ class EquivalenciasEntreEdicoesTests(TestCase):
         self.assertContains(resposta, "Equivalente visível")
         self.assertContains(resposta, "64 h")
         self.assertContains(resposta, "eq-chip")
+        self.assertNotContains(resposta, "ACEx 0 h")
 
     def test_endpoint_candidatos_somente_matriz_anterior_do_curso_e_desabilita_ch_baixa(self):
         self.componente("Candidato elegível", teoria=64)
@@ -630,6 +735,53 @@ class EquivalenciasPPCInterfaceTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "Antigo —")
         self.assertContains(response, "Salvar equivalências")
+        self.assertNotContains(response, "ACEx 0 h")
+
+    def test_acex_no_editor_candidato_previa_salvar_e_alerta_legado_ppc(self):
+        antigo_comp = ComponenteCurricular.objects.create(
+            nome="Anterior com ACEx menor", codigo="AXA", tipo="disciplina",
+            carga_horaria_teorica=80, carga_horaria_pratica=0, carga_horaria_acex=8,
+            unidade_academica_componente="UA", ementa="Ementa idêntica",
+        )
+        novo_comp = ComponenteCurricular.objects.create(
+            nome="Atual com ACEx maior", codigo="AXB", tipo="disciplina",
+            carga_horaria_teorica=64, carga_horaria_pratica=0, carga_horaria_acex=16,
+            unidade_academica_componente="UA", ementa="Ementa idêntica",
+        )
+        antigo = ComponenteNaMatriz.objects.create(ppc=self.anterior, componente=antigo_comp, periodo=2, natureza="obrigatoria")
+        novo = ComponenteNaMatriz.objects.create(ppc=self.novo, componente=novo_comp, periodo=2, natureza="obrigatoria")
+        url = reverse("candidatos_equivalencia_ppc", args=[self.novo.pk])
+        resultado = self.client.get(url, {"item_id": novo.pk, "matriz_anterior_id": self.anterior.pk}).json()
+        candidato = next(c for c in resultado["candidatos"] if c["id"] == antigo.pk)
+        self.assertFalse(candidato["elegivel"])
+        self.assertEqual(candidato["acex"], 8)
+        self.assertIn("ACEx insuficiente", candidato["motivos_por_condicao"]["acex"])
+        from .services.equivalencias_ppc import preparar_editor_ppc
+        self.assertNotIn([novo.pk, self.anterior.pk, antigo.pk], preparar_editor_ppc(self.novo)["automaticas"])
+        zero_candidates = self.client.get(url, {
+            "item_id": self.atual.pk, "matriz_anterior_id": self.anterior.pk,
+        }).json()["candidatos"]
+        self.assertTrue(next(c for c in zero_candidates if c["id"] == antigo.pk)["elegivel"])
+
+        previa = self.client.post(reverse("equivalencias_ppc", args=[self.novo.pk]),
+                                  data=__import__("json").dumps({"pares": [[novo.pk, antigo.pk]], "preview": True}),
+                                  content_type="application/json")
+        self.assertIn("ACEx insuficiente: anterior 8 h, nova 16 h", previa.json()["html"])
+        salvar = self.client.post(reverse("equivalencias_ppc", args=[self.novo.pk]),
+                                  data=__import__("json").dumps({"pares": [[novo.pk, antigo.pk]]}),
+                                  content_type="application/json")
+        self.assertEqual(salvar.status_code, 400)
+        self.assertIn("ACEx insuficiente: anterior 8 h, nova 16 h", salvar.json()["erro"])
+
+        resposta = self.client.get(reverse("equivalencias_ppc", args=[self.novo.pk]))
+        self.assertContains(resposta, "ACEx 16 h")
+        EquivalenciaPPC.objects.bulk_create([EquivalenciaPPC(item_novo=novo, item_anterior=antigo)])
+        legado = self.client.get(reverse("equivalencias_ppc", args=[self.novo.pk]))
+        self.assertEqual(legado.status_code, 200)
+        self.assertContains(legado, "1 par(es) fora da regra atual")
+        self.assertContains(legado, "ACEx 8 h")
+        self.assertContains(legado, "ACEx insuficiente: anterior 8 h, nova 16 h")
+        self.assertTrue(EquivalenciaPPC.objects.filter(item_novo=novo, item_anterior=antigo).exists())
 
     def test_candidatos_e_previa_validam_ch_sem_gravar(self):
         baixo_comp = ComponenteCurricular.objects.create(nome="Abaixo", codigo="LOW", tipo="disciplina", carga_horaria_teorica=32, carga_horaria_pratica=0, carga_horaria_estudante=0, carga_horaria_acex=0, unidade_academica_componente="UA", ementa="")
@@ -643,7 +795,7 @@ class EquivalenciasPPCInterfaceTests(TestCase):
         preview = self.client.post(reverse("equivalencias_ppc", args=[self.novo.pk]), data=__import__("json").dumps({"pares": [[self.atual.pk, baixo.pk]], "preview": True}), content_type="application/json")
         self.assertEqual(preview.status_code, 200)
         self.assertContains(preview, "Quadro de", html=False)
-        self.assertIn("Pares rejeitados", preview.json()["html"])
+        self.assertIn("par(es) rejeitado(s)", preview.json()["html"])
         self.assertFalse(EquivalenciaPPC.objects.exists())
 
     def test_salvar_ppc_registra_par_validado_e_usuario_logado_tem_acesso(self):

@@ -1398,6 +1398,9 @@ h3 {
 .eq-chip { display: inline-block; max-width: 100%; margin: .1rem .15rem .1rem 0; padding: .08rem .35rem; border: 1px solid var(--cor-borda); border-radius: 1rem; background: var(--cor-superficie); font-size: .72rem; overflow-wrap: anywhere; }
 .eq-chip-auto { background: rgba(63, 125, 88, .12); border-color: rgba(63, 125, 88, .35); }
 .eq-chip-manual { background: rgba(192, 138, 46, .12); border-color: rgba(192, 138, 46, .35); }
+.eq-rejeitados { margin-top: .6rem; }
+.eq-rejeitados > summary { cursor: pointer; font-weight: 600; }
+.eq-legado-detalhe { display: block; margin-top: .25rem; color: var(--cor-texto-suave); }
 .eq-sugestao { display: block; color: var(--cor-destaque); font-size: .7rem; }
 .eq-vazio { color: var(--cor-texto-suave); }
 .eq-celula .btn { display: block; margin-top: .3rem; font-size: .75rem; padding: .2rem .4rem; }

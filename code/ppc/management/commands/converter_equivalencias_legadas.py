@@ -22,6 +22,7 @@ class Command(BaseCommand):
                 for antigo in itens[:pos]:
                     n, a = novo.item_matriz, antigo.item_matriz
                     motivo = ""
+                    regra = None
                     if not n.matriz.curso_id or n.matriz.curso_id != a.matriz.curso_id:
                         motivo = "matrizes sem o mesmo curso vinculado"
                     elif n.matriz_id == a.matriz_id:
@@ -40,7 +41,16 @@ class Command(BaseCommand):
                                 motivo = "; ".join(regra["motivos"])
                     if motivo:
                         ignorados += 1
-                        self.stdout.write(f"IGNORADO grupo={grupo_id} novo={n.pk} anterior={a.pk}: {motivo}")
+                        condicoes = regra.get("motivos_por_condicao", {}) if regra else {}
+                        partes = []
+                        if condicoes.get("ch_total"):
+                            partes.append(f"CH total: {condicoes['ch_total']}")
+                        if condicoes.get("acex"):
+                            partes.append(f"ACEx: {condicoes['acex']}")
+                        if condicoes.get("carga_incompleta"):
+                            partes.append(f"Carga: {condicoes['carga_incompleta']}")
+                        causas = " | ".join(partes) or motivo
+                        self.stdout.write(f"IGNORADO grupo={grupo_id} novo={n.pk} anterior={a.pk}: {causas}")
                         continue
                     existe = EquivalenciaMatriz.objects.filter(item_novo=n, item_anterior=a).exists()
                     if aplicar and not existe:

@@ -28,7 +28,7 @@
       <label><input type="checkbox" name="aplicar_equivalencias" value="on" checked> Aplicar equivalências elegíveis ao PPC</label>
       {% if preview.equivalencias.criadas %}<h4>Novas</h4><ul>{% for item in preview.equivalencias.criadas %}<li>{{ item.item_novo.componente.nome }} → {{ item.item_anterior.componente.nome }}</li>{% endfor %}</ul>{% endif %}
       {% if preview.equivalencias.existentes %}<h4>Já existentes</h4><ul>{% for item in preview.equivalencias.existentes %}<li>{{ item.item_novo.componente.nome }} → {{ item.item_anterior.componente.nome }}</li>{% endfor %}</ul>{% endif %}
-      {% if preview.equivalencias.nao_aplicaveis %}<h4>Não aplicáveis</h4><ul>{% for item in preview.equivalencias.nao_aplicaveis %}<li>{{ item.item_novo.componente.nome }} → {{ item.item_anterior.componente.nome }}: {{ item.motivo }}</li>{% endfor %}</ul>{% endif %}
+      {% if preview.equivalencias.nao_aplicaveis %}<details class="eq-rejeitados"><summary>{{ preview.equivalencias.nao_aplicaveis|length }} par(es) não aplicável(is) — ver motivos</summary><ul>{% for item in preview.equivalencias.nao_aplicaveis %}<li>{{ item.item_novo.componente.nome }} → {{ item.item_anterior.componente.nome }}: {{ item.motivo }}</li>{% endfor %}</ul></details>{% endif %}
     </div>
   </details>
 

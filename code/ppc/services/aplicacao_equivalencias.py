@@ -72,6 +72,11 @@ def traduzir_equivalencias_matriz_para_ppc(
             continue
         anterior_ppc = candidatos[0]
 
+        regra = avaliar_equivalencia(anterior_ppc, novo_ppc)
+        if not regra["elegivel"]:
+            nao_aplicavel(par, "; ".join(regra["motivos"]))
+            continue
+
         existente = None
         if novo_ppc.pk:
             existente = EquivalenciaPPC.objects.filter(
@@ -84,10 +89,6 @@ def traduzir_equivalencias_matriz_para_ppc(
             })
             continue
 
-        regra = avaliar_equivalencia(anterior_ppc, novo_ppc)
-        if not regra["elegivel"]:
-            nao_aplicavel(par, "; ".join(regra["motivos"]))
-            continue
         if aplicar:
             equivalencia = EquivalenciaPPC.objects.create(
                 item_novo=novo_ppc, item_anterior=anterior_ppc, criado_por=usuario,

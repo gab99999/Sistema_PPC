@@ -629,14 +629,20 @@ def equivalencias_ppc(request, ppc_id):
                 for novo_id, antigo_id in pares:
                     n, a = novos.get(novo_id), antigos.get(antigo_id)
                     motivo = "Componente não encontrado no PPC atual." if not n else "Componente anterior fora da linhagem." if not a else ""
+                    regra = None
                     if not motivo:
                         regra = avaliar_equivalencia(a, n)
                         if not regra["elegivel"]: motivo = "; ".join(regra["motivos"])
-                    if motivo: rejeitados.append({"novo": novo_id, "antigo": antigo_id, "motivo": motivo})
+                    if motivo:
+                        rejeitados.append({"novo": novo_id, "antigo": antigo_id, "motivo": motivo,
+                                           "item_novo": n, "item_anterior": a, "regra": regra})
                     else: escolhidos.add((novo_id, antigo_id))
                 for n in sorted(novos.values(), key=lambda x: (x.periodo, x.componente.nome)):
-                    celulas_preview = [{"ppc": ant, "pares": [antigos[a] for nn,a in escolhidos if nn == n.pk and antigos[a].ppc_id == ant.pk]} for ant in anteriores]
-                    validos.append({"item": n, "celulas": celulas_preview, "has_equivalencia": any(c["pares"] for c in celulas_preview)})
+                    celulas_preview = [{"ppc": ant, "pares": [{"item": antigos[a], "carga_total": carga_equivalencia(antigos[a]), "acex": antigos[a].componente.carga_horaria_acex or 0} for nn,a in escolhidos if nn == n.pk and antigos[a].ppc_id == ant.pk]} for ant in anteriores]
+                    ch_nova = carga_equivalencia(n)
+                    validos.append({"item": n, "carga_total": ch_nova, "acex": n.componente.carga_horaria_acex or 0,
+                                    "carga_motivo": "Carga horária incompleta." if ch_nova is None else "",
+                                    "celulas": celulas_preview, "has_equivalencia": any(c["pares"] for c in celulas_preview)})
                 html = render_to_string("ppc/equivalencias/_previa_ppc.html", {"ppc": ppc, "ppcs_anteriores": anteriores, "linhas": validos, "rejeitados": rejeitados}, request=request)
                 return JsonResponse({"html": html, "erro": erro})
             resumo = salvar_equivalencias_ppc(ppc.pk, pares, request.user)
