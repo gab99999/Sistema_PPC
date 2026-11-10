@@ -7,6 +7,53 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.forms import BaseFormSet
 from ppc.services.codigos_componentes import normalizar_codigo_componente, validar_codigo_componente
+from ppc.services.importacoes_web import localizar_importacao, tamanho_maximo_bytes
+
+
+class ImportacaoArquivoForm(forms.Form):
+    arquivo = forms.FileField(
+        label="Arquivo",
+        widget=forms.ClearableFileInput(attrs={"accept": ".xlsx,.csv"}),
+    )
+    confirmacao_explicita = forms.BooleanField(
+        required=False,
+        label="Confirmo que esta importação grava dados diretamente.",
+    )
+
+    def __init__(self, *args, comando, require_file=True, require_confirmation=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.comando = comando
+        self.registro = localizar_importacao(comando) or {}
+        self.require_confirmation = require_confirmation
+        self.fields["arquivo"].required = require_file
+        extensoes = self.registro.get("extensoes", ())
+        if extensoes:
+            self.fields["arquivo"].widget.attrs["accept"] = ",".join(extensoes)
+
+    def clean_arquivo(self):
+        arquivo = self.cleaned_data.get("arquivo")
+        if not arquivo:
+            return arquivo
+
+        if arquivo.size > tamanho_maximo_bytes():
+            limite_mb = tamanho_maximo_bytes() // (1024 * 1024)
+            raise ValidationError(f"O arquivo excede o limite de {limite_mb} MB.")
+
+        nome = arquivo.name.replace("\\", "/").rsplit("/", 1)[-1]
+        extensao = "." + nome.rsplit(".", 1)[-1].lower() if "." in nome else ""
+        if extensao not in self.registro.get("extensoes", ()):
+            esperadas = ", ".join(self.registro.get("extensoes", ())) or "nenhuma"
+            raise ValidationError(f"Extensão inválida. Este importador aceita: {esperadas}.")
+        return arquivo
+
+    def clean(self):
+        dados = super().clean()
+        if self.require_confirmation and not dados.get("confirmacao_explicita"):
+            self.add_error(
+                "confirmacao_explicita",
+                "Marque a confirmação para executar uma importação que grava diretamente.",
+            )
+        return dados
 
 
 class CodigoComponenteForm(forms.Form):

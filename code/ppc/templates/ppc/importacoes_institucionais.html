@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Importações institucionais{% endblock %}
+{% block content %}
+<h1>Importações institucionais</h1>
+<p class="ajuda-campo">Arquivos de até {{ limite_mb }} MB. Importações longas podem ser interrompidas pelo servidor. Matriz de referência e CCU usam transação; se houver rollback, as gravações daquela execução são desfeitas. O CCU é seguro para repetir. Se o resultado da matriz ficar incerto, confira o registro antes de repetir: linhas sem código e sem identificador interno podem ser criadas novamente.</p>
+
+{% if aviso_repeticao %}<div class="alerta alerta-warning" role="status">{{ aviso_repeticao }}</div>{% endif %}
+
+{% if resultado %}
+  {% if resultado.sucesso %}
+    <div class="alerta alerta-success" role="status">Operação concluída em {{ resultado.duracao }} segundo(s).</div>
+  {% else %}
+    <div class="alerta alerta-error" role="alert">A operação terminou com erro após {{ resultado.duracao }} segundo(s): {{ resultado.erro }}</div>
+  {% endif %}
+  {% if resultado.saida %}<section class="card"><h2>Saída do comando</h2><pre>{{ resultado.saida }}</pre></section>{% endif %}
+{% endif %}
+
+{% if pendencia %}
+  <section class="card card-importacao">
+    <h2>Simulação pronta</h2>
+    <p><strong>Arquivo:</strong> {{ pendencia.nome }}</p>
+    <p><strong>SHA-256:</strong> <code>{{ pendencia.sha256 }}</code></p>
+    <p>Confirme para executar com este mesmo arquivo. O token é de uso único e expira em 30 minutos.</p>
+    <form method="post" class="form-empilhado">
+      {% csrf_token %}
+      <input type="hidden" name="comando" value="{{ pendencia.comando }}">
+      <input type="hidden" name="token" value="{{ pendencia.token }}">
+      <button class="btn btn-primario" type="submit" name="acao" value="confirmar">Confirmar e gravar</button>
+    </form>
+  </section>
+{% endif %}
+
+<div class="grade-estatisticas">
+{% for importacao in importacoes %}
+  <section class="card card-importacao">
+    <h2>{{ importacao.rotulo }}</h2>
+    <p>{{ importacao.ajuda }}</p>
+    {% if importacao.disponivel %}
+      <form method="post" enctype="multipart/form-data" class="form-empilhado">
+        {% csrf_token %}
+        <input type="hidden" name="comando" value="{{ importacao.comando }}">
+        {{ importacao.form.non_field_errors }}
+        <div>
+          <label for="{{ importacao.form.arquivo.id_for_label }}">{{ importacao.form.arquivo.label }}</label>
+          {{ importacao.form.arquivo }}
+          {{ importacao.form.arquivo.errors }}
+          <span class="ajuda-campo">Aceita: {{ importacao.extensoes|join:", " }}. Limite: {{ limite_mb }} MB.</span>
+        </div>
+        {% if importacao.dry_run %}
+          <button class="btn btn-primario" type="submit" name="acao" value="simular">Simular (dry-run)</button>
+        {% else %}
+          <div>
+            {{ importacao.form.confirmacao_explicita }}
+            <label for="{{ importacao.form.confirmacao_explicita.id_for_label }}">{{ importacao.form.confirmacao_explicita.label }}</label>
+            {{ importacao.form.confirmacao_explicita.errors }}
+          </div>
+          <button class="btn btn-primario" type="submit" name="acao" value="executar_direto">Confirmar e executar</button>
+        {% endif %}
+      </form>
+    {% else %}
+      <p class="alerta alerta-warning">Indisponível: o importador ainda não é idempotente e não tem modo de simulação.</p>
+    {% endif %}
+  </section>
+{% endfor %}
+</div>
+<p><a class="link-voltar" href="{% url 'painel_institucional' %}">Voltar ao Painel Institucional</a></p>
+{% endblock %}
+{% block ajuda %}<p>As planilhas não são mantidas em mídia permanente. Arquivos da simulação ficam temporariamente disponíveis para confirmação por até 30 minutos.</p>{% endblock %}

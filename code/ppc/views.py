@@ -30,6 +30,9 @@ from functools import wraps
 from types import SimpleNamespace
 from django.db import transaction
 import tempfile
+import os
+import secrets
+from datetime import timedelta
 from pathlib import Path
 from io import BytesIO
 try:
@@ -42,7 +45,7 @@ logger = logging.getLogger(__name__)
 from django.core.exceptions import ValidationError, PermissionDenied
 import json
 from django.http import JsonResponse
-from django.views.decorators.http import require_POST, require_GET
+from django.views.decorators.http import require_POST, require_GET, require_http_methods
 from .models import MatrizReferenciaCurricular, ComponenteNaMatrizReferencia, EquivalenciaMatriz
 from django.db.models import Count, Max
 from .models import ImportacaoPendencia
@@ -66,6 +69,14 @@ from .forms import CodigoComponenteForm, CodigoComponenteFormSet
 from django.utils.http import url_has_allowed_host_and_scheme
 from .completude import confirmar_revisao
 from ppc.services.eventos import registrar_evento, suspender_eventos_edicao
+from ppc.services.highlights import css_destaques_para_pdf
+from .forms import ImportacaoArquivoForm
+from ppc.services.importacoes_web import (
+    CHAVE_SESSAO_IMPORTACAO, IMPORTACOES, TEMPO_TOKEN_MINUTOS,
+    apagar_temporario, calcular_sha256, emitir_evento_importacao,
+    executar_importacao, execucao_anterior, lista_importacoes,
+    limpar_temporarios_expirados, salvar_temporario, tamanho_maximo_bytes,
+)
 from ppc.services.regras_matriz import pendencias_referencias, relacoes_invalidas, contar_relacoes_invalidas, ppcs_fora_da_duracao_queryset, maior_periodo_ppc, validar_mudanca_periodo, periodo_relacao_invalido
 from ppc.services.comparacao_bibliografias import calcular_operacoes_bibliografia, resumir_operacoes
 from ppc.services.painel_bibliografias import (
@@ -1301,6 +1312,200 @@ def painel_institucional(request):
         "ppcs_sem_duracoes_count": ppcs_sem_duracoes.count(),
         "ppcs_fora_duracao_count": total_ppcs_fora_duracao,
     })
+
+
+def _render_pagina_importacoes(request, *, comando_selecionado=None, form_selecionado=None,
+                               resultado=None, pendencia=None, aviso=None):
+    formularios = {}
+    for comando, registro in IMPORTACOES.items():
+        if registro["disponivel"]:
+            formularios[comando] = (
+                form_selecionado if comando == comando_selecionado and form_selecionado
+                else ImportacaoArquivoForm(comando=comando, prefix=comando)
+            )
+    importacoes = lista_importacoes()
+    for item in importacoes:
+        item["form"] = formularios.get(item["comando"])
+    return render(request, "ppc/importacoes_institucionais.html", {
+        "importacoes": importacoes,
+        "formularios": formularios,
+        "comando_selecionado": comando_selecionado,
+        "resultado": resultado,
+        "pendencia": pendencia,
+        "aviso_repeticao": aviso,
+        "limite_mb": tamanho_maximo_bytes() // (1024 * 1024),
+    })
+
+
+@_bloquear_nde_em_detalhes_staff
+@staff_member_required(login_url="login")
+@require_http_methods(["GET", "POST"])
+def importacoes_institucionais(request):
+    limpar_temporarios_expirados()
+    pendencia = request.session.get(CHAVE_SESSAO_IMPORTACAO)
+    if pendencia and pendencia.get("expira_em", 0) < timezone.now().timestamp():
+        apagar_temporario(pendencia.get("caminho"))
+        request.session.pop(CHAVE_SESSAO_IMPORTACAO, None)
+        pendencia = None
+
+    if request.method == "GET":
+        return _render_pagina_importacoes(request, pendencia=pendencia)
+
+    comando = request.POST.get("comando", "")
+    registro_base = IMPORTACOES.get(comando)
+    if not registro_base:
+        messages.error(request, "Importador não reconhecido.")
+        return _render_pagina_importacoes(request, pendencia=pendencia)
+    if not registro_base["disponivel"]:
+        messages.error(request, "Esta importação está indisponível no momento.")
+        return _render_pagina_importacoes(request, pendencia=pendencia)
+
+    registro = {"comando": comando, **registro_base}
+    acao = request.POST.get("acao", "")
+    confirmar = acao == "confirmar"
+    direto = acao == "executar_direto"
+    simular = acao == "simular"
+    if not (confirmar or direto or simular):
+        messages.error(request, "Ação de importação inválida.")
+        return _render_pagina_importacoes(request, pendencia=pendencia)
+    if registro["dry_run"] and not (simular or confirmar):
+        messages.error(request, "Este importador exige simulação antes da confirmação.")
+        return _render_pagina_importacoes(request, pendencia=pendencia)
+    if not registro["dry_run"] and not direto:
+        messages.error(request, "Este importador grava diretamente e exige confirmação explícita.")
+        return _render_pagina_importacoes(request, pendencia=pendencia)
+
+    form = ImportacaoArquivoForm(
+        request.POST, request.FILES, comando=comando,
+        require_file=not confirmar,
+        require_confirmation=direto,
+        prefix=comando,
+    )
+    if not form.is_valid():
+        return _render_pagina_importacoes(
+            request, comando_selecionado=comando, form_selecionado=form,
+            pendencia=pendencia,
+        )
+
+    aviso = None
+    if confirmar:
+        token = request.POST.get("token", "")
+        atual = request.session.get(CHAVE_SESSAO_IMPORTACAO)
+        if not atual or not secrets.compare_digest(str(atual.get("token", "")), token):
+            messages.error(request, "A simulação expirou ou já foi usada. Envie o arquivo e simule novamente.")
+            return _render_pagina_importacoes(request)
+        if atual.get("comando") != comando or atual.get("expira_em", 0) < timezone.now().timestamp():
+            apagar_temporario(atual.get("caminho"))
+            request.session.pop(CHAVE_SESSAO_IMPORTACAO, None)
+            messages.error(request, "A simulação expirou. Envie o arquivo e simule novamente.")
+            return _render_pagina_importacoes(request)
+
+        caminho = Path(atual.get("caminho", ""))
+        diretorio_temp = Path(tempfile.gettempdir()).resolve()
+        if caminho.parent.resolve() != diretorio_temp or not caminho.name.startswith("ppc-importacao-"):
+            request.session.pop(CHAVE_SESSAO_IMPORTACAO, None)
+            messages.error(request, "O arquivo temporário não foi encontrado. Envie novamente e faça nova simulação.")
+            return _render_pagina_importacoes(request)
+        try:
+            if not caminho.is_file():
+                raise FileNotFoundError
+            hash_atual = calcular_sha256(caminho)
+            if not secrets.compare_digest(hash_atual, atual.get("sha256", "")):
+                apagar_temporario(caminho)
+                request.session.pop(CHAVE_SESSAO_IMPORTACAO, None)
+                messages.error(request, "O arquivo temporário mudou. Envie novamente e faça nova simulação.")
+                return _render_pagina_importacoes(request)
+        except OSError:
+            request.session.pop(CHAVE_SESSAO_IMPORTACAO, None)
+            messages.error(request, "O arquivo temporário não foi encontrado. Envie novamente e faça nova simulação.")
+            return _render_pagina_importacoes(request)
+
+        caminho_execucao = caminho.with_name(caminho.name + ".running")
+        try:
+            # Rename atômico no mesmo filesystem: só a primeira confirmação obtém o arquivo.
+            os.rename(caminho, caminho_execucao)
+        except OSError as exc:
+            logger.warning("Não foi possível reivindicar o temporário para confirmação (%s)", exc)
+            apagar_temporario(caminho)
+            request.session.pop(CHAVE_SESSAO_IMPORTACAO, None)
+            messages.error(request, "O arquivo temporário não está disponível para confirmação. Envie novamente e simule outra vez.")
+            return _render_pagina_importacoes(request)
+
+        request.session.pop(CHAVE_SESSAO_IMPORTACAO, None)
+        try:
+            if not secrets.compare_digest(calcular_sha256(caminho_execucao), atual["sha256"]):
+                apagar_temporario(caminho_execucao)
+                messages.error(request, "O arquivo mudou durante a confirmação. Envie novamente e faça nova simulação.")
+                return _render_pagina_importacoes(request)
+        except OSError:
+            apagar_temporario(caminho_execucao)
+            messages.error(request, "O arquivo temporário não foi encontrado. Envie novamente e faça nova simulação.")
+            return _render_pagina_importacoes(request)
+        aviso = execucao_anterior(comando, atual["sha256"])
+        try:
+            resultado = executar_importacao(registro, caminho_execucao, "confirmado")
+            emitir_evento_importacao(
+                comando=comando, modo="confirmado", nome_arquivo=atual["nome"],
+                sha256=atual["sha256"], usuario=request.user,
+                duracao=resultado["duracao"],
+                resumo=resultado["erro"] or resultado["saida"],
+                sucesso=resultado["sucesso"],
+            )
+        finally:
+            apagar_temporario(caminho_execucao)
+        return _render_pagina_importacoes(request, resultado=resultado, aviso=aviso)
+
+    upload = form.cleaned_data["arquivo"]
+    if simular:
+        anterior = request.session.pop(CHAVE_SESSAO_IMPORTACAO, None)
+        if anterior:
+            apagar_temporario(anterior.get("caminho"))
+    extensao = Path(upload.name.replace("\\", "/")).suffix.lower()
+    caminho = None
+    try:
+        caminho = salvar_temporario(upload, extensao)
+        sha256 = calcular_sha256(caminho)
+    except Exception as exc:
+        apagar_temporario(caminho)
+        messages.error(request, f"Não foi possível guardar o arquivo temporário: {exc}")
+        return _render_pagina_importacoes(request, comando_selecionado=comando)
+
+    nome_arquivo = upload.name.replace("\\", "/").rsplit("/", 1)[-1][:255]
+    aviso = execucao_anterior(comando, sha256)
+    modo = "simulacao" if simular else "confirmado"
+    try:
+        resultado = executar_importacao(registro, caminho, modo)
+        emitir_evento_importacao(
+            comando=comando, modo=modo, nome_arquivo=nome_arquivo,
+            sha256=sha256, usuario=request.user, duracao=resultado["duracao"],
+            resumo=resultado["erro"] or resultado["saida"],
+            sucesso=resultado["sucesso"],
+        )
+        if simular and resultado["sucesso"]:
+            token = secrets.token_urlsafe(32)
+            pendencia = {
+                "comando": comando,
+                "caminho": str(caminho),
+                "nome": nome_arquivo,
+                "sha256": sha256,
+                "token": token,
+                "expira_em": (timezone.now() + timedelta(minutes=TEMPO_TOKEN_MINUTOS)).timestamp(),
+            }
+            request.session[CHAVE_SESSAO_IMPORTACAO] = pendencia
+        else:
+            apagar_temporario(caminho)
+            pendencia = request.session.get(CHAVE_SESSAO_IMPORTACAO)
+    except Exception as exc:
+        apagar_temporario(caminho)
+        logger.exception("Falha na tela de importações institucionais")
+        messages.error(request, f"Não foi possível concluir a operação: {exc}")
+        return _render_pagina_importacoes(request, comando_selecionado=comando)
+
+    return _render_pagina_importacoes(
+        request, comando_selecionado=comando, resultado=resultado,
+        pendencia=pendencia if simular and resultado["sucesso"] else None,
+        aviso=aviso,
+    )
 
 
 @login_required
@@ -2888,6 +3093,7 @@ def gerar_pdf_ppc(request, ppc_id):
         'ppc': ppc,
         'componentes_na_matriz': ppc.matriz_componentes.all(),
         'dinamica_ead': dinamica_ead,
+        'highlights_css': css_destaques_para_pdf(),
     }, request=request)
 
     pdf = HTML(string=html, base_url=request.build_absolute_uri('/')).write_pdf()

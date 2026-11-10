@@ -1,11 +1,15 @@
 import ast
 import re
+import shutil
 from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.management import call_command, CommandError
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse, get_resolver, URLPattern, URLResolver
 from django.core.management import call_command
@@ -22,6 +26,268 @@ from .services.comparacao_bibliografias import calcular_operacoes_bibliografia
 from .services.painel_bibliografias import resumo_pendencias_bibliograficas
 from .services.equivalencias_matrizes import consultar_equivalencias_matriz, salvar_equivalencias_matriz, preparar_editor_equivalencias
 from .services.regras_equivalencia import avaliar_equivalencia, carga_total_segura
+
+
+class DestaquesCKEditorTests(TestCase):
+    def test_configuracao_tem_dezesseis_destaques_com_classes_e_modelos_unicos(self):
+        opcoes = settings.CKEDITOR_5_CONFIGS["default"]["highlight"]["options"]
+
+        self.assertIn("highlight", settings.CKEDITOR_5_CONFIGS["default"]["toolbar"])
+        self.assertEqual(len(opcoes), 16)
+        self.assertEqual(len({opcao["model"] for opcao in opcoes}), 16)
+        self.assertEqual(len({opcao["class"] for opcao in opcoes}), 16)
+        css = Path(__file__).parent / "static" / "ppc" / "highlights.css"
+        conteudo_css = css.read_text(encoding="utf-8")
+        self.assertEqual(sum(1 for opcao in opcoes if opcao["class"] in conteudo_css), 16)
+
+    def test_formatacao_sem_mudar_texto_mantem_revisao_e_historico_sem_evento_de_edicao(self):
+        from .completude import calcular_completude_ppc, confirmar_revisao
+        from .models import EventoEdicao
+
+        usuario = User.objects.create_user("revisor-destaque", password="x")
+        curso = Curso.objects.create(
+            nome="Curso destaques", unidade_academica="UA", area_conhecimento="Área",
+        )
+        ppc = PPC.objects.create(
+            curso=curso, tipo_ppc="novo", modalidade="presencial",
+            grau_academico="bacharelado", turno_funcionamento="Integral",
+            numero_vagas_anuais=30, duracao_minima_semestres=4,
+            duracao_media_semestres=6, duracao_maxima_semestres=8,
+            diretor="D", vice_diretor="VD", coordenador_curso="C",
+            vice_coordenador_curso="VC", apresentacao_texto="<p>Texto revisado.</p>",
+        )
+        confirmar_revisao(ppc, ["apresentacao"], usuario)
+        eventos_antes = EventoEdicao.objects.filter(modelo="ppc.PPC", objeto_id=ppc.pk).count()
+        historicos_antes = ppc.history.count()
+
+        ppc.apresentacao_texto = '<p><mark class="hl-preto-vermelho">Texto revisado.</mark></p>'
+        ppc.save(update_fields=["apresentacao_texto"])
+
+        ppc.refresh_from_db()
+        secao = next(
+            item for item in calcular_completude_ppc(ppc)
+            if item["chave"] == "apresentacao"
+        )
+        self.assertEqual(secao["estado"], "revisada")
+        self.assertEqual(ppc.history.count(), historicos_antes + 1)
+        self.assertEqual(
+            EventoEdicao.objects.filter(modelo="ppc.PPC", objeto_id=ppc.pk).count(),
+            eventos_antes,
+        )
+
+
+class ImportacoesInstitucionaisTests(TestCase):
+    def setUp(self):
+        self.staff = User.objects.create_user("importador-staff", password="x", is_staff=True)
+        self.usuario = User.objects.create_user("importador-nde", password="x", is_staff=False)
+        self.url = reverse("importacoes_institucionais")
+
+    def arquivo(self, nome="matriz.xlsx", conteudo=b"conteudo"):
+        return SimpleUploadedFile(nome, conteudo)
+
+    def test_acesso_anomimo_redireciona_nao_staff_recebe_403_e_staff_acessa(self):
+        resposta = self.client.get(self.url)
+        self.assertEqual(resposta.status_code, 302)
+        self.assertIn(reverse("login"), resposta.url)
+
+        self.client.force_login(self.usuario)
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+
+        self.client.force_login(self.staff)
+        self.assertEqual(self.client.get(self.url).status_code, 200)
+
+    def test_extensao_e_tamanho_sao_validados_antes_de_guardar_temporario(self):
+        from .forms import ImportacaoArquivoForm
+        from django.test import override_settings
+
+        form_extensao = ImportacaoArquivoForm(
+            {}, {"importar_matriz_referencia-arquivo": self.arquivo("matriz.csv")},
+            comando="importar_matriz_referencia", prefix="importar_matriz_referencia",
+        )
+        self.assertFalse(form_extensao.is_valid())
+        self.assertIn("Extensão inválida", str(form_extensao.errors))
+
+        with override_settings(IMPORTACAO_TAMANHO_MAXIMO_MB=1):
+            form_tamanho = ImportacaoArquivoForm(
+                {}, {"importar_matriz_referencia-arquivo": self.arquivo("matriz.xlsx", b"x" * (1024 * 1024 + 1))},
+                comando="importar_matriz_referencia", prefix="importar_matriz_referencia",
+            )
+            self.assertFalse(form_tamanho.is_valid())
+            self.assertIn("excede o limite", str(form_tamanho.errors))
+
+    @patch("ppc.views.os.rename", side_effect=lambda origem, destino: (shutil.copyfile(origem, destino), Path(origem).unlink()))
+    @patch("ppc.views.executar_importacao")
+    def test_matriz_exige_simulacao_mesmo_hash_token_unico_e_registra_eventos(self, executar, _renomear):
+        from .models import EventoUso
+        executar.side_effect = [
+            {"sucesso": True, "saida": "Simulação sem gravação", "erro": "", "duracao": 0.25},
+            {"sucesso": True, "saida": "Gravado", "erro": "", "duracao": 0.5},
+        ]
+        self.client.force_login(self.staff)
+        dados = {
+            "comando": "importar_matriz_referencia",
+            "acao": "simular",
+            "importar_matriz_referencia-arquivo": self.arquivo(),
+        }
+        resposta = self.client.post(self.url, dados)
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, "Simulação pronta")
+        self.assertEqual(EventoUso.objects.filter(tipo="importacao", metadados__modo="simulacao").count(), 1)
+        pendencia = self.client.session["ppc_importacao_pendente"]
+        caminho = Path(pendencia["caminho"])
+        self.assertTrue(caminho.is_file())
+
+        confirmar = self.client.post(self.url, {
+            "comando": "importar_matriz_referencia", "acao": "confirmar",
+            "token": pendencia["token"],
+        })
+        self.assertEqual(confirmar.status_code, 200)
+        self.assertContains(confirmar, "Operação concluída")
+        self.assertFalse(caminho.exists())
+        self.assertEqual(EventoUso.objects.filter(tipo="importacao", metadados__modo="confirmado").count(), 1)
+        self.assertEqual(executar.call_count, 2)
+        self.assertEqual(executar.call_args_list[0].args[2], "simulacao")
+        self.assertEqual(executar.call_args_list[1].args[2], "confirmado")
+
+        replay = self.client.post(self.url, {
+            "comando": "importar_matriz_referencia", "acao": "confirmar",
+            "token": pendencia["token"],
+        })
+        self.assertContains(replay, "simule novamente")
+        self.assertEqual(executar.call_count, 2)
+
+    @patch("ppc.views.executar_importacao")
+    def test_temporario_ausente_exige_novo_upload_e_nao_executa_confirmacao(self, executar):
+        executar.return_value = {"sucesso": True, "saida": "Simulado", "erro": "", "duracao": 0.1}
+        self.client.force_login(self.staff)
+        self.client.post(self.url, {
+            "comando": "importar_matriz_referencia", "acao": "simular",
+            "importar_matriz_referencia-arquivo": self.arquivo(),
+        })
+        pendencia = self.client.session["ppc_importacao_pendente"]
+        Path(pendencia["caminho"]).unlink()
+        resposta = self.client.post(self.url, {
+            "comando": "importar_matriz_referencia", "acao": "confirmar",
+            "token": pendencia["token"],
+        })
+        self.assertContains(resposta, "arquivo temporário não foi encontrado")
+        self.assertEqual(executar.call_count, 1)
+
+    @patch("ppc.views.os.rename", side_effect=PermissionError("rename indisponível"))
+    @patch("ppc.views.executar_importacao")
+    def test_falha_na_renomeacao_nao_executa_confirmacao(self, executar, _renomear):
+        executar.return_value = {"sucesso": True, "saida": "Simulado", "erro": "", "duracao": 0.1}
+        self.client.force_login(self.staff)
+        self.client.post(self.url, {
+            "comando": "importar_matriz_referencia", "acao": "simular",
+            "importar_matriz_referencia-arquivo": self.arquivo(),
+        })
+        pendencia = self.client.session["ppc_importacao_pendente"]
+        resposta = self.client.post(self.url, {
+            "comando": "importar_matriz_referencia", "acao": "confirmar",
+            "token": pendencia["token"],
+        })
+        self.assertContains(resposta, "não está disponível para confirmação")
+        self.assertEqual(executar.call_count, 1)
+        self.assertFalse(Path(pendencia["caminho"]).exists())
+
+    @patch("ppc.views.executar_importacao")
+    def test_comando_direto_exige_checkbox_e_saida_e_escapada(self, executar):
+        from .models import CineBrasilCurso, EventoUso
+        self.client.force_login(self.staff)
+        arquivo_csv = SimpleUploadedFile(
+            "cine.csv",
+            b"nome_curso,area_geral_codigo,rotulo_codigo,area_geral_nome,rotulo_nome\nCurso Teste,01,011,Area,Rotulo\n",
+        )
+        sem_confirmacao = self.client.post(self.url, {
+            "comando": "importar_cine_brasil", "acao": "executar_direto",
+            "importar_cine_brasil-arquivo": arquivo_csv,
+        })
+        self.assertContains(sem_confirmacao, "Marque a confirmação")
+        executar.assert_not_called()
+        self.assertFalse(CineBrasilCurso.objects.exists())
+
+        executar.return_value = {"sucesso": True, "saida": "<script>alert(1)</script>", "erro": "", "duracao": 0.3}
+        resposta = self.client.post(self.url, {
+            "comando": "importar_cine_brasil", "acao": "executar_direto",
+            "importar_cine_brasil-arquivo": SimpleUploadedFile("cine.csv", b"conteudo"),
+            "importar_cine_brasil-confirmacao_explicita": "on",
+        })
+        self.assertContains(resposta, "&lt;script&gt;alert(1)&lt;/script&gt;")
+        self.assertNotContains(resposta, "<script>alert(1)</script>")
+        self.assertEqual(EventoUso.objects.filter(tipo="importacao", metadados__modo="confirmado").count(), 1)
+
+    def test_cine_brasil_executa_com_call_command_mede_tempo_e_avisa_repeticao(self):
+        from .models import CineBrasilCurso, EventoUso
+
+        self.client.force_login(self.staff)
+        conteudo = (
+            b"nome_curso,area_geral_codigo,rotulo_codigo,area_geral_nome,rotulo_nome\n"
+            b"Curso CSV,01,011,Area geral,Rotulo\n"
+        )
+        dados = {
+            "comando": "importar_cine_brasil", "acao": "executar_direto",
+            "importar_cine_brasil-arquivo": SimpleUploadedFile("cine.csv", conteudo),
+            "importar_cine_brasil-confirmacao_explicita": "on",
+        }
+        primeira = self.client.post(self.url, dados)
+        self.assertContains(primeira, "Operação concluída em")
+        self.assertContains(primeira, "1 criados")
+        self.assertEqual(CineBrasilCurso.objects.count(), 1)
+        evento = EventoUso.objects.get(tipo="importacao", metadados__comando="importar_cine_brasil")
+        self.assertTrue(evento.metadados["sucesso"])
+        self.assertGreaterEqual(evento.metadados["duracao_segundos"], 0)
+
+        segunda = self.client.post(self.url, {
+            **dados,
+            "importar_cine_brasil-arquivo": SimpleUploadedFile("cine.csv", conteudo),
+        })
+        self.assertContains(segunda, "Este arquivo já foi importado")
+        self.assertEqual(CineBrasilCurso.objects.count(), 1)
+
+    def test_bibliografias_aparecem_indisponiveis_e_nao_podem_ser_executadas(self):
+        self.client.force_login(self.staff)
+        resposta = self.client.get(self.url)
+        self.assertContains(resposta, "Bibliografias")
+        self.assertContains(resposta, "ainda não é idempotente")
+        with patch("ppc.views.executar_importacao") as executar:
+            resposta = self.client.post(self.url, {
+                "comando": "importar_bibliografias", "acao": "executar_direto",
+                "importar_bibliografias-arquivo": self.arquivo("bibliografia.csv"),
+                "importar_bibliografias-confirmacao_explicita": "on",
+            })
+            self.assertContains(resposta, "indisponível")
+            executar.assert_not_called()
+
+    def test_importador_matriz_reporta_codigo_duplicado_com_diferenca_de_caixa_e_espacos(self):
+        from ppc.models import ComponenteCurricular
+
+        ComponenteCurricular.objects.create(
+            codigo="CUR-1", nome="Existente", tipo="disciplina",
+            carga_horaria_teorica=64, carga_horaria_pratica=0,
+            carga_horaria_estudante=0, carga_horaria_professor=0,
+            carga_horaria_acex=0, unidade_academica_componente="UA", ementa="",
+        )
+        linha = {
+            "confianca": "determinada", "codigo": " cur-1 ",
+            "id_componente_interno": None, "identificador_origem": "origem-teste",
+            "periodo": 1, "natureza": "obrigatoria", "carga_horaria_teorica": 64,
+            "carga_horaria_pratica": 0, "nome": "Novo", "ementa": "Ementa",
+            "nucleo": "NC", "linha_origem": 2,
+        }
+        stdout, stderr = StringIO(), StringIO()
+        with patch(
+            "ppc.management.commands.importar_matriz_referencia.normalizar_planilha_matriz",
+            return_value=[linha],
+        ), self.assertRaises(CommandError) as erro:
+            call_command(
+                "importar_matriz_referencia", "arquivo.xlsx", confirmar=True,
+                stdout=stdout, stderr=stderr,
+            )
+        self.assertIn("importação parcial", str(erro.exception).lower())
+        self.assertIn("maiúsculas", stderr.getvalue())
+        self.assertNotIn("Importação concluída e gravada", stdout.getvalue())
+        self.assertEqual(ComponenteCurricular.objects.count(), 1)
 
 
 class RegraCentralEquivalenciaTests(TestCase):

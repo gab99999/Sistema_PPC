@@ -1,0 +1,25 @@
+/* Paleta fixa de destaques CKEditor; compartilhada com as telas e o PDF. */
+mark.hl-preto-vermelho { --hl-bg: #000000; --hl-fg: #ff5252; }
+mark.hl-preto-laranja  { --hl-bg: #000000; --hl-fg: #ffa040; }
+mark.hl-preto-amarelo  { --hl-bg: #000000; --hl-fg: #ffee58; }
+mark.hl-preto-verde    { --hl-bg: #000000; --hl-fg: #69f0ae; }
+mark.hl-preto-ciano    { --hl-bg: #000000; --hl-fg: #18ffff; }
+mark.hl-preto-azul     { --hl-bg: #000000; --hl-fg: #82b1ff; }
+mark.hl-preto-roxo     { --hl-bg: #000000; --hl-fg: #b388ff; }
+mark.hl-preto-rosa     { --hl-bg: #000000; --hl-fg: #ff80ab; }
+mark.hl-branco-vermelho { --hl-bg: #ffffff; --hl-fg: #c62828; }
+mark.hl-branco-laranja  { --hl-bg: #ffffff; --hl-fg: #e65100; }
+mark.hl-branco-amarelo  { --hl-bg: #ffffff; --hl-fg: #8a6d00; }
+mark.hl-branco-verde    { --hl-bg: #ffffff; --hl-fg: #2e7d32; }
+mark.hl-branco-ciano    { --hl-bg: #ffffff; --hl-fg: #00838f; }
+mark.hl-branco-azul     { --hl-bg: #ffffff; --hl-fg: #1565c0; }
+mark.hl-branco-roxo     { --hl-bg: #ffffff; --hl-fg: #6a1b9a; }
+mark.hl-branco-rosa     { --hl-bg: #ffffff; --hl-fg: #c2185b; }
+
+mark[class^="hl-"],
+mark[class*=" hl-"] {
+    background-color: var(--hl-bg) !important;
+    color: var(--hl-fg) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}

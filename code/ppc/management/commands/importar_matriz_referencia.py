@@ -1,5 +1,5 @@
 # ppc/management/commands/importar_matriz_referencia.py
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from ppc.services.normalizacao_componentes import normalizar_planilha_matriz
 from ppc.services.importacao_matriz_referencia import importar_linhas_normalizadas
 
@@ -32,15 +32,23 @@ class Command(BaseCommand):
         # ------------------------------------
         relatorio = importar_linhas_normalizadas(linhas, dry_run=dry_run)
 
-        self.stdout.write(self.style.SUCCESS(f"OK (prontas/gravadas): {len(relatorio['ok'])}"))
+        if not relatorio["erros"]:
+            self.stdout.write(self.style.SUCCESS(f"OK (prontas/gravadas): {len(relatorio['ok'])}"))
+        else:
+            self.stdout.write(f"Linhas prontas/gravadas sem erro: {len(relatorio['ok'])}")
         self.stdout.write(self.style.WARNING(f"Pendentes de revisão (ambíguas): {len(relatorio['pendentes_revisao'])}"))
         self.stdout.write(f"Duplicadas idênticas (ignoradas): {len(relatorio['duplicadas_identicas'])}")
         self.stdout.write(self.style.ERROR(f"Duplicadas conflitantes (não gravadas): {len(relatorio['duplicadas_conflitantes'])}"))
 
         if relatorio["erros"]:
-            self.stdout.write(self.style.ERROR(f"Erros inesperados: {len(relatorio['erros'])}"))
+            self.stderr.write(self.style.ERROR(f"Linhas com erro de importação: {len(relatorio['erros'])}"))
             for e in relatorio["erros"][:10]:
-                self.stdout.write(f"  linha {e['linha']['linha_origem']}: {e['erro']}")
+                self.stderr.write(f"  linha {e['linha']['linha_origem']}: {e['erro']}")
+            if not dry_run:
+                raise CommandError(
+                    "Importação parcial: linhas sem erro podem ter sido gravadas; "
+                    "revise o relatório antes de considerar concluída ou tentar novamente."
+                )
         if relatorio["pendentes_revisao"] or relatorio["duplicadas_conflitantes"] or relatorio["sem_mapeamento"]:
             self.stdout.write(
                 "\nPendências gravadas em Pendências de Importação (admin) para revisão."

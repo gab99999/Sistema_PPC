@@ -15,6 +15,7 @@ from .models import (
 
 from .services.carga_horaria import calcular_resumo_carga_horaria
 from .services.equivalencias_ppc import cadeia_ppc
+from .services.highlights import css_destaques_para_pdf
 
 
 def gerar_pdf_ppc(request, ppc_id):
@@ -326,6 +327,7 @@ def gerar_pdf_ppc(request, ppc_id):
 
         # Fluxograma
         "fluxograma": montar_fluxograma_ppc(ppc),
+        "highlights_css": css_destaques_para_pdf(),
     }
 
     # =========================================================

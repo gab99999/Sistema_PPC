@@ -136,13 +136,35 @@ CKEDITOR_5_CONFIGS = {
         'language': 'pt-br',
         'toolbar': [
             'heading', '|',
-            'bold', 'italic', 'underline', '|',
+            'bold', 'italic', 'underline', 'highlight', '|',
             'bulletedList', 'numberedList', '|',
             'blockQuote', 'link', '|',
             'undo', 'redo',
         ],
+        'highlight': {
+            'options': [
+                {'model': 'pretoVermelho', 'class': 'hl-preto-vermelho', 'title': 'Fundo preto, vermelho', 'color': '#ff5252', 'type': 'marker'},
+                {'model': 'pretoLaranja', 'class': 'hl-preto-laranja', 'title': 'Fundo preto, laranja', 'color': '#ffa040', 'type': 'marker'},
+                {'model': 'pretoAmarelo', 'class': 'hl-preto-amarelo', 'title': 'Fundo preto, amarelo', 'color': '#ffee58', 'type': 'marker'},
+                {'model': 'pretoVerde', 'class': 'hl-preto-verde', 'title': 'Fundo preto, verde', 'color': '#69f0ae', 'type': 'marker'},
+                {'model': 'pretoCiano', 'class': 'hl-preto-ciano', 'title': 'Fundo preto, ciano', 'color': '#18ffff', 'type': 'marker'},
+                {'model': 'pretoAzul', 'class': 'hl-preto-azul', 'title': 'Fundo preto, azul', 'color': '#82b1ff', 'type': 'marker'},
+                {'model': 'pretoRoxo', 'class': 'hl-preto-roxo', 'title': 'Fundo preto, roxo', 'color': '#b388ff', 'type': 'marker'},
+                {'model': 'pretoRosa', 'class': 'hl-preto-rosa', 'title': 'Fundo preto, rosa', 'color': '#ff80ab', 'type': 'marker'},
+                {'model': 'brancoVermelho', 'class': 'hl-branco-vermelho', 'title': 'Fundo branco, vermelho', 'color': '#c62828', 'type': 'pen'},
+                {'model': 'brancoLaranja', 'class': 'hl-branco-laranja', 'title': 'Fundo branco, laranja', 'color': '#e65100', 'type': 'pen'},
+                {'model': 'brancoAmarelo', 'class': 'hl-branco-amarelo', 'title': 'Fundo branco, amarelo', 'color': '#8a6d00', 'type': 'pen'},
+                {'model': 'brancoVerde', 'class': 'hl-branco-verde', 'title': 'Fundo branco, verde', 'color': '#2e7d32', 'type': 'pen'},
+                {'model': 'brancoCiano', 'class': 'hl-branco-ciano', 'title': 'Fundo branco, ciano', 'color': '#00838f', 'type': 'pen'},
+                {'model': 'brancoAzul', 'class': 'hl-branco-azul', 'title': 'Fundo branco, azul', 'color': '#1565c0', 'type': 'pen'},
+                {'model': 'brancoRoxo', 'class': 'hl-branco-roxo', 'title': 'Fundo branco, roxo', 'color': '#6a1b9a', 'type': 'pen'},
+                {'model': 'brancoRosa', 'class': 'hl-branco-rosa', 'title': 'Fundo branco, rosa', 'color': '#c2185b', 'type': 'pen'},
+            ],
+        },
     },
 }
+CKEDITOR_5_CUSTOM_CSS = 'ppc/highlights.css'
+IMPORTACAO_TAMANHO_MAXIMO_MB = 10
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

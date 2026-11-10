@@ -107,6 +107,7 @@ urlpatterns = [
     path('componentes/<int:componente_id>/rejeitar/', rejeitar_componente, name='rejeitar_componente'),
     path('componentes/meus-pendentes/', meus_componentes_pendentes, name='meus_componentes_pendentes'),
     path('painel-institucional/', painel_institucional, name='painel_institucional'),
+    path('painel-institucional/importacoes/', views.importacoes_institucionais, name='importacoes_institucionais'),
     path('painel-institucional/ppc/<int:ppc_id>/bibliografias/', views.detalhe_pendencias_bibliografia_ppc, name='detalhe_pendencias_bibliografia_ppc'),
     path('painel-institucional/matriz/<int:matriz_id>/bibliografias/', views.detalhe_pendencias_bibliografia_matriz, name='detalhe_pendencias_bibliografia_matriz'),
     path('painel-institucional/relacoes-invalidas/', views.detalhe_relacoes_invalidas, name='detalhe_relacoes_invalidas'),
