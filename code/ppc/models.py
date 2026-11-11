@@ -8,12 +8,12 @@ from django.conf import settings
 
 
 class CineBrasilCurso(models.Model):
-    nome_curso = models.CharField(max_length=255)
-    area_geral_codigo = models.CharField(max_length=2)
-    area_geral_nome = models.CharField(max_length=255)
+    nome_curso = models.CharField(max_length=255, verbose_name='Nome do curso')
+    area_geral_codigo = models.CharField(max_length=2, verbose_name='Código da área geral')
+    area_geral_nome = models.CharField(max_length=255, verbose_name='Nome da área geral')
 
-    rotulo_codigo = models.CharField(max_length=8)
-    rotulo_nome = models.CharField(max_length=255)
+    rotulo_codigo = models.CharField(max_length=8, verbose_name='Código do rótulo')
+    rotulo_nome = models.CharField(max_length=255, verbose_name='Nome do rótulo')
 
     origem = models.CharField(
         max_length=10,
@@ -22,19 +22,25 @@ class CineBrasilCurso(models.Model):
             ("CNCST", "CNCST"),
         ],
         blank=True,
+        verbose_name='Origem',
     )
 class Curso(models.Model):
-    nome = models.CharField(max_length=200)
+    nome = models.CharField(max_length=200, verbose_name='Nome')
     cine_brasil = models.ForeignKey(
         CineBrasilCurso,
         on_delete=models.PROTECT,
         null=True,
         blank=True,
+        verbose_name='Cine Brasil',
     )
-    unidade_academica = models.CharField(max_length=200)
-    area_conhecimento = models.CharField(max_length=200)  # áreas CAPES
-    carga_horaria_minima = models.PositiveIntegerField(null=True, blank=True)
-    carga_horaria_maxima = models.PositiveIntegerField(null=True, blank=True)
+    unidade_academica = models.CharField(max_length=200, verbose_name='Unidade acadêmica')
+    area_conhecimento = models.CharField(max_length=200, verbose_name='Área de conhecimento')  # áreas CAPES
+    carga_horaria_minima = models.PositiveIntegerField(null=True, blank=True, verbose_name='Carga horária mínima')
+    carga_horaria_maxima = models.PositiveIntegerField(null=True, blank=True, verbose_name='Carga horária máxima')
+
+    class Meta:
+        verbose_name = "Curso"
+        verbose_name_plural = "Cursos"
 
     history = HistoricalRecords()
 
@@ -67,39 +73,39 @@ class PPC(models.Model):
         (2, '2'),
     ]
 
-    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='ppcs')
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='ppcs', verbose_name='Curso')
     ppc_anterior = models.ForeignKey(
         'self', null=True, blank=True, on_delete=models.PROTECT,
         related_name='edicoes', verbose_name='PPC anterior',
     )
 
     # -- Informações Gerais --
-    modalidade = models.CharField(max_length=20, choices=MODALIDADE_CHOICES)
-    grau_academico = models.CharField(max_length=20, choices=GRAU_CHOICES)
-    turno_funcionamento = models.CharField(max_length=50)
-    carga_horaria_total = models.PositiveIntegerField(help_text="em horas", blank=True, null=True, default=0)
-    numero_vagas_anuais = models.PositiveIntegerField()
-    duracao_minima_semestres = models.PositiveIntegerField()
-    duracao_media_semestres = models.PositiveIntegerField()
-    duracao_maxima_semestres = models.PositiveIntegerField()
-    diretor = models.CharField(max_length=200)
-    vice_diretor = models.CharField(max_length=200)
-    coordenador_curso = models.CharField(max_length=200)
-    vice_coordenador_curso = models.CharField(max_length=200)
-    reitor = models.CharField(max_length=200, blank=True)
-    vice_reitor = models.CharField(max_length=200, blank=True)
-    coordenador_administrativo = models.CharField(max_length=200, blank=True)
+    modalidade = models.CharField(max_length=20, choices=MODALIDADE_CHOICES, verbose_name='Modalidade')
+    grau_academico = models.CharField(max_length=20, choices=GRAU_CHOICES, verbose_name='Grau acadêmico')
+    turno_funcionamento = models.CharField(max_length=50, verbose_name='Turno de funcionamento')
+    carga_horaria_total = models.PositiveIntegerField(help_text="em horas", blank=True, null=True, default=0, verbose_name='Carga horária total')
+    numero_vagas_anuais = models.PositiveIntegerField(verbose_name='Número de vagas anuais')
+    duracao_minima_semestres = models.PositiveIntegerField(verbose_name='Duração mínima (semestres)')
+    duracao_media_semestres = models.PositiveIntegerField(verbose_name='Duração média (semestres)')
+    duracao_maxima_semestres = models.PositiveIntegerField(verbose_name='Duração máxima (semestres)')
+    diretor = models.CharField(max_length=200, verbose_name='Diretor')
+    vice_diretor = models.CharField(max_length=200, verbose_name='Vice-diretor')
+    coordenador_curso = models.CharField(max_length=200, verbose_name='Coordenador do curso')
+    vice_coordenador_curso = models.CharField(max_length=200, verbose_name='Vice-coordenador do curso')
+    reitor = models.CharField(max_length=200, blank=True, verbose_name='Reitor')
+    vice_reitor = models.CharField(max_length=200, blank=True, verbose_name='Vice-reitor')
+    coordenador_administrativo = models.CharField(max_length=200, blank=True, verbose_name='Coordenador administrativo')
 
     # -- Datas --
-    criado_em = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='rascunho')
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
+    atualizado_em = models.DateTimeField(auto_now=True, verbose_name='Atualizado em')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='rascunho', verbose_name='Status')
     numero_resolucao = models.CharField(max_length=100, blank=True, verbose_name="Número da Resolução de Aprovação (Pode ficar em branco durante o processo de produção)")
     numero_processo_eletronico = models.CharField(max_length=100, blank=True, verbose_name="Número do processo eletrônico")
-    data_aprovacao = models.DateField(null=True, blank=True)
-    data_resolucao = models.DateField(null=True, blank=True)
-    ano_vigencia = models.PositiveIntegerField(null=True, blank=True)
-    semestre_vigencia = models.PositiveSmallIntegerField(choices=SEMESTRE_CHOICES, default=1)
+    data_aprovacao = models.DateField(null=True, blank=True, verbose_name='Data de aprovação')
+    data_resolucao = models.DateField(null=True, blank=True, verbose_name='Data da resolução')
+    ano_vigencia = models.PositiveIntegerField(null=True, blank=True, verbose_name='Ano de vigência')
+    semestre_vigencia = models.PositiveSmallIntegerField(choices=SEMESTRE_CHOICES, default=1, verbose_name='Semestre de vigência')
 
     @property
     def periodo_vigencia(self):
@@ -155,21 +161,21 @@ class PPC(models.Model):
         super().save(*args, **kwargs)
 
     # -- Campos condicionais (só para EAD) --
-    publico_alvo_ead = CKEditor5Field(blank=True, config_name='default')
-    ato_integracao_uab = CKEditor5Field(blank=True, config_name='default')
-    ato_credenciamento_mec = CKEditor5Field(blank=True, config_name='default')
-    polos_ead = CKEditor5Field(blank=True, config_name='default')
+    publico_alvo_ead = CKEditor5Field(blank=True, config_name='default', verbose_name='Público-alvo EAD')
+    ato_integracao_uab = CKEditor5Field(blank=True, config_name='default', verbose_name='Ato de integração UAB')
+    ato_credenciamento_mec = CKEditor5Field(blank=True, config_name='default', verbose_name='Ato de credenciamento MEC')
+    polos_ead = CKEditor5Field(blank=True, config_name='default', verbose_name='Polos EAD')
 
     # -- Apresentação (texto narrativo) --
-    apresentacao_texto = CKEditor5Field(blank=True, config_name='default')
+    apresentacao_texto = CKEditor5Field(blank=True, config_name='default', verbose_name='Apresentação')
 
     # -- Exposição de Motivos --
     tipo_ppc = models.CharField(max_length=20, choices=TIPO_PPC_CHOICES, verbose_name="Tipo de PPC")
     exposicao_motivos = CKEditor5Field(blank=True, config_name='default', verbose_name="Exposição de Motivos")
 
     # -- Objetivos --
-    objetivo_geral = CKEditor5Field(blank=True, config_name='default')
-    objetivo_especifico = CKEditor5Field(blank=True, config_name='default')
+    objetivo_geral = CKEditor5Field(blank=True, config_name='default', verbose_name='Objetivo geral')
+    objetivo_especifico = CKEditor5Field(blank=True, config_name='default', verbose_name='Objetivos específicos')
 
     # -- Princípios Norteadores para a Formação Profissional --
     principios_geral = CKEditor5Field(blank=True, config_name='default', verbose_name="Princípios Gerais")
@@ -184,7 +190,7 @@ class PPC(models.Model):
     perfil_habilidades = CKEditor5Field(blank=True, config_name='default', verbose_name="Perfil e Habilidades do Egresso")
 
     # -- Trabalho de Conclusão de Curso --
-    tcc = CKEditor5Field(blank=True, config_name='default')
+    tcc = CKEditor5Field(blank=True, config_name='default', verbose_name='Trabalho de conclusão de curso (TCC)')
 
     # -- Detalhes sobre Política e Gestão do Estágio Obrigatório e Não Obrigatório --
     estagio = CKEditor5Field(blank=True, config_name='default', verbose_name="Política e Gestão de Estágio Curricular Obrigatório e Não Obrigatório")
@@ -223,21 +229,25 @@ class PPC(models.Model):
     estrutura_curricular_informacoes_complementares = CKEditor5Field(blank=True, config_name='default', verbose_name="Informações Complementares")
     history = HistoricalRecords()
 
+    class Meta:
+        verbose_name = "PPC"
+        verbose_name_plural = "PPCs"
+
     def __str__(self):
         return f"PPC - {self.curso.nome}"
     
 class DinamicaEAD(models.Model):
-    ppc = models.OneToOneField(PPC,on_delete=models.CASCADE,related_name="dinamica_ead")
+    ppc = models.OneToOneField(PPC,on_delete=models.CASCADE,related_name="dinamica_ead", verbose_name='PPC')
 
-    dinamica_atividades_presenciais_distancia = CKEditor5Field(blank=True, config_name='default')
-    recuperacao_estudos_permanencia = CKEditor5Field(blank=True, config_name='default')
-    componente_informatica_basica = CKEditor5Field(blank=True, config_name='default')
-    atuacao_tutoria = CKEditor5Field(blank=True, config_name='default')
-    atribuicoes_profissionais = CKEditor5Field(blank=True, config_name='default')
-    material_didatico = CKEditor5Field(blank=True, config_name='default')
-    ferramentas_comunicacao = CKEditor5Field(blank=True, config_name='default')
-    carga_horaria_presencial_acompanhamento = CKEditor5Field(blank=True, config_name='default')
-    armazenamento_gerenciamento_dados = CKEditor5Field(blank=True, config_name='default')
+    dinamica_atividades_presenciais_distancia = CKEditor5Field(blank=True, config_name='default', verbose_name='Dinâmica das atividades presenciais e a distância')
+    recuperacao_estudos_permanencia = CKEditor5Field(blank=True, config_name='default', verbose_name='Recuperação de estudos e permanência')
+    componente_informatica_basica = CKEditor5Field(blank=True, config_name='default', verbose_name='Componente de informática básica')
+    atuacao_tutoria = CKEditor5Field(blank=True, config_name='default', verbose_name='Atuação da tutoria')
+    atribuicoes_profissionais = CKEditor5Field(blank=True, config_name='default', verbose_name='Atribuições profissionais')
+    material_didatico = CKEditor5Field(blank=True, config_name='default', verbose_name='Material didático')
+    ferramentas_comunicacao = CKEditor5Field(blank=True, config_name='default', verbose_name='Ferramentas de comunicação')
+    carga_horaria_presencial_acompanhamento = CKEditor5Field(blank=True, config_name='default', verbose_name='Carga horária presencial de acompanhamento')
+    armazenamento_gerenciamento_dados = CKEditor5Field(blank=True, config_name='default', verbose_name='Armazenamento e gerenciamento de dados')
 
     history = HistoricalRecords()
 
@@ -263,28 +273,29 @@ class ComponenteCurricular(models.Model):
         ("aprovado", "Aprovado"),
     ]
 
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='aprovado')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='aprovado', verbose_name='Status')
 
     criado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='componentes_criados',
+        verbose_name='Criado por',
     )
 
-    codigo = models.CharField(max_length=20, blank=True)
-    nome = models.CharField(max_length=200)
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    codigo = models.CharField(max_length=20, blank=True, verbose_name='Código')
+    nome = models.CharField(max_length=200, verbose_name='Nome')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, verbose_name='Tipo')
     ccu = models.BooleanField(null=True, blank=True, choices=CCU_CHOICES, verbose_name='Esse componente é uma CCU?')
     
-    carga_horaria_teorica = models.PositiveIntegerField()
-    carga_horaria_pratica = models.PositiveIntegerField()
-    unidade_academica_componente = models.CharField(max_length=200, blank=True)
-    ementa = models.TextField()
+    carga_horaria_teorica = models.PositiveIntegerField(verbose_name='Carga horária teórica')
+    carga_horaria_pratica = models.PositiveIntegerField(verbose_name='Carga horária prática')
+    unidade_academica_componente = models.CharField(max_length=200, blank=True, verbose_name='Unidade acadêmica do componente')
+    ementa = models.TextField(verbose_name='Ementa')
 
-    carga_horaria_estudante = models.PositiveIntegerField(null=True, blank=True)
-    carga_horaria_professor = models.PositiveIntegerField(null=True, blank=True)
-    carga_horaria_acex = models.PositiveIntegerField(null=True, blank=True)
+    carga_horaria_estudante = models.PositiveIntegerField(null=True, blank=True, verbose_name='Carga horária do estudante')
+    carga_horaria_professor = models.PositiveIntegerField(null=True, blank=True, verbose_name='Carga horária do professor')
+    carga_horaria_acex = models.PositiveIntegerField(null=True, blank=True, verbose_name='Carga horária ACEx')
 
     def clean(self):
         super().clean()
@@ -336,7 +347,7 @@ class ComponenteNaMatriz(models.Model):
         ("NC", "Núcleo Comum"),
         ("NE", "Núcleo Específico"),
     ]
-    nucleo = models.CharField(max_length=4, choices=NUCLEO_CHOICES, default='NE')
+    nucleo = models.CharField(max_length=4, choices=NUCLEO_CHOICES, default='NE', verbose_name='Núcleo')
 
     GRUPO_LICENCIATURA_CHOICES = [
         (1, "Grupo 1"),
@@ -364,10 +375,10 @@ class ComponenteNaMatriz(models.Model):
                         validar_mudanca_periodo(self, self.periodo, "ppc")
                 else:
                     validar_periodo_ppc(self.ppc, self.periodo)
-    ppc = models.ForeignKey(PPC, on_delete=models.CASCADE, related_name="matriz_componentes")
-    componente = models.ForeignKey(ComponenteCurricular, on_delete=models.PROTECT, related_name="uso_em_ppcs")
-    periodo = models.PositiveSmallIntegerField()
-    natureza = models.CharField(max_length=20, choices=NATUREZA_CHOICES)
+    ppc = models.ForeignKey(PPC, on_delete=models.CASCADE, related_name="matriz_componentes", verbose_name='PPC')
+    componente = models.ForeignKey(ComponenteCurricular, on_delete=models.PROTECT, related_name="uso_em_ppcs", verbose_name='Componente')
+    periodo = models.PositiveSmallIntegerField(verbose_name='Período')
+    natureza = models.CharField(max_length=20, choices=NATUREZA_CHOICES, verbose_name='Natureza')
 
     class Meta:
         unique_together = ('ppc', 'componente')
@@ -398,19 +409,22 @@ class ComponenteNaMatriz(models.Model):
 
 class Bibliografia(models.Model):
     TIPO_CHOICES = [("basica", "Básica"), ("complementar", "Complementar")]
-    componente_na_matriz = models.ForeignKey(ComponenteNaMatriz, on_delete=models.CASCADE, related_name="bibliografias")
+    componente_na_matriz = models.ForeignKey(ComponenteNaMatriz, on_delete=models.CASCADE, related_name="bibliografias", verbose_name='Componente na matriz')
     referencia = models.ForeignKey(
         "ReferenciaBibliografica", null=True, blank=True,
         on_delete=models.SET_NULL, related_name="bibliografias_ppc",
+        verbose_name='Referência bibliográfica',
     )
-    tipo = models.CharField(max_length=15, choices=TIPO_CHOICES)
-    titulo = models.CharField(max_length=300)
-    autores = models.CharField(max_length=300)
-    editora = models.CharField(max_length=150, blank=True)
-    cidade = models.CharField(max_length=100, blank=True)
-    ano = models.PositiveIntegerField(blank=True, null=True)
+    tipo = models.CharField(max_length=15, choices=TIPO_CHOICES, verbose_name='Tipo')
+    titulo = models.CharField(max_length=300, verbose_name='Título')
+    autores = models.CharField(max_length=300, verbose_name='Autores')
+    editora = models.CharField(max_length=150, blank=True, verbose_name='Editora')
+    cidade = models.CharField(max_length=100, blank=True, verbose_name='Cidade')
+    ano = models.PositiveIntegerField(blank=True, null=True, verbose_name='Ano')
 
     class Meta:
+        verbose_name = "Bibliografia"
+        verbose_name_plural = "Bibliografias"
         constraints = [models.UniqueConstraint(
             fields=["componente_na_matriz", "referencia"],
             name="uniq_bibliografia_obra_por_componente",
@@ -435,12 +449,12 @@ class Bibliografia(models.Model):
 class ReferenciaBibliografica(models.Model):
     """Catálogo institucional de referências bibliográficas da UFCAT — existe
     independente de estar vinculada a qualquer componente curricular ou PPC."""
-    titulo = models.CharField(max_length=300)
-    autores = models.CharField(max_length=300, blank=True)
-    editora = models.CharField(max_length=150, blank=True)
-    cidade = models.CharField(max_length=100, blank=True)
-    ano = models.PositiveIntegerField(blank=True, null=True)
-    criado_em = models.DateTimeField(auto_now_add=True)
+    titulo = models.CharField(max_length=300, verbose_name='Título')
+    autores = models.CharField(max_length=300, blank=True, verbose_name='Autores')
+    editora = models.CharField(max_length=150, blank=True, verbose_name='Editora')
+    cidade = models.CharField(max_length=100, blank=True, verbose_name='Cidade')
+    ano = models.PositiveIntegerField(blank=True, null=True, verbose_name='Ano')
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
     history = HistoricalRecords()
 
     def __str__(self):
@@ -451,9 +465,9 @@ class RelacaoComponente(models.Model):
         ("pre_requisito", "Pré-requisito"),
         ("co_requisito", "Co-requisito"),
     ]
-    componente_na_matriz = models.ForeignKey(ComponenteNaMatriz, on_delete=models.CASCADE, related_name="relacoes")
-    componente_relacionado_na_matriz = models.ForeignKey(ComponenteNaMatriz, on_delete=models.CASCADE, related_name="relacionado_em")
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    componente_na_matriz = models.ForeignKey(ComponenteNaMatriz, on_delete=models.CASCADE, related_name="relacoes", verbose_name='Componente na matriz')
+    componente_relacionado_na_matriz = models.ForeignKey(ComponenteNaMatriz, on_delete=models.CASCADE, related_name="relacionado_em", verbose_name='Componente relacionado na matriz')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, verbose_name='Tipo')
 
     class Meta:
         unique_together = ('componente_na_matriz', 'componente_relacionado_na_matriz', 'tipo')
@@ -495,13 +509,17 @@ class Apendice(models.Model):
         ("ac","Atividade Complementar"),
     ]
 
-    ppc = models.ForeignKey(PPC,on_delete=models.CASCADE,related_name="apendices")
-    tipo = models.CharField(max_length=30,choices=TIPO_CHOICES)
-    titulo = models.CharField(max_length=200)
-    descricao = CKEditor5Field(blank=True, config_name='default')
-    arquivo = models.FileField(upload_to="apendices/",blank=True)
+    ppc = models.ForeignKey(PPC,on_delete=models.CASCADE,related_name="apendices", verbose_name='PPC')
+    tipo = models.CharField(max_length=30,choices=TIPO_CHOICES, verbose_name='Tipo')
+    titulo = models.CharField(max_length=200, verbose_name='Título')
+    descricao = CKEditor5Field(blank=True, config_name='default', verbose_name='Descrição')
+    arquivo = models.FileField(upload_to="apendices/",blank=True, verbose_name='Arquivo')
 
     history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = "Apêndice"
+        verbose_name_plural = "Apêndices"
 
     def __str__(self):
         return self.titulo
@@ -559,6 +577,7 @@ class MatrizReferenciaCurricular(models.Model):
         blank=True,
         related_name="matrizes_referencia",
         help_text="Pode ficar em branco até alguém identificar a que curso esta matriz pertence.",
+        verbose_name='Curso',
     )
     identificador_origem = models.CharField(
         max_length=50,
@@ -567,8 +586,9 @@ class MatrizReferenciaCurricular(models.Model):
         blank=True,
         default=None,
         help_text="Identificador original da planilha (ex: 'FIS-LN-2C'), para rastreio antes/depois de vincular a um Curso.",
+        verbose_name='Identificador de origem',
     )
-    nome = models.CharField(max_length=200, blank=True)
+    nome = models.CharField(max_length=200, blank=True, verbose_name='Nome')
     grau_academico = models.CharField(
         max_length=20, choices=GRAU_CHOICES, null=True, blank=True,
         verbose_name="Grau acadêmico da matriz",
@@ -586,10 +606,11 @@ class MatrizReferenciaCurricular(models.Model):
     numero_periodos = models.PositiveSmallIntegerField(
         default=8,
         help_text="Quantidade de períodos exibidos na tela de edição desta matriz.",
+        verbose_name='Número de períodos',
     )
 
-    criado_em = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
+    atualizado_em = models.DateTimeField(auto_now=True, verbose_name='Atualizado em')
 
     history = HistoricalRecords()
 
@@ -626,7 +647,7 @@ class ComponenteNaMatrizReferencia(models.Model):
         ("NC", "Núcleo Comum"),
         ("NE", "Núcleo Específico"),
     ]
-    nucleo = models.CharField(max_length=4, choices=NUCLEO_CHOICES, default='NE')
+    nucleo = models.CharField(max_length=4, choices=NUCLEO_CHOICES, default='NE', verbose_name='Núcleo')
 
     GRUPO_LICENCIATURA_CHOICES = [
             (1, "Grupo 1"),
@@ -657,17 +678,20 @@ class ComponenteNaMatrizReferencia(models.Model):
         MatrizReferenciaCurricular,
         on_delete=models.CASCADE,
         related_name="componentes",
+        verbose_name='Matriz de referência',
     )
     componente = models.ForeignKey(
         ComponenteCurricular,
         on_delete=models.PROTECT,
         related_name="uso_em_matrizes_referencia",
+        verbose_name='Componente',
     )
-    periodo = models.PositiveSmallIntegerField()
-    natureza = models.CharField(max_length=20, choices=NATUREZA_CHOICES)
+    periodo = models.PositiveSmallIntegerField(verbose_name='Período')
+    natureza = models.CharField(max_length=20, choices=NATUREZA_CHOICES, verbose_name='Natureza')
     ordem = models.PositiveIntegerField(
         default=0,
         help_text="Posição dentro do período, para uso futuro no drag-and-drop.",
+        verbose_name='Ordem',
     )
 
     class Meta:
@@ -707,12 +731,14 @@ class RelacaoComponenteReferencia(models.Model):
         ("co_requisito", "Co-requisito"),
     ]
     item = models.ForeignKey(
-        ComponenteNaMatrizReferencia, on_delete=models.CASCADE, related_name="relacoes"
+        ComponenteNaMatrizReferencia, on_delete=models.CASCADE, related_name="relacoes",
+        verbose_name='Componente',
     )
     item_relacionado = models.ForeignKey(
-        ComponenteNaMatrizReferencia, on_delete=models.CASCADE, related_name="relacionado_em"
+        ComponenteNaMatrizReferencia, on_delete=models.CASCADE, related_name="relacionado_em",
+        verbose_name='Tem como pré/co-requisito',
     )
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, verbose_name='Tipo')
 
     class Meta:
         constraints = [
@@ -753,6 +779,7 @@ class MapeamentoImportacaoMatriz(models.Model):
         max_length=50,
         unique=True,
         help_text="Ex: 'FIS-LN-2C', como aparece na coluna matriz_curricular da planilha.",
+        verbose_name='Identificador de origem',
     )
     curso = models.ForeignKey(
         Curso,
@@ -760,13 +787,15 @@ class MapeamentoImportacaoMatriz(models.Model):
         null=True,
         blank=True,
         help_text="Deixe em branco até identificar a que curso este identificador pertence.",
+        verbose_name='Curso',
     )
     nome_matriz_referencia = models.CharField(
         max_length=200,
         blank=True,
         help_text="Nome a dar à MatrizReferenciaCurricular criada (ex: 'Noturno'). Opcional.",
+        verbose_name='Nome da matriz de referência',
     )
-    observacao = models.CharField(max_length=300, blank=True)
+    observacao = models.CharField(max_length=300, blank=True, verbose_name='Observação')
 
     def __str__(self):
         return f"{self.identificador_origem} → {self.curso.nome}"
@@ -783,22 +812,24 @@ class ImportacaoPendencia(models.Model):
         ("sem_mapeamento", "Sem mapeamento de curso"),
     ]
 
-    tipo = models.CharField(max_length=30, choices=TIPO_CHOICES)
-    identificador_origem = models.CharField(max_length=50)
-    codigo = models.CharField(max_length=20, blank=True)
-    nome = models.CharField(max_length=200, blank=True)
-    linha_origem = models.PositiveIntegerField(null=True, blank=True)
+    tipo = models.CharField(max_length=30, choices=TIPO_CHOICES, verbose_name='Tipo')
+    identificador_origem = models.CharField(max_length=50, verbose_name='Identificador de origem')
+    codigo = models.CharField(max_length=20, blank=True, verbose_name='Código')
+    nome = models.CharField(max_length=200, blank=True, verbose_name='Nome')
+    linha_origem = models.PositiveIntegerField(null=True, blank=True, verbose_name='Linha de origem')
     detalhe = models.TextField(
         blank=True,
         help_text="Motivo da ambiguidade, ou comparação da linha conflitante, conforme o tipo.",
+        verbose_name='Detalhe',
     )
     dados_brutos = models.JSONField(
-        help_text="Linha(s) originais normalizadas, para referência/depuração."
+        help_text="Linha(s) originais normalizadas, para referência/depuração.",
+        verbose_name='Dados brutos',
     )
 
-    resolvido = models.BooleanField(default=False)
-    resolvido_em = models.DateTimeField(null=True, blank=True)
-    criado_em = models.DateTimeField(auto_now_add=True)
+    resolvido = models.BooleanField(default=False, verbose_name='Resolvido')
+    resolvido_em = models.DateTimeField(null=True, blank=True, verbose_name='Resolvido em')
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
 
     class Meta:
         verbose_name = "Pendência de importação"
@@ -813,18 +844,20 @@ class BibliografiaReferencia(models.Model):
     Bibliografia cumpre para ComponenteNaMatriz, mas em nível institucional."""
     TIPO_CHOICES = [("basica", "Básica"), ("complementar", "Complementar")]
     componente_na_matriz_referencia = models.ForeignKey(
-        ComponenteNaMatrizReferencia, on_delete=models.CASCADE, related_name="bibliografias"
+        ComponenteNaMatrizReferencia, on_delete=models.CASCADE, related_name="bibliografias",
+        verbose_name='Componente na matriz de referência',
     )
     referencia = models.ForeignKey(
         ReferenciaBibliografica, null=True, blank=True,
         on_delete=models.SET_NULL, related_name="bibliografias_matrizes_referencia",
+        verbose_name='Referência bibliográfica',
     )
-    tipo = models.CharField(max_length=15, choices=TIPO_CHOICES)
-    titulo = models.CharField(max_length=300)
-    autores = models.CharField(max_length=300)
-    editora = models.CharField(max_length=150, blank=True)
-    cidade = models.CharField(max_length=100, blank=True)
-    ano = models.PositiveIntegerField(blank=True, null=True)
+    tipo = models.CharField(max_length=15, choices=TIPO_CHOICES, verbose_name='Tipo')
+    titulo = models.CharField(max_length=300, verbose_name='Título')
+    autores = models.CharField(max_length=300, verbose_name='Autores')
+    editora = models.CharField(max_length=150, blank=True, verbose_name='Editora')
+    cidade = models.CharField(max_length=100, blank=True, verbose_name='Cidade')
+    ano = models.PositiveIntegerField(blank=True, null=True, verbose_name='Ano')
 
     class Meta:
         constraints = [models.UniqueConstraint(
@@ -855,14 +888,17 @@ class Chamado(models.Model):
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
         related_name="chamados_abertos",
+        verbose_name='Usuário',
     )
-    tela = models.CharField(max_length=255)  # request.path no momento do envio
-    mensagem = models.TextField()
-    criado_em = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pendente")
-    resolvido_em = models.DateTimeField(null=True, blank=True)
+    tela = models.CharField(max_length=255, verbose_name='Tela')  # request.path no momento do envio
+    mensagem = models.TextField(verbose_name='Mensagem')
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pendente", verbose_name='Status')
+    resolvido_em = models.DateTimeField(null=True, blank=True, verbose_name='Resolvido em')
 
     class Meta:
+        verbose_name = "Chamado"
+        verbose_name_plural = "Chamados"
         ordering = ["-criado_em"]
 
     def __str__(self):
@@ -871,16 +907,17 @@ class Chamado(models.Model):
 class GrupoEquivalenciaComponentes(models.Model):
     """Um conjunto de componentes (de matrizes diferentes) considerados equivalentes entre si."""
     
-    criado_em = models.DateTimeField(auto_now_add=True)
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
     history = HistoricalRecords()
 
 
 class ItemEquivalencia(models.Model):
-    grupo = models.ForeignKey(GrupoEquivalenciaComponentes, on_delete=models.CASCADE, related_name='itens')
+    grupo = models.ForeignKey(GrupoEquivalenciaComponentes, on_delete=models.CASCADE, related_name='itens', verbose_name='Grupo de equivalência')
     item_matriz = models.ForeignKey(
-        'ComponenteNaMatrizReferencia', on_delete=models.CASCADE, related_name='equivalencias'
+        'ComponenteNaMatrizReferencia', on_delete=models.CASCADE, related_name='equivalencias',
+        verbose_name='Item da matriz',
     )
-    ordem = models.PositiveIntegerField(default=1, help_text="Posição da matriz na sequência (a de maior ordem é a que será cadastrada na Resolução)")
+    ordem = models.PositiveIntegerField(default=1, help_text="Posição da matriz na sequência (a de maior ordem é a que será cadastrada na Resolução)", verbose_name='Ordem')
 
     class Meta:
         constraints = [
@@ -905,16 +942,19 @@ class EquivalenciaMatriz(models.Model):
     item_novo = models.ForeignKey(
         ComponenteNaMatrizReferencia, on_delete=models.PROTECT,
         related_name="equivalencias_como_novo",
+        verbose_name='Item novo',
     )
     item_anterior = models.ForeignKey(
         ComponenteNaMatrizReferencia, on_delete=models.PROTECT,
         related_name="equivalencias_como_anterior",
+        verbose_name='Item anterior',
     )
     criado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True,
         on_delete=models.SET_NULL, related_name="equivalencias_matriz_criadas",
+        verbose_name='Criado por',
     )
-    criado_em = models.DateTimeField(auto_now_add=True)
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
 
     class Meta:
         constraints = [models.UniqueConstraint(
@@ -940,10 +980,10 @@ class EquivalenciaMatriz(models.Model):
 
 class EquivalenciaPPC(models.Model):
     """Par entre vínculo curricular atual e vínculo do PPC predecessor."""
-    item_novo = models.ForeignKey(ComponenteNaMatriz, on_delete=models.PROTECT, related_name="equivalencias_ppc_como_novo")
-    item_anterior = models.ForeignKey(ComponenteNaMatriz, on_delete=models.PROTECT, related_name="equivalencias_ppc_como_anterior")
-    criado_por = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="equivalencias_ppc_criadas")
-    criado_em = models.DateTimeField(auto_now_add=True)
+    item_novo = models.ForeignKey(ComponenteNaMatriz, on_delete=models.PROTECT, related_name="equivalencias_ppc_como_novo", verbose_name='Item novo')
+    item_anterior = models.ForeignKey(ComponenteNaMatriz, on_delete=models.PROTECT, related_name="equivalencias_ppc_como_anterior", verbose_name='Item anterior')
+    criado_por = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="equivalencias_ppc_criadas", verbose_name='Criado por')
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["item_novo", "item_anterior"], name="uniq_equivalencia_ppc_par")]
@@ -965,20 +1005,21 @@ class EquivalenciaPPC(models.Model):
     history = HistoricalRecords()
 
 class ResumoCargaHorariaPPC(models.Model):
-    ppc = models.OneToOneField(PPC, on_delete=models.CASCADE, related_name="resumo_carga_horaria")
-    nucleo_livre_manual = models.PositiveIntegerField(default=0)
-    acex_nucleo_livre_manual = models.PositiveIntegerField(default=0)
-    acex_extensao_manual = models.PositiveIntegerField(default=0)
-    atividades_complementares_manual = models.PositiveIntegerField(default=0)
+    ppc = models.OneToOneField(PPC, on_delete=models.CASCADE, related_name="resumo_carga_horaria", verbose_name='PPC')
+    nucleo_livre_manual = models.PositiveIntegerField(default=0, verbose_name='Núcleo livre (manual)')
+    acex_nucleo_livre_manual = models.PositiveIntegerField(default=0, verbose_name='ACEx do núcleo livre (manual)')
+    acex_extensao_manual = models.PositiveIntegerField(default=0, verbose_name='ACEx de extensão (manual)')
+    atividades_complementares_manual = models.PositiveIntegerField(default=0, verbose_name='Atividades complementares (manual)')
     history = HistoricalRecords()
 
 class VinculoUsuarioCurso(models.Model):
     """Quais cursos cada usuário (NDE) pode acessar. Staff (DAA) não precisa de vínculo."""
     usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='vinculos_curso'
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='vinculos_curso',
+        verbose_name='Usuário',
     )
-    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='vinculos_usuarios')
-    criado_em = models.DateTimeField(auto_now_add=True)
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='vinculos_usuarios', verbose_name='Curso')
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
 
     class Meta:
         constraints = [
@@ -994,13 +1035,14 @@ class VinculoUsuarioCurso(models.Model):
 
 class RevisaoSecaoPPC(models.Model):
     """Confirmação de que o NDE revisou uma seção do PPC. Independe de a seção estar preenchida."""
-    ppc = models.ForeignKey(PPC, on_delete=models.CASCADE, related_name="revisoes_secao")
-    secao = models.CharField(max_length=50)
-    conteudo_hash = models.CharField(max_length=64)
+    ppc = models.ForeignKey(PPC, on_delete=models.CASCADE, related_name="revisoes_secao", verbose_name='PPC')
+    secao = models.CharField(max_length=50, verbose_name='Seção')
+    conteudo_hash = models.CharField(max_length=64, verbose_name='Hash do conteúdo')
     revisado_por = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="+"
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="+",
+        verbose_name='Revisado por',
     )
-    revisado_em = models.DateTimeField(auto_now=True)
+    revisado_em = models.DateTimeField(auto_now=True, verbose_name='Revisado em')
 
     class Meta:
         constraints = [
@@ -1029,15 +1071,16 @@ class EventoUso(models.Model):
     # tipos sujeitos à retenção de 12 meses
     TIPOS_ACESSO = ("login", "logout", "login_falhou")
 
-    tipo = models.CharField(max_length=30, choices=Tipo.choices)
+    tipo = models.CharField(max_length=30, choices=Tipo.choices, verbose_name='Tipo')
     usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
+        verbose_name='Usuário',
     )
-    identificador = models.CharField(max_length=150, blank=True, help_text="Só em falha de login: o username digitado.")
-    curso = models.ForeignKey(Curso, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
-    ppc = models.ForeignKey(PPC, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
-    metadados = models.JSONField(default=dict, blank=True)
-    criado_em = models.DateTimeField(auto_now_add=True)
+    identificador = models.CharField(max_length=150, blank=True, help_text="Só em falha de login: o username digitado.", verbose_name='Identificador')
+    curso = models.ForeignKey(Curso, on_delete=models.SET_NULL, null=True, blank=True, related_name="+", verbose_name='Curso')
+    ppc = models.ForeignKey(PPC, on_delete=models.SET_NULL, null=True, blank=True, related_name="+", verbose_name='PPC')
+    metadados = models.JSONField(default=dict, blank=True, verbose_name='Metadados')
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
 
     class Meta:
         ordering = ["-criado_em"]
@@ -1051,16 +1094,16 @@ class EventoEdicao(models.Model):
     """Uma edição real (o save mudou algo) em modelo rastreado. Alimentado por signal do simple_history."""
     TIPO_CHOICES = [("criacao", "Criação"), ("edicao", "Edição"), ("exclusao", "Exclusão")]
 
-    modelo = models.CharField(max_length=60)          # ex.: 'ppc.PPC'
-    objeto_id = models.PositiveIntegerField()
-    history_id = models.PositiveIntegerField()
-    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
-    campos = models.JSONField(default=list, blank=True)  # [] = não se sabe quais (ou criação/exclusão)
-    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
-    ppc = models.ForeignKey(PPC, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
-    curso = models.ForeignKey(Curso, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
-    matriz = models.ForeignKey(MatrizReferenciaCurricular, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
-    ocorreu_em = models.DateTimeField(db_index=True)  # = history_date (preserva a data original no backfill)
+    modelo = models.CharField(max_length=60, verbose_name='Modelo')          # ex.: 'ppc.PPC'
+    objeto_id = models.PositiveIntegerField(verbose_name='ID do objeto')
+    history_id = models.PositiveIntegerField(verbose_name='ID do histórico')
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, verbose_name='Tipo')
+    campos = models.JSONField(default=list, blank=True, verbose_name='Campos')  # [] = não se sabe quais (ou criação/exclusão)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+", verbose_name='Usuário')
+    ppc = models.ForeignKey(PPC, on_delete=models.SET_NULL, null=True, blank=True, related_name="+", verbose_name='PPC')
+    curso = models.ForeignKey(Curso, on_delete=models.SET_NULL, null=True, blank=True, related_name="+", verbose_name='Curso')
+    matriz = models.ForeignKey(MatrizReferenciaCurricular, on_delete=models.SET_NULL, null=True, blank=True, related_name="+", verbose_name='Matriz')
+    ocorreu_em = models.DateTimeField(db_index=True, verbose_name='Ocorreu em')  # = history_date (preserva a data original no backfill)
 
     class Meta:
         ordering = ["-ocorreu_em"]
@@ -1077,11 +1120,11 @@ class EventoEdicao(models.Model):
 
 class UsoDiario(models.Model):
     """Contador de páginas vistas por usuário/dia/hora/tela (data e hora já no fuso local)."""
-    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
-    data = models.DateField()
-    hora = models.PositiveSmallIntegerField()  # 0-23
-    url_name = models.CharField(max_length=100)
-    contagem = models.PositiveIntegerField(default=0)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+", verbose_name='Usuário')
+    data = models.DateField(verbose_name='Data')
+    hora = models.PositiveSmallIntegerField(verbose_name='Hora')  # 0-23
+    url_name = models.CharField(max_length=100, verbose_name='Nome da rota')
+    contagem = models.PositiveIntegerField(default=0, verbose_name='Contagem')
 
     class Meta:
         constraints = [

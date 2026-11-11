@@ -41,10 +41,10 @@ IMPORTACOES = {
     },
     "importar_bibliografias": {
         "rotulo": "Bibliografias",
-        "ajuda": "CSV bibliográfico. Indisponível até o importador ser idempotente e oferecer simulação.",
+        "ajuda": "CSV bibliográfico. Se a página expirar durante a confirmação, envie o mesmo arquivo, simule e confirme novamente; obras já gravadas serão ignoradas.",
         "extensoes": (".csv",),
-        "dry_run": False,
-        "disponivel": False,
+        "dry_run": True,
+        "disponivel": True,
         "argumentos": {},
     },
     "importar_cine_brasil": {

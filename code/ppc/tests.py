@@ -132,7 +132,7 @@ class ImportacoesInstitucionaisTests(TestCase):
         resposta = self.client.post(self.url, dados)
         self.assertEqual(resposta.status_code, 200)
         self.assertContains(resposta, "Simulação pronta")
-        self.assertEqual(EventoUso.objects.filter(tipo="importacao", metadados__modo="simulacao").count(), 1)
+        self.assertEqual(EventoUso.objects.filter(tipo="importacao", metadados__modo="simulacao").count(), 0)
         pendencia = self.client.session["ppc_importacao_pendente"]
         caminho = Path(pendencia["caminho"])
         self.assertTrue(caminho.is_file())
@@ -245,19 +245,156 @@ class ImportacoesInstitucionaisTests(TestCase):
         self.assertContains(segunda, "Este arquivo já foi importado")
         self.assertEqual(CineBrasilCurso.objects.count(), 1)
 
-    def test_bibliografias_aparecem_indisponiveis_e_nao_podem_ser_executadas(self):
+    @patch("ppc.views.os.rename", side_effect=lambda origem, destino: (shutil.copyfile(origem, destino), Path(origem).unlink()))
+    def test_bibliografias_exigem_simulacao_mesmo_hash_e_confirmacao(self, _renomear):
+        from .models import EventoUso
+
         self.client.force_login(self.staff)
         resposta = self.client.get(self.url)
         self.assertContains(resposta, "Bibliografias")
-        self.assertContains(resposta, "ainda não é idempotente")
-        with patch("ppc.views.executar_importacao") as executar:
-            resposta = self.client.post(self.url, {
-                "comando": "importar_bibliografias", "acao": "executar_direto",
-                "importar_bibliografias-arquivo": self.arquivo("bibliografia.csv"),
-                "importar_bibliografias-confirmacao_explicita": "on",
-            })
-            self.assertContains(resposta, "indisponível")
-            executar.assert_not_called()
+        self.assertContains(resposta, "Se a página expirar")
+        self.assertContains(resposta, "Simular (dry-run)")
+        conteudo = (
+            b"titulo;autores;editora;cidade;ano\n"
+            b"A obra;Autora;Editora;Cidade;2020\n"
+            b"A obra;Autora;Editora;Cidade;2020\n"
+        )
+        simulacao = self.client.post(self.url, {
+            "comando": "importar_bibliografias", "acao": "simular",
+            "importar_bibliografias-arquivo": SimpleUploadedFile("bibliografia.csv", conteudo),
+        })
+        self.assertEqual(simulacao.status_code, 200)
+        self.assertContains(simulacao, "Simulação pronta")
+        self.assertContains(simulacao, "Linhas repetidas dentro do arquivo: 1")
+        self.assertEqual(ReferenciaBibliografica.objects.count(), 0)
+        pendencia = self.client.session["ppc_importacao_pendente"]
+        self.assertFalse(EventoUso.objects.filter(
+            tipo="importacao", metadados__comando="importar_bibliografias",
+            metadados__modo="simulacao",
+        ).exists())
+
+        confirmacao = self.client.post(self.url, {
+            "comando": "importar_bibliografias", "acao": "confirmar",
+            "token": pendencia["token"],
+        })
+        self.assertEqual(confirmacao.status_code, 200)
+        self.assertContains(confirmacao, "Operação concluída")
+        self.assertEqual(ReferenciaBibliografica.objects.count(), 1)
+        evento_confirmado = EventoUso.objects.get(
+            tipo="importacao", metadados__comando="importar_bibliografias",
+            metadados__modo="confirmado",
+        )
+        self.assertGreaterEqual(evento_confirmado.metadados["duracao_segundos"], 0)
+
+
+class ImportadorBibliografiasTests(TestCase):
+    def arquivo_csv(self, conteudo, *, bom=False):
+        import tempfile
+
+        temporario = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
+        dados = conteudo.encode("utf-8")
+        temporario.write((b"\xef\xbb\xbf" if bom else b"") + dados)
+        temporario.close()
+        self.addCleanup(Path(temporario.name).unlink, missing_ok=True)
+        return temporario.name
+
+    def test_dry_run_deduplica_por_acento_e_espacos_sem_gravar_nada(self):
+        from .models import EventoUso
+
+        caminho = self.arquivo_csv(
+            "titulo;autores;editora;cidade;ano\n"
+            "Ação, política;Ana;Editora;Goiânia;2020\n"
+            "Acao,  política;Ana;Editora;Goiania;2020\n"
+            ";Sem título;Editora;Cidade;2020\n"
+            "Livro;Autor;Editora;Cidade;inválido\n",
+            bom=True,
+        )
+        saida = StringIO()
+        call_command("importar_bibliografias", caminho, stdout=saida)
+        self.assertIn("Linhas lidas: 4", saida.getvalue())
+        self.assertIn("Linhas ignoradas (título vazio): 1", saida.getvalue())
+        self.assertIn("Linhas com ano convertido para None: 1", saida.getvalue())
+        self.assertIn("Linhas repetidas dentro do arquivo: 1", saida.getvalue())
+        self.assertIn("Obras distintas no arquivo: 2", saida.getvalue())
+        self.assertIn("Novas a criar: 2", saida.getvalue())
+        self.assertIn("Ação, política", saida.getvalue())
+        self.assertEqual(ReferenciaBibliografica.objects.count(), 0)
+        self.assertEqual(ReferenciaBibliografica.history.count(), 0)
+        self.assertFalse(EventoUso.objects.filter(tipo="importacao").exists())
+
+    def test_confirmacao_e_segunda_execucao_sao_idempotentes_e_criam_historico(self):
+        caminho = self.arquivo_csv(
+            "titulo;autores;editora;cidade;ano\n"
+            "Obra;Autora;Editora;Cidade;2020\n"
+            "Outra;Autor;Editora;Cidade;\n"
+            "Outra;Autor;Editora;Cidade;\n"
+        )
+        primeira = StringIO()
+        call_command("importar_bibliografias", caminho, confirmar=True, stdout=primeira)
+        self.assertEqual(ReferenciaBibliografica.objects.count(), 2)
+        self.assertEqual(ReferenciaBibliografica.history.count(), 2)
+        self.assertIn("Obras criadas: 2", primeira.getvalue())
+        self.assertIn("Lotes gravados: 1", primeira.getvalue())
+
+        segunda = StringIO()
+        call_command("importar_bibliografias", caminho, confirmar=True, stdout=segunda)
+        self.assertEqual(ReferenciaBibliografica.objects.count(), 2)
+        self.assertIn("Já existentes no catálogo: 2", segunda.getvalue())
+        self.assertIn("Obras criadas: 0", segunda.getvalue())
+        self.assertIn("Duração:", segunda.getvalue())
+
+    def test_duplicatas_legadas_sao_so_reportadas_e_ano_none_eh_parte_da_chave(self):
+        antiga_a = ReferenciaBibliografica.objects.create(
+            titulo="Título legado", autores="Autora", editora="Ed", cidade="Cidade", ano=None,
+        )
+        antiga_b = ReferenciaBibliografica.objects.create(
+            titulo="Titulo  legado", autores="Autora", editora="Ed", cidade="Cidade", ano=None,
+        )
+        antes = list(ReferenciaBibliografica.objects.order_by("pk").values_list("pk", "titulo"))
+        caminho = self.arquivo_csv(
+            "titulo;autores;editora;cidade;ano\n"
+            "TÍTULO legado;Autora;Ed;Cidade;incorreto\n"
+        )
+        saida = StringIO()
+        call_command("importar_bibliografias", caminho, confirmar=True, stdout=saida)
+        self.assertIn("Grupos repetidos no catálogo existente (informativo): 1", saida.getvalue())
+        self.assertIn("Já existentes no catálogo: 1", saida.getvalue())
+        self.assertEqual(list(ReferenciaBibliografica.objects.order_by("pk").values_list("pk", "titulo")), antes)
+        self.assertEqual(ReferenciaBibliografica.objects.count(), 2)
+        self.assertNotEqual(antiga_a.pk, antiga_b.pk)
+
+    def test_interrupcao_apos_lote_permite_retomar_com_segunda_execucao(self):
+        from ppc.management.commands import importar_bibliografias as modulo
+
+        caminho = self.arquivo_csv(
+            "titulo;autores;editora;cidade;ano\n"
+            "Uma;A;E;C;2020\nDuas;B;E;C;2021\nTrês;C;E;C;2022\n"
+        )
+        funcao_original = modulo.bulk_create_with_history
+        chamadas = 0
+
+        def falha_na_segunda_chamada(*args, **kwargs):
+            nonlocal chamadas
+            chamadas += 1
+            if chamadas == 2:
+                raise RuntimeError("erro simulado após o primeiro lote")
+            return funcao_original(*args, **kwargs)
+
+        erro = StringIO()
+        with patch.object(modulo, "bulk_create_with_history", side_effect=falha_na_segunda_chamada):
+            with self.assertRaises(CommandError):
+                call_command(
+                    "importar_bibliografias", caminho, confirmar=True, batch_size=1,
+                    stdout=StringIO(), stderr=erro,
+                )
+        self.assertEqual(ReferenciaBibliografica.objects.count(), 1)
+        self.assertIn("1 lote(s)", erro.getvalue())
+        self.assertIn("Repita com --confirmar", erro.getvalue())
+
+        retomada = StringIO()
+        call_command("importar_bibliografias", caminho, confirmar=True, batch_size=1, stdout=retomada)
+        self.assertEqual(ReferenciaBibliografica.objects.count(), 3)
+        self.assertIn("Obras criadas: 2", retomada.getvalue())
 
     def test_importador_matriz_reporta_codigo_duplicado_com_diferenca_de_caixa_e_espacos(self):
         from ppc.models import ComponenteCurricular
@@ -1723,6 +1860,56 @@ class RegrasMatrizRegressaoTests(TestCase):
         self.criar_bibliografia_ppc(ppc_item, obra.titulo, obra.autores, referencia=obra)
         self.criar_bibliografia_referencia(matriz_item, obra.titulo, obra.autores, referencia=obra)
         self.assertEqual(ReferenciaBibliografica.objects.filter(pk=obra.pk).count(), 1)
+
+
+class VerboseNameTests(TestCase):
+    def test_todos_os_campos_concretos_tem_verbose_name_explicito(self):
+        from django.apps import apps
+
+        encontrados = []
+        for model in apps.get_app_config("ppc").get_models():
+            if model.__name__.startswith("Historical"):
+                continue
+            for campo in model._meta.get_fields():
+                if not getattr(campo, "concrete", False):
+                    continue
+                if campo.name == "id":
+                    continue
+                self.assertNotEqual(
+                    str(campo.verbose_name), campo.name.replace("_", " "),
+                    f"{model.__name__}.{campo.name} ainda usa o verbose_name automático",
+                )
+                encontrados.append((model.__name__, campo.name))
+        self.assertIn(("EventoEdicao", "history_id"), encontrados)
+        campo_historico = apps.get_model("ppc", "EventoEdicao")._meta.get_field("history_id")
+        self.assertEqual(str(campo_historico.verbose_name), "ID do histórico")
+
+    def test_labels_explicitos_dos_formularios_sao_iguais_ao_verbose_name(self):
+        from .forms import ComponenteMatrizReferenciaForm, RelacaoComponenteReferenciaForm
+
+        verificacoes = (
+            (ComponenteMatrizReferenciaForm, {
+                "nome": "ComponenteCurricular", "tipo": "ComponenteCurricular",
+                "nucleo": "ComponenteNaMatrizReferencia", "natureza": "ComponenteNaMatrizReferencia",
+                "periodo": "ComponenteNaMatrizReferencia", "grupo_licenciatura": "ComponenteNaMatrizReferencia",
+                "carga_horaria_teorica": "ComponenteCurricular", "carga_horaria_pratica": "ComponenteCurricular",
+                "carga_horaria_estudante": "ComponenteCurricular", "carga_horaria_professor": "ComponenteCurricular",
+                "carga_horaria_acex": "ComponenteCurricular", "ementa": "ComponenteCurricular",
+            }),
+            (RelacaoComponenteReferenciaForm, {
+                "item": "RelacaoComponenteReferencia", "tipo": "RelacaoComponenteReferencia",
+                "item_relacionado": "RelacaoComponenteReferencia",
+            }),
+        )
+        from django.apps import apps
+
+        for formulario, modelos_por_campo in verificacoes:
+            for nome_campo, nome_modelo in modelos_por_campo.items():
+                campo = apps.get_model("ppc", nome_modelo)._meta.get_field(nome_campo)
+                self.assertEqual(
+                    str(formulario.base_fields[nome_campo].label), str(campo.verbose_name),
+                    f"Label {formulario.__name__}.{nome_campo} diverge do verbose_name",
+                )
 
 
 class TemplateURLNameTests(TestCase):

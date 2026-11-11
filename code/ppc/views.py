@@ -1475,12 +1475,13 @@ def importacoes_institucionais(request):
     modo = "simulacao" if simular else "confirmado"
     try:
         resultado = executar_importacao(registro, caminho, modo)
-        emitir_evento_importacao(
-            comando=comando, modo=modo, nome_arquivo=nome_arquivo,
-            sha256=sha256, usuario=request.user, duracao=resultado["duracao"],
-            resumo=resultado["erro"] or resultado["saida"],
-            sucesso=resultado["sucesso"],
-        )
+        if not simular:
+            emitir_evento_importacao(
+                comando=comando, modo=modo, nome_arquivo=nome_arquivo,
+                sha256=sha256, usuario=request.user, duracao=resultado["duracao"],
+                resumo=resultado["erro"] or resultado["saida"],
+                sucesso=resultado["sucesso"],
+            )
         if simular and resultado["sucesso"]:
             token = secrets.token_urlsafe(32)
             pendencia = {
